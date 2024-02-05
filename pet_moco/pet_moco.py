@@ -11,7 +11,6 @@ Todo:
     * Test motion correction module
 """
 import numpy as np
-import numba
 import nibabel
 import ants
 
