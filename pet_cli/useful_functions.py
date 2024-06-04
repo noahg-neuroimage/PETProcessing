@@ -76,5 +76,5 @@ def build_label_map(region_names: list[str]):
     Builds a BIDS compliant label map. Loop through CTAB and convert names to
     abbreviations using :meth:`abbreviate_region`
     """
-    abbreviated_names = list(map(region_names,abbreviate_region))
+    abbreviated_names = list(map(abbreviate_region,region_names))
     return abbreviated_names

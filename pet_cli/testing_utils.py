@@ -1,9 +1,80 @@
 import numpy as np
+from typing import Union
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
 
 _TEXT_BOX_ = {'facecolor': 'lightblue', 'edgecolor': 'black', 'lw': 2.0, 'alpha': 0.2}
+
+
+class TACPlots(object):
+    r"""
+    A class for plotting Time Activity Curves (TACs) on linear and semi-logarithmic scales.
+
+    This class simplifies the process of comparing TACs on different scales. It generates a
+    side-by-side plot with a linear-linear scale for the first plot and a log-x scale for the
+    second plot. Users can add TACs to the plots and optionally generate a legend.
+
+    Attributes:
+        fig (matplotlib.figure.Figure): The figure object that contains the plots.
+        axes (ndarray of Axes): The axes objects where the TACs are plotted.
+
+    Example:
+    
+    .. code-block:: python
+
+        tac_plots = TACPlots()
+        tac_plots.add_tac(tac_times, tac_vals, label='TAC 1', pl_kwargs={'color': 'blue'})
+        tac_plots.add_tac(tac_times_2, tac_vals_2, label='TAC 2', pl_kwargs={'color': 'red'})
+        tac_plots.gen_legend()
+        plt.show()
+
+    """
+    def __init__(self,
+                 figsize: tuple = (8, 4),
+                 xlabel: str = r'$t$ [minutes]',
+                 ylabel: str = r'TAC [$\mathrm{kBq/ml}$]'):
+        r"""
+        Initialize the TACPlots with two subplots, one with a linear scale and the other with a semi-logarithmic scale.
+
+        Args:
+            figsize (tuple): The total size of the figure. Defaults to an 8x4 inches figure.
+            xlabel (str): The label for the x-axis. Defaults to '$t$ [minutes]'.
+            ylabel (str): The label for the y-axis. Defaults to 'TAC [$\mathrm{kBq/ml}$]'.
+        """
+        self.fig, self.axes = plt.subplots(1, 2, sharey=True, constrained_layout=True, figsize=figsize)
+        self.fax = self.axes.flatten()
+        [ax.set(xlabel=xlabel) for ax in self.fax]
+        self.fax[0].set(ylabel=ylabel, title='Linear')
+        self.fax[1].set(xscale='log', title='SemiLog-X')
+    
+    def add_tac(self, tac_times: np.ndarray, tac_vals: np.ndarray, label: str = None, pl_kwargs: dict = None):
+        r"""
+        Add a TAC to both subplots.
+
+        Args:
+            tac_times (np.ndarray): The time points for the TAC.
+            tac_vals (np.ndarray): The corresponding values for the TAC.
+            label (str): The label for the TAC in the legend. Defaults to no label.
+            pl_kwargs (dict): Additional keyword arguments for the plot() function. Defaults to an empty dictionary.
+        """
+        if pl_kwargs is None:
+            pl_kwargs = {'lw': 2, 'alpha': 0.8}
+        if label is None:
+            [ax.plot(tac_times, tac_vals, **pl_kwargs) for ax in self.fax]
+        else:
+            [ax.plot(tac_times, tac_vals, label=label, **pl_kwargs) for ax in self.fax]
+    
+    def gen_legend(self):
+        r"""
+        Generate a legend using the labels provided in the add_tac() method.
+
+        Note:
+            It is recommended to add all TACs before generating the legend. Any TACs added after the legend is
+        generated will not be included in the legend.
+        
+        """
+        self.fig.legend(*self.fax[0].get_legend_handles_labels(), bbox_to_anchor=(1.0, 0.5), loc='center left')
 
 
 def generate_random_parameter_samples(num_samples, num_params, hi, lo):
@@ -22,7 +93,29 @@ def generate_random_parameter_samples(num_samples, num_params, hi, lo):
     Note:
         Uses :func:`np.random.random` to generate random values in a given shape.
     """
-    return np.random.random((num_samples, num_params)) * (hi - lo) + lo
+    rand_samples = np.zeros((num_samples, num_params))
+    if isinstance(hi, tuple):
+        assert len(hi) == num_params, "`hi` must be of length num_params"
+        if isinstance(lo, tuple):
+            assert len(lo) == num_params, "`lo` must be of length num_params"
+            for i in range(num_params):
+                rand_samples[:, i] = np.random.random(num_samples) * (hi[i] - lo[i]) + lo[i]
+        else:
+            for i in range(num_params):
+                rand_samples[:, i] = np.random.random(num_samples) * (hi[i] - lo) + lo
+    elif isinstance(lo, tuple):
+        assert len(lo) == num_params, "`lo` must be of length num_params"
+        if isinstance(hi, tuple):
+            assert len(hi) == num_params, "`hi` must be of length num_params"
+            for i in range(num_params):
+                rand_samples[:, i] = np.random.random(num_samples) * (hi[i] - lo[i]) + lo[i]
+        else:
+            for i in range(num_params):
+                rand_samples[:, i] = np.random.random(num_samples) * (hi - lo[i]) + lo[i]
+    else:
+        rand_samples = np.random.random((num_samples, num_params)) * (hi - lo) + lo
+    
+    return rand_samples
 
 
 def add_gaussian_noise_to_tac_based_on_max(tac_vals: np.ndarray, scale: float = 0.05) -> np.ndarray:
@@ -74,7 +167,7 @@ def scatter_with_regression_figure(axes,
         sca_kwargs = dict(s=10, marker='.', color='red')
     
     if reg_kwargs is None:
-        reg_kwargs = dict(s=10, color='black', alpha=0.8, lw=3, ls='-')
+        reg_kwargs = dict(ms=10, color='black', alpha=0.8, lw=3, ls='-')
     
     fax = axes.flatten()
     for ax_id, (xAr, yAr, title) in enumerate((zip(true_values.T, fit_values.T, ax_titles))):
