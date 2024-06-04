@@ -103,17 +103,19 @@ def exp_fit_dosimetry(
     return popt, pcov
 
 
-def time_integrated_activity(
+def time_integrated_activity_fit(
         exp_coeffs: list[float],
         half_life: float
         ):
     decay_constant = np.log(2)/half_life
-    return exp_coeffs[0]/(exp_coeffs[1]+decay_constant) + exp_coeffs[2]/(exp_coeffs[3]+decay_constant)
+    return exp_coeffs[0]/(exp_coeffs[1]+decay_constant) + exp_coeffs[2]/(exp_coeffs[3]+decay_constant) / 3600
 
 
 def run_dosimetry(
         roi_data: pd.DataFrame,
-        plots_save: str
+        plots_save: str,
+        use_midpoint=True,
+        use_fit=True
         ):
     """
     Run dosimetry processing to produce time-integrated activity, TAC plots, and save into an excel spreadsheet.
@@ -134,11 +136,15 @@ def run_dosimetry(
                 start_times=organ_roi_data['Scan Time'],
                 injection_time=organ_roi_data['Injection Time'].iloc[0]
                 )
-            organ_frame_midpoint_times = time_midpoint(
-                start_times=organ_frame_start_times,
-                frame_durations=organ_roi_data['Frame Duration (s)'],
-                half_life=organ_roi_data['Half Life (s)'].iloc[0]
-                )
+            if use_midpoint:
+                organ_frame_midpoint_times = time_midpoint(
+                    start_times=organ_frame_start_times,
+                    frame_durations=organ_roi_data['Frame Duration (s)'],
+                    half_life=organ_roi_data['Half Life (s)'].iloc[0]
+                    )
+                organ_frame_times = orgam_frame_midpoint_times
+            else:
+                organ_frame_times = orgam_frame_start_times
             organ_dose_ratio = organ_dose(
                 activity_cps=organ_roi_data['Activity (cps)'],
                 organ_volume=organ_roi_data['Organ Volume (mL)'],
@@ -147,19 +153,25 @@ def run_dosimetry(
                 scale_factor=organ_roi_data['Scale Factor'].iloc[0]
                 )
             organ_dose_ratio_corrected = decay_correct(
-                frame_times=organ_frame_midpoint_times,
+                frame_times=organ_frame_times,
                 activity_uncorrected=organ_dose_ratio,
                 half_life=organ_roi_data['Half Life (s)'].iloc[0]
             )
-            popt, pcov = exp_fit_dosimetry(
-                frame_ref_time=organ_frame_midpoint_times,
-                activity_uncorrected=organ_dose_ratio,
-                half_life=organ_roi_data['Half Life (s)'].iloc[0]
+            if use_fit:
+                popt, pcov = exp_fit_dosimetry(
+                    frame_ref_time=organ_frame_midpoint_times,
+                    activity_uncorrected=organ_dose_ratio,
+                    half_life=organ_roi_data['Half Life (s)'].iloc[0]
+                    )
+                tia = time_integrated_activity_fit(
+                    exp_coeffs=popt,
+                    half_life=organ_roi_data['Half Life (s)'].iloc[0]
                 )
-            tia = time_integrated_activity(
-                exp_coeffs=popt,
-                half_life=organ_roi_data['Half Life (s)'].iloc[0]
-            )/3600
+            else:
+                tia = np.trapz(
+                    y=organ_dose_ratio_corrected,
+                    x=organ_frame_times
+                )
             tia_event = pd.DataFrame([{'scan': scan, 'organ': organ, 'time_integrated_activity_hr': tia}])
             tia_df = pd.concat([tia_df,tia_event],ignore_index=True)
             for i,frame_ref_time in enumerate(organ_frame_midpoint_times):
