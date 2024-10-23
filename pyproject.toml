@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "petpal"
+version = "0.0.1"
+description = "PET-PAL (Positron Emission Tomography Processing and Analysis Library)"
+authors = [
+    {name = "Furqan Dar"},
+    {name = "Bradley Judge"},
+    {name = "Noah Goldman"},
+    {name = "Kenan Oestreich", email = "kenan.oestreich@wustl.edu"}
+]
+requires-python = ">= 3.9" # At least Python 3.9
+dependencies = [
+    "docker",
+    "numpy",
+    "scipy",
+    "numba",
+    "pandas",
+    "nibabel",
+    "antspyx == 0.4.2",
+    "fslpy",
+    "SimpleITK",
+    "matplotlib",
+    "sphinx",
+    "pydata-sphinx-theme",
+    "bids_validator",
+    "seaborn",
+]
+readme = "README.md"
+classifiers = [  # These are added to PyPI package when published; Used for searching
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Topic :: Scientific/Engineering :: Image Processing",
+
+    # Python Versions (This does NOT restrict in any way; merely for PyPI searches)
+    "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+    petpal-preproc = "petpal.cli.cli_preproc:main"
+    petpal-bids = "petpal.cli.cli_bids:main"
+    petpal-tac-interpolate = "petpal.cli.cli_tac_interpolation:main"
+    petpal-graph-plot = "petpal.cli.cli_graphical_plots:main"
+    petpal-graph-analysis = "petpal.cli.cli_graphical_analysis:main"
+    petpal-parametric-image = "petpal.cli.cli_parametric_images:main"
+    petpal-tcm-fit = "petpal.cli.cli_tac_fitting:main"
+    petpal-rtms = "petpal.cli.cli_reference_tissue_models:main"
+    petpal-vat-proc = "petpal.cli.cli_vat_processing:main"
+    petpal-brier-fdg-pipeline = "petpal.cli.cli_brier_fdg_processing:main"
+    petpal-pib-proc = "petpal.cli.cli_pib_processing:main"
+
+[project.urls]
+    Repository = "https://github.com/FurqanDar/PETProcessing.git"
