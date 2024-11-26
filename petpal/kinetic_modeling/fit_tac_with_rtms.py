@@ -364,24 +364,12 @@ class FitTACWithRTMs:
                 given method.
         """
         method = self.method
-        nan_array = np.array([])
+        output_size = get_rtm_output_size(method=method)
 
-        if method == 'srtm':
-            nan_array = np.array([np.nan, np.nan, np.nan])
-        elif method == 'frtm':
-            nan_array = np.array([np.nan, np.nan, np.nan, np.nan])
-        elif method == 'srtm2':
-            nan_array = np.array([np.nan, np.nan])
-        elif method == 'frtm2':
-            nan_array = np.array([np.nan, np.nan, np.nan])
-        elif method == 'mrtm':
-            nan_array = [np.array([np.nan, np.nan, np.nan]),
-                         np.array(len(self.tac_times_in_minutes)*[np.nan])]
-        elif method == 'mrtm-original':
-            nan_array = [np.array([np.nan, np.nan, np.nan]),
-                         np.array(len(self.tac_times_in_minutes)*[np.nan])]
-        elif method == 'mrtm2':
-            nan_array = [np.array([np.nan, np.nan]),
+        nan_array = np.array([np.nan]*output_size)
+
+        if 'mrtm' in method:
+            nan_array = [np.array([np.nan]*output_size),
                          np.array(len(self.tac_times_in_minutes)*[np.nan])]
 
         return nan_array
