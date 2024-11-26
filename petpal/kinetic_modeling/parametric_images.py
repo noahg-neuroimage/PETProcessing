@@ -184,6 +184,57 @@ def apply_mrtm2_to_all_voxels(tac_times_in_minutes: np.ndarray,
     return bp_img, simulation_img
 
 
+def apply_rtm2_to_all_voxels(tac_times_in_minutes: np.ndarray,
+                             tgt_image: np.ndarray,
+                             ref_tac_vals: np.ndarray,
+                             mask_img: np.ndarray,
+                             analysis_func: Callable = fit_mrtm2_2003_to_tac,
+                             **analysis_kwargs) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Generates parametric images for 4D-PET data using the SRTM2 reference tissue method.
+
+    Args:
+        tac_times_in_minutes (np.ndarray): A 1D array representing the reference TAC and PET frame
+            times in minutes.
+        tgt_image (np.ndarray): A 4D array representing the 3D PET image over time.
+            The shape of this array should be (x, y, z, time).
+        ref_tac_vals (np.ndarray): A 1D array representing the reference TAC values. This array
+            should be of the same length as `tac_times_in_minutes`.
+        k2_prime (float): A float representing the k2' value to be used for MRTM2 analysis. This
+            is chosen based on the tracer or based on a regional MRTM1 analysis.
+        mask_img (np.ndarray): A 3D array representing the brain mask for `tgt_image`, where brain
+            regions are labelled 1 and non-brain regions are labelled 0. This is made necessary in
+            order to save time during computation. 
+
+    Returns:
+        bp_img (np.ndarray): A 3D array with computed BP values based on the MRTM2 parameter fit
+            results. 
+        simulation_img (np.ndarray): A 4D array with the same shape as `tgt_image` where each voxel
+            is the best fit curve based on the solved parameters to the linear equation in MRTM2.
+    """
+    img_dims = tgt_image.shape
+    # TODO: This is has shape (x,y,z,k) where k is the size of the output of one run of the method
+    params_img = np.zeros((img_dims[0], img_dims[1], img_dims[2],3), float)
+
+
+    for i in range(0, img_dims[0], 1):
+        for j in range(0, img_dims[1], 1):
+            for k in range(0, img_dims[2], 1):
+                if mask_img[i,j,k]>0.5:
+                    analysis_vals = analysis_func(tac_times_in_minutes=tac_times_in_minutes,
+                                                  ref_tac_vals=ref_tac_vals,
+                                                  tgt_tac_vals=tgt_image[i, j, k, :],
+                                                  **analysis_kwargs)
+                    try:
+                        params_img[i, j, k] = calc_bp_from_mrtm2_2003_fit(analysis_vals[0])
+                    except ValueError as exc:
+                        print("Error in estimating BP from parameters, setting BP to NaN."
+                              f"See: {exc}")
+                        params_img[i, j, k] = np.nan
+
+    return params_img
+
+
 class ReferenceTissueParametricImage:
     """
     Class for generating parametric images of 4D-PET images using reference tissue model (RTM)
