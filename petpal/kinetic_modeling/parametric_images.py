@@ -19,7 +19,9 @@ import numba
 
 from petpal.kinetic_modeling.reference_tissue_models import (fit_mrtm2_2003_to_tac,
                                                              calc_bp_from_mrtm2_2003_fit)
-from petpal.kinetic_modeling.fit_tac_with_rtms import get_rtm_kwargs, get_rtm_method
+from petpal.kinetic_modeling.fit_tac_with_rtms import (get_rtm_kwargs,
+                                                       get_rtm_method,
+                                                       get_rtm_output_size)
 from petpal.utils.time_activity_curve import TimeActivityCurveFromFile
 from petpal.utils.image_io import safe_load_4dpet_nifti
 from . import graphical_analysis
@@ -214,8 +216,8 @@ def apply_rtm2_to_all_voxels(tac_times_in_minutes: np.ndarray,
     """
     analysis_func = get_rtm_method(method=method)
     img_dims = tgt_image.shape
-    # TODO: This is has shape (x,y,z,k) where k is the size of the output of one run of the method
-    params_img = np.zeros((img_dims[0], img_dims[1], img_dims[2],3), float)
+    output_shape = get_rtm_output_size(method=method)
+    params_img = np.zeros((img_dims[0], img_dims[1], img_dims[2],output_shape), float)
 
 
     for i in range(0, img_dims[0], 1):
