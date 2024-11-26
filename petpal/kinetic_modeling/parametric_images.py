@@ -190,7 +190,7 @@ def apply_rtm2_to_all_voxels(tac_times_in_minutes: np.ndarray,
                              tgt_image: np.ndarray,
                              ref_tac_vals: np.ndarray,
                              mask_img: np.ndarray,
-                             method: str = 'mrtm2',
+                             method: str = 'srtm2',
                              **analysis_kwargs) -> np.ndarray:
     """
     Generates parametric images for 4D-PET data using the SRTM2 reference tissue method.
