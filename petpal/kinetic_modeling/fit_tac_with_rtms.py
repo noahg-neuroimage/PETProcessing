@@ -142,6 +142,20 @@ def get_rtm_kwargs(method: Callable,
     return args_dict
 
 
+def get_rtm_output_size(method: str) -> int | tuple:
+    """
+    Gets the size of the output array for a given RTM method.
+    """
+    output_size = {"srtm": 3,
+                   "frtm": 4,
+                   "srtm2": 2,
+                   "frtm2": 3,
+                   "mrtm": 3,
+                   "mrtm-original": 3,
+                   "mrtm2": 2}
+    return output_size.get(method)
+
+
 class FitTACWithRTMs:
     r"""
     A class used to fit a kinetic model to both a target and a reference Time Activity Curve (TAC).
@@ -284,8 +298,7 @@ class FitTACWithRTMs:
             if self.t_thresh_in_mins is None:
                 raise ValueError(
                     "t_t_thresh_in_mins must be defined if method is 'mrtm'")
-            else:
-                assert self.t_thresh_in_mins >= 0, "t_thresh_in_mins must be a positive number."
+            assert self.t_thresh_in_mins >= 0, "t_thresh_in_mins must be a positive number."
         if self.method.endswith("2"):
             if self.k2_prime is None:
                 raise ValueError("k2_prime must be defined if we are using the reduced models: "
