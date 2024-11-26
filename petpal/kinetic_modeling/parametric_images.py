@@ -188,7 +188,7 @@ def apply_rtm2_to_all_voxels(tac_times_in_minutes: np.ndarray,
                              tgt_image: np.ndarray,
                              ref_tac_vals: np.ndarray,
                              mask_img: np.ndarray,
-                             analysis_func: Callable = fit_mrtm2_2003_to_tac,
+                             method: str = 'mrtm2',
                              **analysis_kwargs) -> Tuple[np.ndarray, np.ndarray]:
     """
     Generates parametric images for 4D-PET data using the SRTM2 reference tissue method.
@@ -212,6 +212,7 @@ def apply_rtm2_to_all_voxels(tac_times_in_minutes: np.ndarray,
         simulation_img (np.ndarray): A 4D array with the same shape as `tgt_image` where each voxel
             is the best fit curve based on the solved parameters to the linear equation in MRTM2.
     """
+    analysis_func = get_rtm_method(method=method)
     img_dims = tgt_image.shape
     # TODO: This is has shape (x,y,z,k) where k is the size of the output of one run of the method
     params_img = np.zeros((img_dims[0], img_dims[1], img_dims[2],3), float)
@@ -370,23 +371,19 @@ class ReferenceTissueParametricImage:
         mask_np = self.mask_image.get_fdata()
         tac_times_in_minutes = self.reference_tac.tac_times_in_minutes
         ref_tac_vals = self.reference_tac.tac_vals
-        rtm_method = get_rtm_method(self.method)
+        method = self.method
+        rtm_method = get_rtm_method(method)
         analysis_kwargs = get_rtm_kwargs(method=rtm_method,
                                          bounds=bounds,
                                          k2_prime=k2_prime,
                                          t_thresh_in_mins=t_thresh_in_mins)
 
-        if self.method=='mrtm2':
-            analysis_function = apply_mrtm2_to_all_voxels
-        else:
-            raise NotImplementedError(f"Method {self.method} is not yet implemented for voxel-wise"
-                                      f"analysis.")
-
-        fit_results = analysis_function(tac_times_in_minutes=tac_times_in_minutes,
-                                        tgt_image=pet_np * image_scale,
-                                        ref_tac_vals=ref_tac_vals,
-                                        mask_img=mask_np,
-                                        **analysis_kwargs)
+        fit_results = apply_rtm2_to_all_voxels(tac_times_in_minutes=tac_times_in_minutes,
+                                               tgt_image=pet_np * image_scale,
+                                               ref_tac_vals=ref_tac_vals,
+                                               mask_img=mask_np,
+                                               method=method
+                                               **analysis_kwargs)
         self.fit_results = fit_results
 
 
