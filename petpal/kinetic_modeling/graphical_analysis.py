@@ -750,6 +750,8 @@ class MultiTACGraphicalAnalysis(GraphicalAnalysis, MultiTACAnalysisMixin):
                                                                 t_thresh_in_minutes=self.fit_thresh_in_mins)
             except np.linalg.LinAlgError:
                 slope, intercept, rsquared = np.nan, np.nan, np.nan
+            except ZeroDivisionError:
+                slope, intercept, rsquared = np.nan, np.nan, np.nan
             self.analysis_props[tac_id]['Slope'] = slope
             self.analysis_props[tac_id]['Intercept'] = intercept
             self.analysis_props[tac_id]['RSquared'] = rsquared
