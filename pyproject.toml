@@ -9,7 +9,7 @@ description = "PET-PAL (Positron Emission Tomography Processing and Analysis Lib
 authors = [
     {name = "Furqan Dar"},
     {name = "Bradley Judge"},
-    {name = "Noah Goldman"},
+    {name = "Noah Goldman", email = "noahg@wustl.edu"},
     {name = "Kenan Oestreich", email = "kenan.oestreich@wustl.edu"}
 ]
 requires-python = ">= 3.12" # At least Python 3.12
