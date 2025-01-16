@@ -72,6 +72,18 @@ def segmentations_merge(segmentation_primary: np.ndarray,
     return segmentation_primary
 
 
+def apply_mask_3d(image: np.ndarray, mask: np.ndarray):
+    """
+    Applies a mask to a 3D image.
+    """
+    if len(image.shape)!=3:
+        raise ValueError(f"Image must be 3D. Got: {len(image.shape)} dimensions.")
+
+    image_masked = np.zeros(image.shape)
+    image_masked[np.where(mask>0)] = image[np.where(mask>0)]
+    return image_masked
+
+
 def binarize(input_image_numpy: np.ndarray,
              out_val: float=1):
     """
