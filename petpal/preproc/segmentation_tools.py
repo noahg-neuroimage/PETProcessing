@@ -72,6 +72,23 @@ def segmentations_merge(segmentation_primary: np.ndarray,
     return segmentation_primary
 
 
+def get_number_of_frames(image: np.ndarray):
+    """
+    Get number of time frames in a 4D time series array.
+    """
+    check_image_dimensions(image=image,dimension=4)
+    return image.shape[-1]
+
+
+def check_image_dimensions(image: np.ndarray, dimension: int):
+    """
+    Check number of dimensions in an image array. Raise ValueError if not equal
+    to the provided dimension.
+    """
+    if len(image.shape)!=dimension:
+        raise ValueError(f"Image must be {dimension}D. Got: {len(image.shape)} dimensions.")
+
+
 def apply_mask_3d(image: np.ndarray, mask: np.ndarray):
     """
     Applies a mask to a 3D image.
