@@ -101,6 +101,28 @@ def apply_mask_3d(image: np.ndarray, mask: np.ndarray):
     return image_masked
 
 
+def apply_mask_4d(image: np.ndarray, mask: np.ndarray):
+    """
+    Apply a mask to a 4D image
+    """
+    check_image_dimensions(image=image,dimension=4)
+    image_masked = np.zeros(image.shape)
+    number_frames = get_number_of_frames(image=image)
+
+    for frame in range(number_frames):
+        masked_frame = apply_mask_3d(image=image[:,:,:,frame],mask=mask)
+        image_masked[:,:,:,frame] = masked_frame
+
+    return image_masked
+
+
+def get_4d_image_where_regions(image: np.ndarray, segmentation: np.ndarray, regions: list):
+    """Gets a mask from a list of regions in a segmentation and applies mask to 4D image."""
+    regions_mask = get_regions_mask(segmentation=segmentation,regions=regions)
+    masked_image = apply_mask_4d(image=image,mask=regions_mask)
+    return masked_image
+
+
 def binarize(input_image_numpy: np.ndarray,
              out_val: float=1):
     """
