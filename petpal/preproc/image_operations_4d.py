@@ -70,7 +70,7 @@ def crop_image(input_image_path: str,
     return cropped_image
 
 
-def determine_motion_target(motion_target_option: str | tuple | list,
+def determine_motion_target(motion_target_option: Union[str, tuple, list],
                             input_image_4d_path: str = None,
                             half_life: float = None) -> str:
     """

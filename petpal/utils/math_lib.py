@@ -1,6 +1,7 @@
 """
 Library for math functions for use elsewhere.
 """
+from typing import Union
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import ants
@@ -43,7 +44,7 @@ def weighted_sum_computation(frame_duration: np.ndarray,
     return image_weighted_sum
 
 
-def weighted_sum_computation_over_index_window(pet_series: ants.core.ANTsImage | np.ndarray,
+def weighted_sum_computation_over_index_window(pet_series: Union[ants.core.ANTsImage, np.ndarray],
                                                window_start_id: int,
                                                window_end_id: int,
                                                half_life: float,
