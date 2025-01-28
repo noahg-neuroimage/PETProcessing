@@ -17,6 +17,7 @@ TODOs:
 
 """
 import os
+from typing import Union
 import tempfile
 import ants
 import nibabel
