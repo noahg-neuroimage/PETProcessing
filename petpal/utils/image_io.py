@@ -163,7 +163,7 @@ def get_half_life_from_meta(meta_data_file_path: str):
         meta_data = json.load(m_file)
     try:
         half_life = meta_data['RadionuclideHalfLife']
-        return half_life
+        return float(half_life)
     except KeyError:
         raise KeyError("RadionuclideHalfLife not found in meta-data file.")
     
