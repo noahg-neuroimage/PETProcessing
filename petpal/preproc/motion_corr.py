@@ -446,8 +446,8 @@ def motion_corr_frames_above_mean_value_to_t1(input_image_4d_path: str,
 
 
 def windowed_motion_corr_to_target(input_image_path: str,
-                                   out_image_path: str | None,
-                                   motion_target_option: str | tuple,
+                                   out_image_path: Union[str, None],
+                                   motion_target_option: Union[str, tuple],
                                    w_size: float,
                                    type_of_transform: str = 'QuickRigid',
                                    interpolator: str = 'linear',
