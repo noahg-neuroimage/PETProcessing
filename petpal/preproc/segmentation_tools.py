@@ -11,6 +11,7 @@ TODO:
 
 """
 import numpy as np
+import ants
 import nibabel
 from nibabel import processing
 from . import image_operations_4d
@@ -314,3 +315,28 @@ def vat_wm_region_merge(wmparc_segmentation_path: str,
                                           header=wmparc.header,
                                           affine=wmparc.affine)
     nibabel.save(out_file,out_image_path)
+
+
+def calc_normalized_vesselness_measure_image(input_image_path: str,
+                                             output_image_path: str,
+                                             sig_min: float = 1.0,
+                                             sig_max: float = 8.0,
+                                             alpha: float = 2.0,
+                                             beta: float = 0.2,
+                                             gamma_scale: float = 1.0,
+                                             morph_open_radius: int = 1):
+    in_image = ants.image_read(input_image_path)
+    hess_objectness_img = in_image.hessian_objectness(sigma_min=sig_min,
+                                                      sigma_max=sig_max,
+                                                      gamma=in_image.max() / gamma_scale,
+                                                      alpha=alpha,
+                                                      beta=beta)
+    del in_image
+    if morph_open_radius > 0:
+        hess_objectness_img = hess_objectness_img.morphology(operation='open',
+                                                             radius=morph_open_radius,
+                                                             mtype='grayscale')
+    hess_objectness_img /= hess_objectness_img.max()
+    if output_image_path is not None:
+        ants.image_write(image=hess_objectness_img, filename=output_image_path)
+    return hess_objectness_img
