@@ -318,20 +318,22 @@ def vat_wm_region_merge(wmparc_segmentation_path: str,
 
 
 def calc_normalized_vesselness_measure(input_image_path: str,
-                                             output_image_path: str,
-                                             sig_min: float = 1.0,
-                                             sig_max: float = 8.0,
-                                             alpha: float = 2.0,
-                                             beta: float = 0.2,
-                                             gamma_scale: float = 1.0,
-                                             morph_open_radius: int = 1):
+                                       output_image_path: str,
+                                       sig_min: float = 1.0,
+                                       sig_max: float = 8.0,
+                                       alpha: float = 2.0,
+                                       beta: float = 0.2,
+                                       gamma_scale: float = 1.0,
+                                       morph_open_radius: int = 1):
     in_image = ants.image_read(input_image_path)
+
+    assert len(in_image.shape) == 3, "Input image must be 3D."
+
     hess_objectness_img = in_image.hessian_objectness(sigma_min=sig_min,
                                                       sigma_max=sig_max,
                                                       gamma=in_image.max() / gamma_scale,
                                                       alpha=alpha,
                                                       beta=beta)
-    del in_image
     if morph_open_radius > 0:
         hess_objectness_img = hess_objectness_img.morphology(operation='open',
                                                              radius=morph_open_radius,
