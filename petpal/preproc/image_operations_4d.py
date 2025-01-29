@@ -23,7 +23,7 @@ import ants
 import nibabel
 import numpy as np
 from scipy.ndimage import center_of_mass
-from ..utils.useful_functions import weighted_series_sum
+from ..utils.useful_functions import weighted_series_sum, check_physical_space_for_ants_image_pair
 from ..utils import image_io, math_lib
 
 
@@ -212,9 +212,15 @@ def brain_mask(input_image_4d_path: str,
 
 def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
                                            mask_image: ants.core.ANTsImage,
-                                           verbose: bool):
-    pass
-
+                                           verbose: bool) -> np.ndarray:
+    assert len(input_image.shape) == 4, "Input image must be 4D."
+    assert check_physical_space_for_ants_image_pair(input_image, mask_image), ("Images must have "
+                                                                               "the same physical dimensions.")
+    x_inds, y_inds, z_inds = mask_image.nonzero()
+    out_voxels = input_image.numpy()[x_inds, y_inds, z_inds, :]
+    if verbose:
+        print(f"(ImageOps): Output TACs have shape {out_voxels.shape}")
+    return out_voxels
 
 
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,

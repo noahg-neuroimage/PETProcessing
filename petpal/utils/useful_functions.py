@@ -274,3 +274,13 @@ def read_plasma_glucose_concentration(file_path: str, correction_scale: float = 
         float: Corrected plasma glucose concentration value.
     """
     return correction_scale * float(np.loadtxt(file_path))
+
+
+def check_physical_space_for_ants_image_pair(image_1: ants.core.ANTsImage,
+                                             image_2: ants.core.ANTsImage) -> bool:
+
+    dir_cons = np.allclose(image_1.direction[:3,:3], image_2.direction[:3,:3])
+    spc_cons = np.allclose(image_1.spacing[:3], image_2.spacing[:3])
+    org_cons = np.allclose(image_1.origin[:3], image_2.origin[:3])
+
+    return dir_cons and spc_cons and org_cons
