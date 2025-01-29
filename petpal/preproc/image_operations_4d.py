@@ -23,6 +23,7 @@ import ants
 import nibabel
 import numpy as np
 from scipy.ndimage import center_of_mass
+from sklearn.decomposition import PCA
 from ..utils.useful_functions import weighted_series_sum, check_physical_space_for_ants_image_pair
 from ..utils import image_io, math_lib
 
@@ -209,10 +210,9 @@ def brain_mask(input_image_4d_path: str,
     ants.image_write(image=mask,filename=out_image_path)
 
 
-
 def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
                                            mask_image: ants.core.ANTsImage,
-                                           verbose: bool) -> np.ndarray:
+                                           verbose: bool = False) -> np.ndarray:
     assert len(input_image.shape) == 4, "Input image must be 4D."
     assert check_physical_space_for_ants_image_pair(input_image, mask_image), ("Images must have "
                                                                                "the same physical dimensions.")
@@ -221,6 +221,16 @@ def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
     if verbose:
         print(f"(ImageOps): Output TACs have shape {out_voxels.shape}")
     return out_voxels
+
+
+def extract_time_pca_comps_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                                 mask_image: ants.core.ANTsImage,
+                                                 num_components: int = 3) -> np.ndarray:
+    mask_voxels = extract_roi_tacs_from_image_using_mask(input_image=input_image,
+                                                         mask_image=mask_image)
+    voxels_pca_obj = PCA(n_components=num_components, svd_solver='full')
+    pca_fit = voxels_pca_obj.fit_transform(X=mask_voxels)
+    return np.asarray(voxels_pca_obj.components_[:])
 
 
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
