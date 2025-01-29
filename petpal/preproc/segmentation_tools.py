@@ -317,7 +317,7 @@ def vat_wm_region_merge(wmparc_segmentation_path: str,
     nibabel.save(out_file,out_image_path)
 
 
-def calc_normalized_vesselness_measure_image(input_image_path: str,
+def calc_normalized_vesselness_measure(input_image_path: str,
                                              output_image_path: str,
                                              sig_min: float = 1.0,
                                              sig_max: float = 8.0,
