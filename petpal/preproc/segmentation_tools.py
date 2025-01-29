@@ -342,3 +342,17 @@ def calc_normalized_vesselness_measure(input_image_path: str,
     if output_image_path is not None:
         ants.image_write(image=hess_objectness_img, filename=output_image_path)
     return hess_objectness_img
+
+
+def calc_vesselness_mask_from_normalized_vesselness(input_image_path: str,
+                                                    output_image_path: str,
+                                                    vmin: float = 1e-2,
+                                                    vmax: float = 1.0,
+                                                    morph_dil_radius: int = 0):
+    in_image = ants.image_read(input_image_path)
+    vess_mask = in_image.threshold_image(low_thresh=vmin, high_thresh=vmax)
+    if morph_dil_radius > 0:
+        vess_mask = vess_mask.morphology(operation='dilate', radius=morph_dil_radius)
+    if output_image_path is not None:
+        ants.image_write(image=vess_mask, filename=output_image_path)
+    return vess_mask
