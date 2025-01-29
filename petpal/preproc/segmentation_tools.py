@@ -10,6 +10,7 @@ TODO:
  * Find a more efficient way to find the region mask in :meth:`segmentations_merge` that works for region=1
 
 """
+import functools
 import numpy as np
 import ants
 import nibabel
@@ -315,6 +316,21 @@ def vat_wm_region_merge(wmparc_segmentation_path: str,
                                           header=wmparc.header,
                                           affine=wmparc.affine)
     nibabel.save(out_file,out_image_path)
+
+def ANTsImageToANTsImage(func):
+    @functools.wraps(func)
+    def wrapper(in_img:ants.core.ANTsImage | str,
+                out_path: str,
+                *args, **kwargs):
+        if isinstance(in_img, str):
+            in_image = ants.image_read(in_img)
+        else:
+            in_image = in_img
+        out_img = func(in_image, *args, **kwargs)
+        if out_path is not None:
+            ants.image_write(out_img, out_path)
+        return out_img
+    return wrapper
 
 
 def calc_normalized_vesselness_measure(input_image_path: str,
