@@ -209,10 +209,18 @@ def brain_mask(input_image_4d_path: str,
     ants.image_write(image=mask,filename=out_image_path)
 
 
-def extract_tac_from_nifty_using_mask(input_image_4d_numpy: np.ndarray,
-                                      segmentation_image_numpy: np.ndarray,
-                                      region: int,
-                                      verbose: bool) -> np.ndarray:
+
+def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                           mask_image: ants.core.ANTsImage,
+                                           verbose: bool):
+    pass
+
+
+
+def extract_mean_roi_tac_from_nifti_using_mask(input_image_4d_numpy: np.ndarray,
+                                               segmentation_image_numpy: np.ndarray,
+                                               region: int,
+                                               verbose: bool) -> np.ndarray:
     """
     Creates a time-activity curve (TAC) by computing the average value within a region, for each 
     frame in a 4D PET image series. Takes as input a PET image, which has been registered to
@@ -333,10 +341,10 @@ def suvr(input_image_path: str,
         raise ValueError("SUVR input image is not 3D. If your image is dynamic"
                          ", try running 'weighted_series_sum' first.")
 
-    ref_region_avg = extract_tac_from_nifty_using_mask(input_image_4d_numpy=pet_image,
-                                                       segmentation_image_numpy=seg_image,
-                                                       region=ref_region,
-                                                       verbose=verbose)
+    ref_region_avg = extract_mean_roi_tac_from_nifti_using_mask(input_image_4d_numpy=pet_image,
+                                                                segmentation_image_numpy=seg_image,
+                                                                region=ref_region,
+                                                                verbose=verbose)
 
     suvr_image = pet_image / ref_region_avg[0]
 
@@ -413,7 +421,7 @@ def roi_tac(input_image_4d_path: str,
                          "'FrameReferenceTime' or 'FrameTimesStart'")
 
     pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_4d_path)
-    tac_extraction_func = extract_tac_from_nifty_using_mask
+    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_mask
     pet_numpy = nibabel.load(input_image_4d_path).get_fdata()
     seg_numpy = nibabel.load(roi_image_path).get_fdata()
 
@@ -450,7 +458,7 @@ def write_tacs(input_image_path: str,
     regions_abrev = label_map['abbreviation']
     regions_map = label_map['mapping']
 
-    tac_extraction_func = extract_tac_from_nifty_using_mask
+    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_mask
     pet_numpy = nibabel.load(input_image_path).get_fdata()
     seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
 
