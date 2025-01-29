@@ -324,8 +324,10 @@ def ANTsImageToANTsImage(func):
                 *args, **kwargs):
         if isinstance(in_img, str):
             in_image = ants.image_read(in_img)
-        else:
+        elif isinstance(in_img, ants.core.ANTsImage):
             in_image = in_img
+        else:
+            raise TypeError('in_img must be str or ants.core.ANTsImage')
         out_img = func(in_image, *args, **kwargs)
         if out_path is not None:
             ants.image_write(out_img, out_path)
@@ -333,42 +335,34 @@ def ANTsImageToANTsImage(func):
     return wrapper
 
 
-def calc_normalized_vesselness_measure(input_image_path: str,
-                                       output_image_path: str,
+@ANTsImageToANTsImage
+def calc_normalized_vesselness_measure(input_image: ants.core.ANTsImage,
                                        sig_min: float = 1.0,
                                        sig_max: float = 8.0,
                                        alpha: float = 2.0,
                                        beta: float = 0.2,
                                        gamma_scale: float = 1.0,
                                        morph_open_radius: int = 1):
-    in_image = ants.image_read(input_image_path)
-
-    assert len(in_image.shape) == 3, "Input image must be 3D."
-
-    hess_objectness_img = in_image.hessian_objectness(sigma_min=sig_min,
-                                                      sigma_max=sig_max,
-                                                      gamma=in_image.max() / gamma_scale,
-                                                      alpha=alpha,
-                                                      beta=beta)
+    assert len(input_image.shape) == 3, "Input image must be 3D."
+    hess_objectness_img = input_image.hessian_objectness(sigma_min=sig_min,
+                                                         sigma_max=sig_max,
+                                                         gamma=input_image.max() / gamma_scale,
+                                                         alpha=alpha,
+                                                         beta=beta)
     if morph_open_radius > 0:
         hess_objectness_img = hess_objectness_img.morphology(operation='open',
                                                              radius=morph_open_radius,
                                                              mtype='grayscale')
     hess_objectness_img /= hess_objectness_img.max()
-    if output_image_path is not None:
-        ants.image_write(image=hess_objectness_img, filename=output_image_path)
     return hess_objectness_img
 
 
-def calc_vesselness_mask_from_normalized_vesselness(input_image_path: str,
-                                                    output_image_path: str,
+@ANTsImageToANTsImage
+def calc_vesselness_mask_from_normalized_vesselness(input_image: ants.core.ANTsImage,
                                                     vmin: float = 1e-2,
                                                     vmax: float = 1.0,
                                                     morph_dil_radius: int = 0):
-    in_image = ants.image_read(input_image_path)
-    vess_mask = in_image.threshold_image(low_thresh=vmin, high_thresh=vmax)
+    vess_mask = input_image.threshold_image(low_thresh=vmin, high_thresh=vmax)
     if morph_dil_radius > 0:
         vess_mask = vess_mask.morphology(operation='dilate', radius=morph_dil_radius)
-    if output_image_path is not None:
-        ants.image_write(image=vess_mask, filename=output_image_path)
     return vess_mask
