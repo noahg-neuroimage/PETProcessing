@@ -317,6 +317,7 @@ def vat_wm_region_merge(wmparc_segmentation_path: str,
                                           affine=wmparc.affine)
     nibabel.save(out_file,out_image_path)
 
+
 def ANTsImageToANTsImage(func):
     @functools.wraps(func)
     def wrapper(in_img:ants.core.ANTsImage | str,
