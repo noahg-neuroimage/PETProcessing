@@ -211,7 +211,7 @@ def brain_mask(input_image_4d_path: str,
     ants.image_write(image=mask,filename=out_image_path)
 
 
-def ANTsImagePairToANTsImage(func):
+def ANTsImagePairToArray(func):
     @functools.wraps(func)
     def wrapper(in_img1: ants.core.ANTsImage | str,
                 out_path: str,
@@ -229,14 +229,14 @@ def ANTsImagePairToANTsImage(func):
             in_image2 = in_img2
         else:
             raise TypeError('in_img2 must be str or ants.core.ANTsImage')
-        out_img = func(in_image1, in_image2, *args, **kwargs)
+        out_arr = func(in_image1, in_image2, *args, **kwargs)
         if out_path is not None:
-            ants.image_write(out_img, out_path)
-        return out_img
-
+            np.savetxt(fname=out_path, X=out_arr, fmt='%.6e')
+        return out_arr
     return wrapper
 
 
+@ANTsImagePairToArray
 def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
                                            mask_image: ants.core.ANTsImage,
                                            verbose: bool = False) -> np.ndarray:
@@ -250,6 +250,7 @@ def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
     return out_voxels
 
 
+@ANTsImagePairToArray
 def extract_temporal_pca_comps_from_image_using_mask(input_image: ants.core.ANTsImage,
                                                      mask_image: ants.core.ANTsImage,
                                                      num_components: int = 3) -> np.ndarray:
