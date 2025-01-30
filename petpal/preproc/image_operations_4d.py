@@ -214,8 +214,8 @@ def brain_mask(input_image_4d_path: str,
 def ANTsImagePairToArray(func):
     @functools.wraps(func)
     def wrapper(in_img1: ants.core.ANTsImage | str,
-                out_path: str,
                 in_img2: ants.core.ANTsImage | str,
+                out_path: str,
                 *args, **kwargs):
         if isinstance(in_img1, str):
             in_image1 = ants.image_read(in_img1)
