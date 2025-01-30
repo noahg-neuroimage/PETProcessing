@@ -17,6 +17,7 @@ TODOs:
 
 """
 import os
+import functools
 from typing import Union
 import tempfile
 import ants
@@ -208,6 +209,32 @@ def brain_mask(input_image_4d_path: str,
     )
     mask = mask_on_pet.get_mask()
     ants.image_write(image=mask,filename=out_image_path)
+
+
+def ANTsImagePairToANTsImage(func):
+    @functools.wraps(func)
+    def wrapper(in_img1: ants.core.ANTsImage | str,
+                out_path: str,
+                in_img2: ants.core.ANTsImage | str,
+                *args, **kwargs):
+        if isinstance(in_img1, str):
+            in_image1 = ants.image_read(in_img1)
+        elif isinstance(in_img1, ants.core.ANTsImage):
+            in_image1 = in_img1
+        else:
+            raise TypeError('in_img1 must be str or ants.core.ANTsImage')
+        if isinstance(in_img2, str):
+            in_image2 = ants.image_read(in_img2)
+        elif isinstance(in_img2, ants.core.ANTsImage):
+            in_image2 = in_img2
+        else:
+            raise TypeError('in_img2 must be str or ants.core.ANTsImage')
+        out_img = func(in_image1, in_image2, *args, **kwargs)
+        if out_path is not None:
+            ants.image_write(out_img, out_path)
+        return out_img
+
+    return wrapper
 
 
 def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
