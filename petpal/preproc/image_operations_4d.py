@@ -223,9 +223,9 @@ def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
     return out_voxels
 
 
-def extract_time_pca_comps_from_image_using_mask(input_image: ants.core.ANTsImage,
-                                                 mask_image: ants.core.ANTsImage,
-                                                 num_components: int = 3) -> np.ndarray:
+def extract_temporal_pca_comps_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                                     mask_image: ants.core.ANTsImage,
+                                                     num_components: int = 3) -> np.ndarray:
     mask_voxels = extract_roi_tacs_from_image_using_mask(input_image=input_image,
                                                          mask_image=mask_image)
     voxels_pca_obj = PCA(n_components=num_components, svd_solver='full')
