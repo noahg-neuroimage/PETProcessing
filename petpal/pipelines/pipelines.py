@@ -692,9 +692,9 @@ class BIDS_Pipeline(BIDSyPathsForPipelines, StepsPipeline):
         
     def update_dependencies_for(self, step_name, verbose=False):
         """
-        Updates the dependencies for a specified step in the pipeline. Overrides
+        Updates the dependencies for a specified step in the pipeline. Extends
         :meth:`StepsPipeline.update_dependencies_for<petpal.pipelines.steps_containers.StepsPipeline.update_dependencies_for>`
-        to infer the outputs from input paths for the sending steps before updating the dependencies.
+        to infer the outputs from input paths after updating dependencies.
 
         Args:
             step_name (str): The name of the step for which to update dependencies.
@@ -706,19 +706,16 @@ class BIDS_Pipeline(BIDSyPathsForPipelines, StepsPipeline):
                 implemented.
         
         """
-        print(step_name)
         super().update_dependencies_for(step_name, verbose=verbose)
         this_step = self.get_step_from_node_label(step_name)
         this_step_grp_name = self.dependency_graph.nodes(data=True)[step_name]['grp']
-        print(this_step.output_image_path)
         try:
             this_step.infer_outputs_from_inputs(out_dir=self.pipeline_dir,
                                                 der_type=this_step_grp_name,)
         except NotImplementedError:
             raise NotImplementedError(f"Step {step_name} does not have the `infer_outputs_from_inputs` "
                                       f"method implemented.")
-        print(this_step.output_image_path)
-    
+
     @classmethod
     def default_bids_pipeline(cls,
                               sub_id: str,

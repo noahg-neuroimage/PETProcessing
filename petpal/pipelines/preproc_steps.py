@@ -532,8 +532,6 @@ class ImageToImageStep(FunctionBasedStep):
             sending_step (FunctionBasedStep): The step from which to derive the input image path.
         """
         assert len(sending_steps) == 1, "ImageToImageStep must have 1 sending step."
-        print("\treceiving", self.name)
-        print("\tsending  ", sending_steps[0].name)
         if isinstance(sending_steps[0], ImageToImageStep):
             self.input_image_path = sending_steps[0].output_image_path
         else:
