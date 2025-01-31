@@ -211,55 +211,6 @@ def brain_mask(input_image_4d_path: str,
     ants.image_write(image=mask,filename=out_image_path)
 
 
-def ANTsImagePairToArray(func):
-    @functools.wraps(func)
-    def wrapper(in_img1: ants.core.ANTsImage | str,
-                in_img2: ants.core.ANTsImage | str,
-                out_path: str,
-                *args, **kwargs):
-        if isinstance(in_img1, str):
-            in_image1 = ants.image_read(in_img1)
-        elif isinstance(in_img1, ants.core.ANTsImage):
-            in_image1 = in_img1
-        else:
-            raise TypeError('in_img1 must be str or ants.core.ANTsImage')
-        if isinstance(in_img2, str):
-            in_image2 = ants.image_read(in_img2)
-        elif isinstance(in_img2, ants.core.ANTsImage):
-            in_image2 = in_img2
-        else:
-            raise TypeError('in_img2 must be str or ants.core.ANTsImage')
-        out_arr = func(in_image1, in_image2, *args, **kwargs)
-        if out_path is not None:
-            np.savetxt(fname=out_path, X=out_arr, fmt='%.6e')
-        return out_arr
-    return wrapper
-
-
-@ANTsImagePairToArray
-def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
-                                           mask_image: ants.core.ANTsImage,
-                                           verbose: bool = False) -> np.ndarray:
-    assert len(input_image.shape) == 4, "Input image must be 4D."
-    assert check_physical_space_for_ants_image_pair(input_image, mask_image), ("Images must have "
-                                                                               "the same physical dimensions.")
-    x_inds, y_inds, z_inds = mask_image.nonzero()
-    out_voxels = input_image.numpy()[x_inds, y_inds, z_inds, :]
-    if verbose:
-        print(f"(ImageOps): Output TACs have shape {out_voxels.shape}")
-    return out_voxels
-
-
-@ANTsImagePairToArray
-def extract_temporal_pca_comps_from_image_using_mask(input_image: ants.core.ANTsImage,
-                                                     mask_image: ants.core.ANTsImage,
-                                                     num_components: int = 3) -> np.ndarray:
-    mask_voxels = extract_roi_tacs_from_image_using_mask(input_image, mask_image, None, False)
-    voxels_pca_obj = PCA(n_components=num_components, svd_solver='full')
-    pca_fit = voxels_pca_obj.fit_transform(X=mask_voxels)
-    return np.asarray(voxels_pca_obj.components_[:])
-
-
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
                                                        segmentation_image_numpy: np.ndarray,
                                                        region: int,
