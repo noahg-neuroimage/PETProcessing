@@ -706,25 +706,18 @@ class BIDS_Pipeline(BIDSyPathsForPipelines, StepsPipeline):
                 implemented.
         
         """
-        sending_step = self.get_step_from_node_label(step_name)
-        sending_step_grp_name = self.dependency_graph.nodes(data=True)[step_name]['grp']
+        print(step_name)
+        super().update_dependencies_for(step_name, verbose=verbose)
+        this_step = self.get_step_from_node_label(step_name)
+        this_step_grp_name = self.dependency_graph.nodes(data=True)[step_name]['grp']
+        print(this_step.output_image_path)
         try:
-            sending_step.infer_outputs_from_inputs(out_dir=self.pipeline_dir,
-                                                   der_type=sending_step_grp_name,)
+            this_step.infer_outputs_from_inputs(out_dir=self.pipeline_dir,
+                                                der_type=this_step_grp_name,)
         except NotImplementedError:
-            raise NotImplementedError(f"Step {step_name} does have the `infer_outputs_from_inputs` "
+            raise NotImplementedError(f"Step {step_name} does not have the `infer_outputs_from_inputs` "
                                       f"method implemented.")
-        for an_edge in self.dependency_graph[step_name]:
-            receiving_step = self.get_step_from_node_label(an_edge)
-            try:
-                receiving_step.set_input_as_output_from(sending_step)
-            except NotImplementedError:
-                raise NotImplementedError(f"Step {receiving_step.name} does have the `set_input_as_output_from_inputs` "
-                                          f"method implemented.")
-            else:
-                if verbose:
-                    print(f"Updated input-output dependency between {sending_step.name} and {receiving_step.name}")
-    
+        print(this_step.output_image_path)
     
     @classmethod
     def default_bids_pipeline(cls,
