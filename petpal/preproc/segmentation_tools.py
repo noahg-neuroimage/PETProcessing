@@ -336,7 +336,6 @@ def ANTsImageToANTsImage(func):
     return wrapper
 
 
-@ANTsImageToANTsImage
 def calc_normalized_vesselness_measure(input_image: ants.core.ANTsImage,
                                        sig_min: float = 1.0,
                                        sig_max: float = 8.0,
@@ -358,7 +357,6 @@ def calc_normalized_vesselness_measure(input_image: ants.core.ANTsImage,
     return hess_objectness_img
 
 
-@ANTsImageToANTsImage
 def calc_vesselness_mask_from_normalized_vesselness(input_image: ants.core.ANTsImage,
                                                     vmin: float = 1e-2,
                                                     vmax: float = 1.0,
@@ -367,3 +365,6 @@ def calc_vesselness_mask_from_normalized_vesselness(input_image: ants.core.ANTsI
     if morph_dil_radius > 0:
         vess_mask = vess_mask.morphology(operation='dilate', radius=morph_dil_radius)
     return vess_mask
+
+step_calc_normalized_vesselness_measure = ANTsImageToANTsImage(calc_normalized_vesselness_measure)
+step_calc_vesselness_mask_from_normalized_vesselness = ANTsImageToANTsImage(calc_vesselness_mask_from_normalized_vesselness)

@@ -213,30 +213,30 @@ def brain_mask(input_image_4d_path: str,
 
 def ANTsImagePairToArray(func):
     @functools.wraps(func)
-    def wrapper(in_img1: ants.core.ANTsImage | str,
-                in_img2: ants.core.ANTsImage | str,
+    def wrapper(input_image: ants.core.ANTsImage | str,
+                mask_image: ants.core.ANTsImage | str,
                 out_path: str,
                 *args, **kwargs):
-        if isinstance(in_img1, str):
-            in_image1 = ants.image_read(in_img1)
-        elif isinstance(in_img1, ants.core.ANTsImage):
-            in_image1 = in_img1
+        if isinstance(input_image, str):
+            in_image1 = ants.image_read(input_image)
+        elif isinstance(input_image, ants.core.ANTsImage):
+            in_image1 = input_image
         else:
-            raise TypeError('in_img1 must be str or ants.core.ANTsImage')
-        if isinstance(in_img2, str):
-            in_image2 = ants.image_read(in_img2)
-        elif isinstance(in_img2, ants.core.ANTsImage):
-            in_image2 = in_img2
+            raise TypeError('input_image must be str or ants.core.ANTsImage')
+        if isinstance(mask_image, str):
+            in_image2 = ants.image_read(mask_image)
+        elif isinstance(mask_image, ants.core.ANTsImage):
+            in_image2 = mask_image
         else:
-            raise TypeError('in_img2 must be str or ants.core.ANTsImage')
+            raise TypeError('mask_image must be str or ants.core.ANTsImage')
         out_arr = func(in_image1, in_image2, *args, **kwargs)
         if out_path is not None:
-            np.savetxt(fname=out_path, X=out_arr, fmt='%.6e')
+            np.savetxt(fname=out_path, X=out_arr.T, fmt='%.6e', delimiter='\t')
         return out_arr
     return wrapper
 
 
-@ANTsImagePairToArray
+# @ANTsImagePairToArray
 def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
                                            mask_image: ants.core.ANTsImage,
                                            verbose: bool = False) -> np.ndarray:
@@ -250,14 +250,14 @@ def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
     return out_voxels
 
 
-@ANTsImagePairToArray
+# @ANTsImagePairToArray
 def extract_temporal_pca_comps_from_image_using_mask(input_image: ants.core.ANTsImage,
                                                      mask_image: ants.core.ANTsImage,
                                                      num_components: int = 3) -> np.ndarray:
     mask_voxels = extract_roi_tacs_from_image_using_mask(input_image=input_image,
                                                          mask_image=mask_image)
     voxels_pca_obj = PCA(n_components=num_components, svd_solver='full')
-    pca_fit = voxels_pca_obj.fit_transform(X=mask_voxels)
+    _ = voxels_pca_obj.fit_transform(X=mask_voxels)
     return np.asarray(voxels_pca_obj.components_[:])
 
 
