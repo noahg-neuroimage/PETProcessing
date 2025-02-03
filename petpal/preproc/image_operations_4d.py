@@ -272,7 +272,7 @@ def generate_temporal_pca_quantile_thresholded_tacs_from_image_using_mask(input_
     assert threshold_component >= 0, "Threshold component must be >= 0."
     assert threshold_component < num_components, "Threshold component must be < num_components."
     assert np.min(quantiles) > 0, "Quantiles must be > 0."
-    assert np.max(quantiles) < 0, "Quantiles must be < 1."
+    assert np.max(quantiles) < 1, "Quantiles must be < 1."
 
     mask_voxels = extract_roi_tacs_from_image_using_mask(input_image=input_image,
                                                          mask_image=mask_image)
