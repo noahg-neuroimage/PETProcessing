@@ -261,6 +261,10 @@ def extract_temporal_pca_comps_from_image_using_mask(input_image: ants.core.ANTs
     return np.asarray(voxels_pca_obj.components_[:])
 
 
+step_extract_roi_tacs_from_image_using_mask = ANTsImagePairToArray(extract_roi_tacs_from_image_using_mask)
+step_extract_temporal_pca_comps_from_image_using_mask = ANTsImagePairToArray(extract_temporal_pca_comps_from_image_using_mask)
+
+
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
                                                        segmentation_image_numpy: np.ndarray,
                                                        region: int,
