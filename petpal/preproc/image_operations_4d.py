@@ -286,7 +286,7 @@ def generate_temporal_pca_quantile_thresholded_tacs_from_image_using_mask(input_
     thresholds = np.quantile(voxels_pca_fit[:, threshold_component], quantiles)
 
     for thresh_id, thresh in enumerate(thresholds):
-        valid_pts = voxels_pca_fit[:, thresh_id] > thresh
+        valid_pts = voxels_pca_fit[:, threshold_component] > thresh
         out_tacs[thresh_id] = np.mean(mask_voxels[valid_pts], axis=0)
     return out_tacs
 
