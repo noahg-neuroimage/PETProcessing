@@ -288,6 +288,7 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
         out_tacs[thresh_id] = np.mean(mask_voxels[valid_pts], axis=0)
     return out_tacs
 
+
 def generate_temporal_pca_quantile_thresholded_tacs_for_image_using_mask(input_image_path: str,
                                                                          mask_image_path: str,
                                                                          output_tacs_path: str,
@@ -300,9 +301,7 @@ def generate_temporal_pca_quantile_thresholded_tacs_for_image_using_mask(input_i
     if tac_times[-1] > 300:
         tac_times /= 60.0
 
-
     num_frames = len(tac_times)
-
     pca_tacs = np.zeros((len(quantiles) + 1, num_frames))
     pca_tacs[0] = tac_times.copy()
 
@@ -319,10 +318,62 @@ def generate_temporal_pca_quantile_thresholded_tacs_for_image_using_mask(input_i
     return pca_tacs
 
 
+def extract_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                                                         mask_image: ants.core.ANTsImage,
+                                                                         first_comp_quantile_threshold: float = 0.9,
+                                                                         lower_comps_quantile_threshold: float = 0.05) -> np.ndarray:
+
+    assert first_comp_quantile_threshold >= 0, "First PC threshold quantile must be >= 0."
+    assert lower_comps_quantile_threshold >= 0, "Lower PCs threshold quantile must be >= 0."
+
+    mask_voxels = extract_roi_tacs_from_image_using_mask(input_image=input_image,
+                                                         mask_image=mask_image)
+    voxels_pca_obj = PCA(n_components=3, svd_solver='full', whiten=True)
+    voxels_pca_fit = voxels_pca_obj.fit_transform(X=mask_voxels)
+
+    first_comp_thresh = np.quantile(voxels_pca_fit[:, 0], first_comp_quantile_threshold)
+    second_comp_thresh = np.quantile(voxels_pca_fit[:, 1], lower_comps_quantile_threshold)
+    third_comp_thresh = np.quantile(voxels_pca_fit[:, 2], lower_comps_quantile_threshold)
+
+    valid_pts = voxels_pca_fit[:, 0] > first_comp_thresh
+    valid_pts *= voxels_pca_fit[:, 1] < second_comp_thresh
+    valid_pts *= voxels_pca_fit[:, 2] < third_comp_thresh
+
+    out_tac = np.mean(mask_voxels[valid_pts], axis=0)
+    return out_tac
+
+def generate_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_image_path: str,
+                                                                          mask_image_path: str,
+                                                                          output_tacs_path: str,
+                                                                          first_comp_quantile_threshold: float = 0.9,
+                                                                          lower_comps_quantile_threshold: float = 0.05) -> np.ndarray:
+    image_time_info_dict = image_io.get_frame_timing_info_for_nifti(image_path=input_image_path)
+
+    tac_times = (image_time_info_dict['start'] + image_time_info_dict['start']) / 2.0
+    if tac_times[-1] > 300:
+        tac_times /= 60.0
+
+    num_frames = len(tac_times)
+    pca_tac = np.zeros((2, num_frames))
+    pca_tac[0] = tac_times.copy()
+    extract_func = extract_temporal_pca_quantile_thresholded_idif_from_image_using_mask
+    pca_tac[1:] = extract_func(input_image=ants.image_read(input_image_path),
+                               mask_image=ants.image_read(mask_image_path),
+                               first_comp_quantile_threshold=first_comp_quantile_threshold,
+                               lower_comps_quantile_threshold=lower_comps_quantile_threshold,)
+
+    if output_tacs_path is not None:
+        col_headers = "\t".join(['time(mins)', "activity"])
+        np.savetxt(fname=output_tacs_path, X=pca_tac.T, fmt="%.6e", delimiter='\t', header=col_headers)
+
+    return pca_tac
+
 
 step_extract_roi_tacs_from_image_using_mask = ANTsImagePairToArray(extract_roi_tacs_from_image_using_mask)
 step_extract_temporal_pca_comps_from_image_using_mask = ANTsImagePairToArray(extract_temporal_pca_comps_from_image_using_mask)
-step_generate_temporal_pca_quantile_thresholded_tacs_from_image_using_mask = ANTsImagePairToArray(extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask)
+step_extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask = ANTsImagePairToArray(extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask)
+step_extract_temporal_pca_quantile_thresholded_idif_from_image_using_mask = ANTsImagePairToArray(extract_temporal_pca_quantile_thresholded_idif_from_image_using_mask)
+
 
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
                                                        segmentation_image_numpy: np.ndarray,
