@@ -339,7 +339,11 @@ def extract_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_i
     valid_pts *= voxels_pca_fit[:, 1] < second_comp_thresh
     valid_pts *= voxels_pca_fit[:, 2] < third_comp_thresh
 
-    out_tac = np.mean(mask_voxels[valid_pts], axis=0)
+    out_tac = np.zeros(mask_voxels.shape[-1], float)
+
+    if valid_pts.sum() != 0:
+        out_tac = np.mean(mask_voxels[valid_pts], axis=0)
+
     return out_tac
 
 def generate_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_image_path: str,
