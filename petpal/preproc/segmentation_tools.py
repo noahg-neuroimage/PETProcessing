@@ -372,5 +372,5 @@ def calc_vesselness_mask_from_quantiled_vesselness(input_image: ants.core.ANTsIm
         vess_mask = vess_mask.morphology(operation='dilate', radius=morph_dil_radius)
     return vess_mask
 
-step_calc_normalized_vesselness_measure = ANTsImageToANTsImage(calc_vesselness_measure_image)
-step_calc_vesselness_mask_from_normalized_vesselness = ANTsImageToANTsImage(calc_vesselness_mask_from_quantiled_vesselness)
+step_calc_vesselness_measure_image = ANTsImageToANTsImage(calc_vesselness_measure_image)
+step_calc_vesselness_mask_from_quantiled_vesselness = ANTsImageToANTsImage(calc_vesselness_mask_from_quantiled_vesselness)
