@@ -297,7 +297,7 @@ def generate_temporal_pca_quantile_thresholded_tacs_for_image_using_mask(input_i
                                                                          quantiles: np.ndarray = np.asarray([0.5, 0.75, 0.9, 0.975])) -> np.ndarray:
     image_time_info_dict = image_io.get_frame_timing_info_for_nifti(image_path=input_image_path)
 
-    tac_times = ( image_time_info_dict['start'] + image_time_info_dict['start'] ) / 2.0
+    tac_times = ( image_time_info_dict['start'] + image_time_info_dict['end'] ) / 2.0
     if tac_times[-1] > 300:
         tac_times /= 60.0
 
@@ -353,7 +353,7 @@ def generate_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_
                                                                           lower_comps_quantile_threshold: float = 0.05) -> np.ndarray:
     image_time_info_dict = image_io.get_frame_timing_info_for_nifti(image_path=input_image_path)
 
-    tac_times = (image_time_info_dict['start'] + image_time_info_dict['start']) / 2.0
+    tac_times = (image_time_info_dict['start'] + image_time_info_dict['end']) / 2.0
     if tac_times[-1] > 300:
         tac_times /= 60.0
 

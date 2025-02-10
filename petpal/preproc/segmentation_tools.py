@@ -336,35 +336,41 @@ def ANTsImageToANTsImage(func):
     return wrapper
 
 
-def calc_normalized_vesselness_measure(input_image: ants.core.ANTsImage,
-                                       sig_min: float = 1.0,
-                                       sig_max: float = 8.0,
-                                       alpha: float = 2.0,
-                                       beta: float = 0.2,
-                                       gamma_scale: float = 1.0,
-                                       morph_open_radius: int = 1) -> ants.core.ANTsImage:
+def calc_vesselness_measure_image(input_image: ants.core.ANTsImage,
+                                  sig_min: float = 1.0,
+                                  sig_max: float = 8.0,
+                                  alpha: float = 2.0,
+                                  beta: float = 0.2,
+                                  gamma: float = 5.0,
+                                  morph_open_radius: int = 1) -> ants.core.ANTsImage:
     assert len(input_image.shape) == 3, "Input image must be 3D."
-    hess_objectness_img = input_image.hessian_objectness(sigma_min=sig_min,
-                                                         sigma_max=sig_max,
-                                                         gamma=input_image.max() / gamma_scale,
-                                                         alpha=alpha,
-                                                         beta=beta)
+
+    tmp_img = input_image / input_image.max()
+    hess_objectness_img = tmp_img.hessian_objectness(sigma_min=sig_min,
+                                                     sigma_max=sig_max,
+                                                     gamma=gamma,
+                                                     alpha=alpha,
+                                                     beta=beta)
     if morph_open_radius > 0:
         hess_objectness_img = hess_objectness_img.morphology(operation='open',
                                                              radius=morph_open_radius,
                                                              mtype='grayscale')
-    hess_objectness_img /= hess_objectness_img.max()
     return hess_objectness_img
 
 
-def calc_vesselness_mask_from_normalized_vesselness(input_image: ants.core.ANTsImage,
-                                                    vmin: float = 1e-2,
-                                                    vmax: float = 1.0,
-                                                    morph_dil_radius: int = 1) -> ants.core.ANTsImage:
-    vess_mask = input_image.threshold_image(low_thresh=vmin, high_thresh=vmax)
+def calc_vesselness_mask_from_quantiled_vesselness(input_image: ants.core.ANTsImage,
+                                                   min_quartile: float = 0.99,
+                                                   morph_dil_radius: int = 0) -> ants.core.ANTsImage:
+    assert 1 > min_quartile >= 0, "Minimal quartile must be greater than 0 and less than 1."
+
+    vess_vals_arr = input_image.numpy()
+    vess_vals_arr = vess_vals_arr[vess_vals_arr !=0 ].flatten()
+    thresh_val = np.quantile(vess_vals_arr, q=min_quartile)
+    vess_mask = input_image.threshold_image(low_thresh=thresh_val, high_thresh=None)
+
     if morph_dil_radius > 0:
         vess_mask = vess_mask.morphology(operation='dilate', radius=morph_dil_radius)
     return vess_mask
 
-step_calc_normalized_vesselness_measure = ANTsImageToANTsImage(calc_normalized_vesselness_measure)
-step_calc_vesselness_mask_from_normalized_vesselness = ANTsImageToANTsImage(calc_vesselness_mask_from_normalized_vesselness)
+step_calc_normalized_vesselness_measure = ANTsImageToANTsImage(calc_vesselness_measure_image)
+step_calc_vesselness_mask_from_normalized_vesselness = ANTsImageToANTsImage(calc_vesselness_mask_from_quantiled_vesselness)
