@@ -360,13 +360,16 @@ def calc_vesselness_measure_image(input_image: ants.core.ANTsImage,
 
 def calc_vesselness_mask_from_quantiled_vesselness(input_image: ants.core.ANTsImage,
                                                    min_quartile: float = 0.99,
-                                                   morph_dil_radius: int = 0) -> ants.core.ANTsImage:
+                                                   morph_dil_radius: int = 0,
+                                                   z_crop:int = 3) -> ants.core.ANTsImage:
     assert 1 > min_quartile >= 0, "Minimal quartile must be greater than 0 and less than 1."
 
     vess_vals_arr = input_image.numpy()
     vess_vals_arr = vess_vals_arr[vess_vals_arr !=0 ].flatten()
     thresh_val = np.quantile(vess_vals_arr, q=min_quartile)
     vess_mask = input_image.threshold_image(low_thresh=thresh_val, high_thresh=None)
+
+    vess_mask[:, :, :z_crop] = 0
 
     if morph_dil_radius > 0:
         vess_mask = vess_mask.morphology(operation='dilate', radius=morph_dil_radius)
