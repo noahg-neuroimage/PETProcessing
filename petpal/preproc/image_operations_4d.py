@@ -321,10 +321,12 @@ def generate_temporal_pca_quantile_thresholded_tacs_for_image_using_mask(input_i
 def extract_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_image: ants.core.ANTsImage,
                                                                          mask_image: ants.core.ANTsImage,
                                                                          first_comp_quantile_threshold: float = 0.9,
-                                                                         lower_comps_quantile_threshold: float = 0.05) -> np.ndarray:
+                                                                         second_comp_quantile_threshold: float = 0.05,
+                                                                         third_comp_quantile_threshold: float = 0.9) -> np.ndarray:
 
     assert first_comp_quantile_threshold >= 0, "First PC threshold quantile must be >= 0."
-    assert lower_comps_quantile_threshold >= 0, "Lower PCs threshold quantile must be >= 0."
+    assert second_comp_quantile_threshold >= 0, "Second PC threshold quantile must be >= 0."
+    assert third_comp_quantile_threshold >= 0, "Third PC threshold quantile must be >= 0."
 
     mask_voxels = extract_roi_tacs_from_image_using_mask(input_image=input_image,
                                                          mask_image=mask_image)
@@ -332,8 +334,8 @@ def extract_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_i
     voxels_pca_fit = voxels_pca_obj.fit_transform(X=mask_voxels)
 
     first_comp_thresh = np.quantile(voxels_pca_fit[:, 0], first_comp_quantile_threshold)
-    second_comp_thresh = np.quantile(voxels_pca_fit[:, 1], lower_comps_quantile_threshold)
-    third_comp_thresh = np.quantile(voxels_pca_fit[:, 2], lower_comps_quantile_threshold)
+    second_comp_thresh = np.quantile(voxels_pca_fit[:, 1], second_comp_quantile_threshold)
+    third_comp_thresh = np.quantile(voxels_pca_fit[:, 2], third_comp_quantile_threshold)
 
     valid_pts = voxels_pca_fit[:, 0] > first_comp_thresh
     valid_pts *= voxels_pca_fit[:, 1] < second_comp_thresh
@@ -350,7 +352,8 @@ def generate_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_
                                                                           mask_image_path: str,
                                                                           output_tacs_path: str,
                                                                           first_comp_quantile_threshold: float = 0.9,
-                                                                          lower_comps_quantile_threshold: float = 0.05) -> np.ndarray:
+                                                                          second_comp_quantile_threshold: float = 0.05,
+                                                                          third_comp_quantile_threshold: float = 0.9) -> np.ndarray:
     image_time_info_dict = image_io.get_frame_timing_info_for_nifti(image_path=input_image_path)
 
     tac_times = (image_time_info_dict['start'] + image_time_info_dict['end']) / 2.0
@@ -364,7 +367,8 @@ def generate_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_
     pca_tac[1:] = extract_func(input_image=ants.image_read(input_image_path),
                                mask_image=ants.image_read(mask_image_path),
                                first_comp_quantile_threshold=first_comp_quantile_threshold,
-                               lower_comps_quantile_threshold=lower_comps_quantile_threshold,)
+                               second_comp_quantile_threshold=second_comp_quantile_threshold,
+                               third_comp_quantile_threshold=third_comp_quantile_threshold,)
 
     if output_tacs_path is not None:
         col_headers = "\t".join(['time(mins)', "activity"])
