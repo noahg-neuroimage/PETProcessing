@@ -23,6 +23,7 @@ import tempfile
 import ants
 import nibabel
 import numpy as np
+import lmfit
 from scipy.ndimage import center_of_mass
 from sklearn.decomposition import PCA
 from ..utils.useful_functions import weighted_series_sum, check_physical_space_for_ants_image_pair
@@ -375,6 +376,75 @@ def generate_temporal_pca_quantile_thresholded_idif_from_image_using_mask(input_
         np.savetxt(fname=output_tacs_path, X=pca_tac.T, fmt="%.6e", delimiter='\t', header=col_headers)
 
     return pca_tac
+
+def generate_pca_guided_idif(input_image_path: str, mask_image_path: str, output_tac_path: str, alpha=1.0, beta=1.0):
+
+    image_time_info_dict = image_io.get_frame_timing_info_for_nifti(image_path=input_image_path)
+
+    tac_times = (image_time_info_dict['start'] + image_time_info_dict['end']) / 2.0
+    if tac_times[-1] > 300:
+        tac_times /= 60.0
+
+    mask_voxels = extract_roi_tacs_from_image_using_mask(input_image=ants.image_read(input_image_path),
+                                                         mask_image=ants.image_read(mask_image_path))
+
+    voxels_pca_obj = PCA(n_components=3, svd_solver='full', whiten=True)
+    voxels_pca_fit = voxels_pca_obj.fit_transform(X=mask_voxels)
+
+    fit_pars = lmfit.create_params(pc1={'value': 0.9, 'vary': True, 'min': 1e-3, 'max': 0.99},
+                                   pc2={'value': 0.1 / 2., 'vary': True, 'min': 1e-3, 'max': 0.99},
+                                   pc3={'value': 0.9, 'vary': True, 'min': 1e-3, 'max': 0.99})
+
+
+    def residual(params, pc_vals, vox_tacs, alpha, beta):
+        parvals = params.valuesdict()
+        pc1_quant = parvals['pc1']
+        pc2_quant = parvals['pc2']
+        pc3_quant = parvals['pc3']
+
+        pc1, pc2, pc3 = pc_vals.T
+        gd_pts = pc1 > np.quantile(pc1, pc1_quant)
+        gd_pts *= pc2 < np.quantile(pc2, pc2_quant)
+        gd_pts *= pc3 < np.quantile(pc3, pc3_quant)
+
+        num_voxs = np.sum(gd_pts)
+        if num_voxs >= 3:
+            tmp_tacs = vox_tacs[gd_pts]
+            tacs_std = np.std(tmp_tacs, axis=0)
+            tacs_avg = np.mean(tmp_tacs, axis=0)
+            relErr = np.nansum(tacs_std / tacs_avg)
+            smTerm = np.sqrt(np.sum(np.abs(np.diff(tacs_avg) ** 2.)))
+            return relErr - alpha * np.max(tacs_avg) + beta * smTerm
+        else:
+            return np.nansum(np.std(vox_tacs, axis=0)/np.mean(vox_tacs, axis=0))
+
+    fit_object = lmfit.minimize(fcn=residual,
+                                params=fit_pars,
+                                args=(voxels_pca_fit, mask_voxels, alpha, beta),
+                                method='ampgo',
+                                nan_policy='omit')
+
+    fit_vals =fit_object.params.valuesdict()
+    pc1_quant = fit_vals['pc1']
+    pc2_quant = fit_vals['pc2']
+    pc3_quant = fit_vals['pc3']
+
+    pc1, pc2, pc3 = voxels_pca_fit.T
+    fit_gd_pts = pc1 > np.quantile(pc1, pc1_quant)
+    fit_gd_pts *= pc2 < np.quantile(pc2, pc2_quant)
+    fit_gd_pts *= pc3 < np.quantile(pc3, pc3_quant)
+
+    fit_gd_tacs = mask_voxels[fit_gd_pts]
+    fit_idif_vals = np.mean(fit_gd_tacs, axis=0)
+    fit_idif_err = np.std(fit_gd_tacs, axis=0)
+
+    idif_tac = np.asarray([tac_times, fit_idif_vals, fit_idif_err])
+
+    if output_tac_path is not None:
+        col_headers = "\t".join(['time(mins)', "activity", "stderr"])
+        np.savetxt(fname=output_tac_path, X=idif_tac.T, fmt="%.6e", delimiter='\t', header=col_headers)
+
+    return idif_tac
 
 
 step_extract_roi_tacs_from_image_using_mask = ANTsImagePairToArray(extract_roi_tacs_from_image_using_mask)
