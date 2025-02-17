@@ -326,6 +326,14 @@ def vat_wm_region_merge(wmparc_segmentation_path: str,
     nibabel.save(out_file,out_image_path)
 
 
+def whole_cerebellum_ref_region(freesurfer_path: str):
+    """
+    Replace cerebellum regions in a FreeSurfer segmentation image with a single 
+    """
+    return 0
+
+
+
 def gw_segmentation(freesurfer_path: str,
                     dseg_path: str,
                     output_path: str):
