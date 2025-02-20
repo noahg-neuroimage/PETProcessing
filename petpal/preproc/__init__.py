@@ -5,6 +5,7 @@ from . import preproc
 from . import register
 from . import symmetric_geometric_transfer_matrix
 from . import segmentation_tools
+from . import decay_correction
 
 
 def main():

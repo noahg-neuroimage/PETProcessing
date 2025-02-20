@@ -13,7 +13,7 @@ import pathlib
 from bids_validator import BIDSValidator
 from nibabel.filebasedimages import FileBasedImage
 from nibabel.nifti1 import Nifti1Image
-
+from petpal.utils.image_io import safe_load_meta
 
 class BidsInstance:
     """
@@ -307,7 +307,7 @@ class BidsInstance:
             Warning: Issues a runtime warning through the `warnings` module if required keys are missing
                 from the JSON data.
         """
-        metadata_cache = load_json(filepath=pet_sidecar_filepath)
+        metadata_cache = safe_load_meta(input_metadata_file=pet_sidecar_filepath)
         json_keys = metadata_cache.keys()
         for keys in self.required_metadata:
             if isinstance(keys, list):
@@ -493,9 +493,8 @@ class BidsInstance:
         if os.path.exists(filepath) or os.path.islink(filepath):
             if filepath.endswith(".nii") or filepath.endswith(".nii.gz"):
                 print("Nifti")
-                # file = ImageIO.load_nii(filepath=self.filepath)
             elif filepath.endswith(".json"):
-                file = load_json(filepath=filepath)
+                file = safe_load_meta(input_metadata_file=filepath)
             elif filepath.endswith(".tsv"):
                 file = load_tsv_simple(filepath=filepath)
             else:
@@ -589,32 +588,6 @@ def save_json(json_dict: dict,
     with open(filepath, 'w') as file:
         json.dump(json_dict, file, indent=4)
         file.write('\n')
-
-
-def load_json(filepath: str):
-    """
-    Loads a JSON file from the specified filepath and returns its content as a dictionary.
-
-    Args:
-        filepath (str): The path to the JSON file to be loaded.
-
-    Returns:
-        dict: The JSON file content as a dictionary.
-
-    Raises:
-        FileNotFoundError: If the specified file does not exist.
-        json.JSONDecodeError: If the file content is not valid JSON.
-    """
-    try:
-        with open(filepath, 'r') as file:
-            data = json.load(file)
-        return data
-    except FileNotFoundError:
-        print(f"File not found: {filepath}")
-        return None
-    except json.JSONDecodeError:
-        print(f"Error decoding JSON from file: {filepath}")
-        return None
 
 
 def save_array_as_tsv(array: numpy.array,
