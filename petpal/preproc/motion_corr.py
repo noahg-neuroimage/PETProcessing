@@ -451,6 +451,7 @@ def windowed_motion_corr_to_target(input_image_path: str,
                                    w_size: float,
                                    type_of_transform: str = 'QuickRigid',
                                    interpolator: str = 'linear',
+                                   copy_metadata: bool = True,
                                    **kwargs):
     """
     Performs windowed motion correction (MoCo) to align frames of a 4D PET image to a given target image.
@@ -531,6 +532,9 @@ def windowed_motion_corr_to_target(input_image_path: str,
     if out_image_path is not None:
         ants.image_write(image=out_image, filename=out_image_path)
 
+    if copy_metadata:
+        image_io.safe_copy_meta(input_image_path=input_image_path,
+                                out_image_path=out_image_path)
     return out_image
 
 def gen_timeseries_from_image_list(image_list: list[ants.core.ANTsImage]) -> ants.core.ANTsImage:

@@ -196,7 +196,7 @@ class BIDSyPathsForRawData:
         else:
             val_path = pathlib.Path(value)
             val_suff = "".join(val_path.suffixes)
-            if val_path.is_file() and val_suff == '.nii.gz':
+            if val_path.is_file() and val_suff in ('.nii.gz','.nii'):
                 self._raw_pet_path = value
             else:
                 raise FileNotFoundError(f"File does not exist: {value}")
@@ -227,7 +227,7 @@ class BIDSyPathsForRawData:
         else:
             val_path = pathlib.Path(value)
             val_suff = "".join(val_path.suffixes)
-            if val_path.is_file() and val_suff == '.nii.gz':
+            if val_path.is_file() and val_suff in ('.nii.gz','.nii'):
                 self._raw_anat_path = value
             else:
                 raise FileNotFoundError(f"File does not exist: {value}")
