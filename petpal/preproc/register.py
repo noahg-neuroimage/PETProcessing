@@ -9,7 +9,6 @@ import ants
 import nibabel
 from nibabel.processing import resample_from_to
 
-from ..utils.useful_functions import weighted_series_sum
 from ..utils import image_io
 from . import image_operations_4d
 
