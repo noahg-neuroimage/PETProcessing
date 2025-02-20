@@ -14,11 +14,14 @@ import ants
 import numpy as np
 import nibabel
 from nibabel import processing
+import pandas as pd
 
 from petpal.preproc import motion_corr
-import pandas as pd
 from . import image_operations_4d
 from ..utils import math_lib
+
+
+_SUBCORTICAL_MAPPINGS_ = [7,8,10,11,12,13,49,50,51,52,173,174,175]
 
 
 def region_blend(segmentation_numpy: np.ndarray,
@@ -359,18 +362,38 @@ def gw_segmentation(freesurfer_path: str,
     ants.image_write(gw_map_4d,output_path)
 
 
-def subcortical_mask(input_seg_path, output_seg_path,subcortical_regions=[7,8,10,11,12,13,49,50,51,52,173,174,175]):
+def subcortical_mask(input_seg_path: str,
+                     output_seg_path: str=None,
+                     subcortical_regions: list=None):
+    """
+    Gets a mask for subcortical regions from a FreeSurfer label image.
+
+    Args:
+        input_seg_path (str): Path to segmentation label image.
+        output_seg_path (str): Path to which subcortical mask is saved.
+        subcortical regions (list): Regions to include in the subcortical mask. Uses a built in
+            list of subcortical mappings unless overridden by the user.
+    
+    Returns:
+        subcortical_img (ants.ANTsImage): Subcortical mask image.
+    """
+    if subcortical_regions is None:
+        subcortical_regions = _SUBCORTICAL_MAPPINGS_
+
     segmentation = ants.image_read(input_seg_path)
     segmentation_np = segmentation.numpy()
-    subcortical_mask = np.zeros(segmentation_np.shape)
+    subcortical_mask_img = np.zeros(segmentation_np.shape)
     for region in subcortical_regions:
         region_seg = np.where(segmentation_np==region)
-        subcortical_mask[region_seg] = 1
+        subcortical_mask_img[region_seg] = 1
     subcortical_img = ants.from_numpy(
-        data=subcortical_mask,
+        data=subcortical_mask_img,
         origin=segmentation.origin,
         spacing=segmentation.spacing,
         direction=segmentation.direction
     )
-    ants.image_write(subcortical_img,output_seg_path)
+
+    if output_seg_path is not None:
+        ants.image_write(subcortical_img,output_seg_path)
+
     return subcortical_img
