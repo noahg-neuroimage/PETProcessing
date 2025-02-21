@@ -1,6 +1,6 @@
-# PET Processing Module
+# Positron Emissions Tomography Processing and Analysis Library (PETPAL)
 
-Test-bed for Brier Lab PET Processing.
+A comprehensive 4D-PET analysis software suite.
 
 ## Installation
 
@@ -9,7 +9,7 @@ In the top-level directory (where `pyproject.toml` exists), we run the following
 ```shell
 pip install build  # Ensures that the build package is available
 python -m build  # Generates a tarball and a wheel that we can use pip to install
-pip install dist/petpal-0.0.1.tar.gz # Installs the package
+pip install dist/petpal-0.0.2.tar.gz # Installs the package
 ```
 
 ## Generating Documentation
