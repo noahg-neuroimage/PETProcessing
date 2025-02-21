@@ -42,7 +42,7 @@ Examples:
 
 def _add_common_args(parser: argparse.ArgumentParser) -> None:
     """
-    Adds common arguments ('--input-img', '--out-img', '--verbose') to a provided ArgumentParser object.
+    Adds common arguments ('--input-img', '--output', '--verbose') to a provided ArgumentParser object.
 
     This function modifies the passed ArgumentParser object by adding three arguments commonly used in the script.
     It uses the add_argument method of the ArgumentParser class. After running this function, the parser will
@@ -71,7 +71,9 @@ def _add_common_args(parser: argparse.ArgumentParser) -> None:
             print(args.prefix)
 
     """
-    parser.add_argument('-o', '--out-img', default='petpal_wss_output.nii.gz', help='Output image filename')
+    parser.add_argument('-o', '--output',
+                        default='petpal_output.nii.gz',
+                        help='Output file or folder')
     parser.add_argument('-i', '--input-img',required=True,help='Path to input image.',type=str)
     parser.add_argument('-v', '--verbose', action='store_true',
                             help='Print processing information during computation.', required=False)
@@ -115,9 +117,19 @@ def _generate_args() -> argparse.Namespace:
                             required=True)
     parser_moco.add_argument('--transform-type', required=False,default='Rigid',
                              help='Transformation type (Rigid or Affine).',type=str)
-    parser_moco.add_argument('--half-life', required=False, 
+    parser_moco.add_argument('--half-life', required=False,
                              help='Half life of radioisotope in seconds.'
                                   'Required for some motion targets.',type=float)
+
+
+    parser_tacs = subparsers.add_parser('write-tacs',
+                                        help='Write TACs for each region in a segmentation image.')
+    _add_common_args(parser_tacs)
+    parser_tacs.add_argument('--seg-img',
+                             help='Segmentation image defining ROIs for which TACs are written',
+                             required=True)
+    parser_tacs.add_argument('--label-map',
+                             help='Path to label map (dseg.tsv) ')
 
     return parser
 
@@ -142,7 +154,7 @@ def main():
 
     if command=='weighted_series_sum':
         useful_functions.weighted_series_sum(input_image_4d_path=args.input_img,
-                                             out_image_path=args.out_img,
+                                             out_image_path=args.output,
                                              half_life=args.half_life,
                                              start_time=args.start_time,
                                              end_time=args.end_time,
@@ -150,7 +162,7 @@ def main():
 
     if command=='auto_crop':
         image_operations_4d.SimpleAutoImageCropper(input_image_path=args.input_img,
-                                                   out_image_path=args.out_img,
+                                                   out_image_path=args.output,
                                                    thresh_val=args.thresh_val,
                                                    verbose=args.verbose)
 
@@ -160,11 +172,20 @@ def main():
         else:
             motion_target = args.motion_target
         motion_corr.motion_corr(input_image_4d_path=args.input_img,
-                                out_image_path=args.out_img,
+                                out_image_path=args.output,
                                 motion_target_option=motion_target,
                                 verbose=True,
                                 type_of_transform=args.transform_type,
                                 half_life=args.half_life)
+
+    if command=='write-tacs':
+        image_operations_4d.write_tacs(input_image_path=args.input_img,
+                                       segmentation_image_path=args.seg_img,
+                                       out_tac_dir=args.output,
+                                       label_map_path='PLACEHOLDER',
+                                       verbose=args.verbose,
+                                       time_frame_keyword='PLACEHOLDER',
+                                       out_tac_prefix=args.patid)
 
 if __name__ == "__main__":
     main()
