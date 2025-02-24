@@ -424,20 +424,72 @@ def ANTsImageToANTsImage(func):
 
 
 def calc_vesselness_measure_image(input_image: ants.core.ANTsImage,
-                                  sig_min: float = 1.0,
-                                  sig_max: float = 8.0,
-                                  alpha: float = 2.0,
-                                  beta: float = 0.2,
+                                  sigma_min: float = 2.0,
+                                  sigma_max: float = 8.0,
+                                  alpha: float = 0.5,
+                                  beta: float = 0.5,
                                   gamma: float = 5.0,
-                                  morph_open_radius: int = 1) -> ants.core.ANTsImage:
+                                  morph_open_radius: int = 1,
+                                  **hessian_func_kwargs) -> ants.core.ANTsImage:
+    """
+    Computes a vesselness measure image using Hessian-based objectness filtering.
+
+    This function calculates the vesselness measure of a given 3D image using
+    multi-scale Hessian filtering with specified parameters. We call the
+    :func:`ants.hessian_objectness` after max-normalizing the input image.
+    It enhances tubular structures like vessels, making them more pronounced
+    in the output image. Optionally, a morphological opening operation can be
+    applied to the result to refine the output and remove pepper-like artefacts.
+
+    Args:
+        input_image (ants.core.ANTsImage): Input 3D image for vesselness computation.
+        sigma_min (float, optional): Minimum scale for multi-scale Hessian filtering
+            (default: 2.0).
+        sigma_max (float, optional): Maximum scale for multi-scale Hessian filtering
+            (default: 8.0).
+        alpha (float, optional): Alpha parameter for vesselness computation
+            (default: 0.5).
+        beta (float, optional): Beta parameter for vesselness computation
+            (default: 0.5).
+        gamma (float, optional): Gamma parameter for vesselness computation
+            (default: 5.0).
+        morph_open_radius (int, optional): Radius for the optional morphological
+            opening operation (default: 1). If set to 0, no morphological opening
+            will be applied.
+        **hessian_func_kwargs: Additional keyword arguments for the Hessian
+            objectness function.
+
+    Returns:
+        ants.core.ANTsImage: The vesselness-enhanced image.
+
+    Notes:
+        - Input image must be 3D; an assertion will fail if a non-3D image is provided.
+        - The input image is normalized before processing to ensure robustness.
+        - Morphological opening, if applied, uses a grayscale operation to refine
+          the tubular structures.
+        - The function has defaults for vesselness computation, but can be used to detect
+          globular or plate-like structures as well.
+
+    Raises:
+        AssertionError: If the input image is not 3D.
+
+    Workflow:
+        1. Normalize the input image to have values between 0 and 1.
+        2. Apply Hessian-based objectness filtering using the provided parameters
+           (`sigma_min`, `sigma_max`, `alpha`, `beta`, `gamma`).
+        3. Perform a morphological opening operation with the specified radius
+           (`morph_open_radius`), if applicable.
+        4. Return the computed vesselness image.
+    """
     assert len(input_image.shape) == 3, "Input image must be 3D."
 
     tmp_img = input_image / input_image.max()
-    hess_objectness_img = tmp_img.hessian_objectness(sigma_min=sig_min,
-                                                     sigma_max=sig_max,
+    hess_objectness_img = tmp_img.hessian_objectness(sigma_min=sigma_min,
+                                                     sigma_max=sigma_max,
                                                      gamma=gamma,
                                                      alpha=alpha,
-                                                     beta=beta)
+                                                     beta=beta,
+                                                     **hessian_func_kwargs)
     if morph_open_radius > 0:
         hess_objectness_img = hess_objectness_img.morphology(operation='open',
                                                              radius=morph_open_radius,
