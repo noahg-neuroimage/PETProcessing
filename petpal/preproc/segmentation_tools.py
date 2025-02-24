@@ -21,7 +21,6 @@ from . import image_operations_4d
 from ..utils import math_lib
 
 
-_SUBCORTICAL_MAPPINGS_ = [7,8,10,11,12,13,49,50,51,52,173,174,175]
 
 
 def region_blend(segmentation_numpy: np.ndarray,
@@ -377,6 +376,8 @@ def subcortical_mask(input_seg_path: str,
     Returns:
         subcortical_img (ants.ANTsImage): Subcortical mask image.
     """
+    _SUBCORTICAL_MAPPINGS_ = [7,8,10,11,12,13,49,50,51,52,173,174,175]
+
     if subcortical_regions is None:
         subcortical_regions = _SUBCORTICAL_MAPPINGS_
 
