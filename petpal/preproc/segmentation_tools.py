@@ -15,9 +15,9 @@ import numpy as np
 import ants
 import nibabel
 from nibabel import processing
-
-from petpal.preproc import motion_corr
 import pandas as pd
+
+from . import motion_corr
 from . import image_operations_4d
 from ..utils import math_lib
 
