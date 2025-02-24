@@ -428,29 +428,31 @@ def suvr(input_image_path: str,
             segmentation image.
         verbose (bool): Set to ``True`` to output processing information. Default is False.
     """
-    pet_nibabel = nibabel.load(filename=input_image_path)
-    pet_image = pet_nibabel.get_fdata()
-    seg_nibabel = nibabel.load(filename=segmentation_image_path)
-    seg_image = seg_nibabel.get_fdata()
+    pet_image = ants.image_read(filename=input_image_path)
+    pet_data = pet_image.numpy()
+    segmentation_image = ants.image_read(filename=segmentation_image_path,
+                                        pixeltype='unsigned int')
+    segmentation_data = segmentation_image.numpy()
 
-    if len(pet_image.shape)!=3:
-        raise ValueError("SUVR input image is not 3D. If your image is dynamic"
-                         ", try running 'weighted_series_sum' first.")
+    if len(pet_data.shape)!=3:
+        raise ValueError("SUVR input image is not 3D. If your image is dynamic, try running 'weighted_series_sum'"
+                         " first.")
 
-    ref_region_avg = extract_tac_from_nifty_using_mask(input_image_4d_numpy=pet_image,
-                                                       segmentation_image_numpy=seg_image,
+    ref_region_avg = extract_tac_from_nifty_using_mask(input_image_4d_numpy=pet_data,
+                                                       segmentation_image_numpy=segmentation_data,
                                                        region=ref_region,
                                                        verbose=verbose)
 
-    suvr_image = pet_image / ref_region_avg[0]
+    suvr_data = pet_data / ref_region_avg[0]
 
-    out_image = nibabel.nifti1.Nifti1Image(dataobj=suvr_image,
-                                           affine=pet_nibabel.affine,
-                                           header=pet_nibabel.header)
-    nibabel.save(img=out_image,filename=out_image_path)
+    out_image = ants.from_numpy_like(data=suvr_data,
+                                     image=pet_image)
 
-    image_io.safe_copy_meta(input_image_path=input_image_path,
-                            out_image_path=out_image_path)
+    if out_image_path is not None:
+        ants.image_write(image=out_image,
+                         filename=out_image_path)
+        image_io.safe_copy_meta(input_image_path=input_image_path,
+                                out_image_path=out_image_path)
 
     return out_image
 
