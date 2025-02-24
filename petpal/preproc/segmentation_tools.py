@@ -498,21 +498,57 @@ def calc_vesselness_measure_image(input_image: ants.core.ANTsImage,
 
 
 def calc_vesselness_mask_from_quantiled_vesselness(input_image: ants.core.ANTsImage,
-                                                   min_quartile: float = 0.99,
+                                                   min_quantile: float = 0.99,
                                                    morph_dil_radius: int = 0,
-                                                   z_crop:int = 3) -> ants.core.ANTsImage:
-    assert 1 > min_quartile >= 0, "Minimal quartile must be greater than 0 and less than 1."
+                                                   z_crop: int = 3) -> ants.core.ANTsImage:
+    """
+    Generates a binary vesselness mask from a given vesselness image using quantile-based thresholding.
+
+    This function creates a binary mask by thresholding a vesselness image at a specified
+    quantile of non-zero voxel values. Additionally, it allows for optional z-axis cropping
+    and morphological dilation to refine the mask.
+
+    Args:
+        input_image (ants.core.ANTsImage): Input vesselness image.
+        min_quantile (float, optional): Minimum quantile value for voxel thresholding
+            (default: 0.99). Must be in the range [0, 1).
+        morph_dil_radius (int, optional): Radius for morphological dilation to refine the
+            mask (default: 0). No dilation is applied if set to 0.
+        z_crop (int, optional): Number of slices to crop from the z-axis from the bottom
+            (default: 3).
+
+    Returns:
+        ants.core.ANTsImage: Binary vesselness mask.
+
+    Notes:
+        - The input image must be an ANTs image containing vesselness measures.
+        - The quantile value (`min_quartile`) determines the threshold value based on
+          non-zero voxel intensities.
+        - If `z_crop` is greater than 0, the z-axis is cropped from the top and bottom.
+        - Morphological dilation is applied to the binary mask with the specified radius,
+          if provided.
+          
+    Raises:
+        - AssertionError: If the input image is not 3D.
+        - AssertionError: If the provided quantile is not in the range [0, 1].
+        - AssertionError: If the provided z-crop is larger than the number of z-slices in the
+          input image.
+
+    """
+    assert 1 >= min_quantile >= 0, "Minimal quantile must be greater than 0 and less than 1."
+    assert len(input_image.shape) == 3, "Input image must be 3D."
+    assert z_crop < input_image.shape[2], "Z-crop must be less than input image's Z-dimension."
 
     vess_vals_arr = input_image.numpy()
-    vess_vals_arr = vess_vals_arr[vess_vals_arr !=0 ].flatten()
-    thresh_val = np.quantile(vess_vals_arr, q=min_quartile)
-    vess_mask = input_image.threshold_image(low_thresh=thresh_val, high_thresh=None)
+    vess_vals_arr = vess_vals_arr[vess_vals_arr != 0].flatten()
+    thresh_val = np.quantile(vess_vals_arr, q=min_quantile)
+    vess_mask_img = input_image.threshold_image(low_thresh=thresh_val, high_thresh=None)
 
-    vess_mask[:, :, :z_crop] = 0
+    vess_mask_img[:, :, :z_crop] = 0
 
     if morph_dil_radius > 0:
-        vess_mask = vess_mask.morphology(operation='dilate', radius=morph_dil_radius)
-    return vess_mask
+        vess_mask_img = vess_mask_img.morphology(operation='dilate', radius=morph_dil_radius)
+    return vess_mask_img
 
 step_calc_vesselness_measure_image = ANTsImageToANTsImage(calc_vesselness_measure_image)
 step_calc_vesselness_mask_from_quantiled_vesselness = ANTsImageToANTsImage(calc_vesselness_mask_from_quantiled_vesselness)
