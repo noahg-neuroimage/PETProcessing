@@ -381,7 +381,7 @@ def subcortical_mask(input_seg_path: str,
             regions
         * Default regions: whole cerebellum, thalamus, caudate, putamen, pallidum, brainstem.
     """
-    subcortical_mappings = [7,8,10,11,12,13,49,50,51,52,173,174,175]
+    subcortical_mappings = [7,8,10,11,12,13,16,49,50,51,52,173,174,175]
 
     if subcortical_regions is None:
         subcortical_regions = subcortical_mappings
