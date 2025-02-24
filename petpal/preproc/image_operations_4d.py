@@ -409,7 +409,7 @@ def get_average_of_timeseries(input_image: ants.ANTsImage):
 
 
 def suvr(input_image_path: str,
-         out_image_path: str,
+         out_image_path: str | None,
          segmentation_image_path: str,
          ref_region: int,
          verbose: bool=False) -> ants.ANTsImage:
@@ -421,7 +421,7 @@ def suvr(input_image_path: str,
     Args:
         input_image_path (str): Path to 3D weighted series sum or other
             parametric image on which we compute SUVR.
-        out_image_path (str): Path to output image file which is written to.
+        out_image_path (str): Path to output image file which is written to. If None, no output is written.
         segmentation_image_path (str): Path to segmentation image, which we use
             to compute average uptake value in the reference region.
         ref_region (int): Region number mapping to the reference region in the
