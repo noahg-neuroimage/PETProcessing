@@ -24,7 +24,7 @@ import os
 import pathlib
 import datetime
 import tempfile
-import re
+import functools
 import ants
 import nibabel
 import numpy as np
