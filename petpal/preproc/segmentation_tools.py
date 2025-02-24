@@ -16,8 +16,7 @@ import nibabel
 from nibabel import processing
 import pandas as pd
 
-from petpal.preproc import motion_corr
-from . import image_operations_4d
+from . import image_operations_4d, motion_corr
 from ..utils import math_lib
 
 
