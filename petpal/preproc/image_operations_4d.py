@@ -30,8 +30,9 @@ import nibabel
 import numpy as np
 import lmfit
 from scipy.ndimage import center_of_mass
+from sklearn.decomposition import PCA
 
-from ..utils.useful_functions import weighted_series_sum
+from ..utils.useful_functions import weighted_series_sum, check_physical_space_for_ants_image_pair
 from ..utils import image_io, math_lib
 from ..preproc.decay_correction import undo_decay_correction, decay_correct
 
