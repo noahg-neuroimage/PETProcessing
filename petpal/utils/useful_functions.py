@@ -279,6 +279,24 @@ def read_plasma_glucose_concentration(file_path: str, correction_scale: float = 
 
 def check_physical_space_for_ants_image_pair(image_1: ants.core.ANTsImage,
                                              image_2: ants.core.ANTsImage) -> bool:
+    """
+    Determines whether two ANTs images share the same physical space. This function works
+    when comparing 4D-images with 3D-images, as opposed to
+    :func:`ants.image_physical_space_consistency`.
+
+    This function validates whether the direction matrices, spacing values, and origins
+    of the two provided ANTs images are consistent, ensuring they reside in the same
+    physical space.
+
+    Args:
+        image_1 (ants.core.ANTsImage): The first ANTs image for comparison.
+        image_2 (ants.core.ANTsImage): The second ANTs image for comparison.
+
+    Returns:
+        bool: `True` if both images share the same physical space, `False` otherwise.
+
+    """
+
 
     dir_cons = np.allclose(image_1.direction[:3,:3], image_2.direction[:3,:3])
     spc_cons = np.allclose(image_1.spacing[:3], image_2.spacing[:3])
