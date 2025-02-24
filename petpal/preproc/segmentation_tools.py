@@ -381,10 +381,10 @@ def subcortical_mask(input_seg_path: str,
             regions
         * Default regions: whole cerebellum, thalamus, caudate, putamen, pallidum, brainstem.
     """
-    _SUBCORTICAL_MAPPINGS_ = [7,8,10,11,12,13,49,50,51,52,173,174,175]
+    subcortical_mappings = [7,8,10,11,12,13,49,50,51,52,173,174,175]
 
     if subcortical_regions is None:
-        subcortical_regions = _SUBCORTICAL_MAPPINGS_
+        subcortical_regions = subcortical_mappings
 
     segmentation = ants.image_read(input_seg_path)
     segmentation_np = segmentation.numpy()
