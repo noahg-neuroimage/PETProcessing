@@ -30,7 +30,7 @@ import nibabel
 import numpy as np
 from scipy.ndimage import center_of_mass
 
-from ..utils.useful_functions import weighted_series_sum
+from ..utils.useful_functions import weighted_series_sum, check_physical_space_for_ants_image_pair
 from ..utils import image_io, math_lib
 from ..preproc.decay_correction import undo_decay_correction, decay_correct
 
@@ -568,6 +568,19 @@ def write_tacs(input_image_path: str,
         else:
             out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
         np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
+
+
+def extract_roi_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                           mask_image: ants.core.ANTsImage,
+                                           verbose: bool = False) -> np.ndarray:
+    assert len(input_image.shape) == 4, "Input image must be 4D."
+    assert check_physical_space_for_ants_image_pair(input_image, mask_image), ("Images must have "
+                                                                               "the same physical dimensions.")
+    x_inds, y_inds, z_inds = mask_image.nonzero()
+    out_voxels = input_image.numpy()[x_inds, y_inds, z_inds, :]
+    if verbose:
+        print(f"(ImageOps): Output TACs have shape {out_voxels.shape}")
+    return out_voxels
 
 
 class SimpleAutoImageCropper(object):
