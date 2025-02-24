@@ -187,7 +187,7 @@ def apply_xfm_ants(input_image_path: str,
                    ref_image_path: str,
                    out_image_path: str,
                    xfm_paths: list[str],
-                   copy_meta = False,
+                   copy_meta: bool = False,
                    **kwargs):
     """
     Applies existing transforms in ANTs or ITK format to an input image, onto
@@ -200,6 +200,11 @@ def apply_xfm_ants(input_image_path: str,
         out_image_path (str): Path to which the transformed image is saved.
         xfm_paths (list[str]): List of transforms to apply to image. Must be in
             ANTs or ITK format, and can be affine matrix or warp coefficients.
+        copy_meta (bool): If True, copies metadata file read from input_image_path as the metadata
+            for new image out_image_path.
+
+    Returns:
+        xfm_image (ants.ANTsImage): The input image transformed with an ANTs transform file.
     """
     pet_image_ants = ants.image_read(input_image_path)
     ref_image_ants = ants.image_read(ref_image_path)
