@@ -2,12 +2,11 @@
 Module to handle abstracted functionalities
 """
 import os
-from typing import Union
 import nibabel
 import numpy as np
 from scipy.interpolate import interp1d
 import ants
-from petpal.utils import image_io, math_lib
+from . import image_io, math_lib
 
 
 FULL_NAME = [
@@ -206,8 +205,8 @@ def weighted_series_sum(input_image_4d_path: str,
 
     return image_weighted_sum
 
-def weighted_series_sum_over_window_indecies(input_image_4d: Union[ants.core.ANTsImage, str],
-                                             output_image_path: Union[str, None],
+def weighted_series_sum_over_window_indecies(input_image_4d: ants.core.ANTsImage | str,
+                                             output_image_path: str | None,
                                              window_start_id: int,
                                              window_end_id: int,
                                              half_life: float,
