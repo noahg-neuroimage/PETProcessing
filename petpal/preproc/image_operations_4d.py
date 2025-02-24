@@ -407,9 +407,9 @@ def get_average_of_timeseries(input_image: ants.ANTsImage):
 
 
 def suvr(input_image_path: str,
+         out_image_path: str,
          segmentation_image_path: str,
          ref_region: int,
-         out_image_path: str,
          verbose: bool):
     """
     Computes an ``SUVR`` (Standard Uptake Value Ratio) by taking the average of
@@ -419,11 +419,11 @@ def suvr(input_image_path: str,
     Args:
         input_image_path (str): Path to 3D weighted series sum or other
             parametric image on which we compute SUVR.
+        out_image_path (str): Path to output image file which is written to.
         segmentation_image_path (str): Path to segmentation image, which we use
             to compute average uptake value in the reference region.
         ref_region (int): Region number mapping to the reference region in the
             segmentation image.
-        out_image_path (str): Path to output image file which is written to.
         verbose (bool): Set to ``True`` to output processing information.
     """
     pet_nibabel = nibabel.load(filename=input_image_path)
