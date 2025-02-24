@@ -63,7 +63,7 @@ def main():
     grp_params.add_argument("-t", "--threshold-in-mins", required=True, type=float,
                             help="Threshold in minutes below which data points will be discarded.")
     grp_params.add_argument("-m", "--method-name", required=True,
-                            choices=['patlak', 'logan', 'alt-logan'],
+                            choices=['patlak', 'logan', 'alt_logan'],
                             help="Name of the method for generating the plot.")
 
 

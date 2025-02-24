@@ -92,7 +92,7 @@ def build_label_map(region_names: list[str]):
 def weighted_series_sum(input_image_4d_path: str,
                         out_image_path: str,
                         half_life: float,
-                        verbose: bool,
+                        verbose: bool=False,
                         start_time: float=0,
                         end_time: float=-1) -> np.ndarray:
     r"""
@@ -122,6 +122,7 @@ def weighted_series_sum(input_image_4d_path: str,
     indicates the total quantity computed over all frames, and :math:`S(f)` is the final weighted
     sum image.
 
+    # TODO: Determine half_life from .json rather than passing as argument.
 
     Args:
         input_image_4d_path (str): Path to a .nii or .nii.gz file containing a 4D
@@ -129,9 +130,9 @@ def weighted_series_sum(input_image_4d_path: str,
             file exists with the same path and file name, but with extension .json,
             and follows BIDS standard.
         out_image_path (str): Path to a .nii or .nii.gz file to which the weighted
-            sum is written.
+            sum is written. If none, will not write output to a file.
         half_life (float): Half life of the PET radioisotope in seconds.
-        verbose (bool): Set to ``True`` to output processing information.
+        verbose (bool): Set to ``True`` to output processing information. Default is False.
         start_time (float): Time, relative to scan start in seconds, at which
             calculation begins. Must be used with ``end_time``. Default value 0.
         end_time (float): Time, relative to scan start in seconds, at which
@@ -195,17 +196,17 @@ def weighted_series_sum(input_image_4d_path: str,
                              frame_start=frame_start_adjusted,
                              decay_correction=decay_correction_adjusted)
 
-    pet_sum_image = nibabel.nifti1.Nifti1Image(dataobj=image_weighted_sum,
-                                               affine=pet_image.affine,
-                                               header=pet_image.header)
     if out_image_path is not None:
+        pet_sum_image = nibabel.nifti1.Nifti1Image(dataobj=image_weighted_sum,
+                                                   affine=pet_image.affine,
+                                                   header=pet_image.header)
         nibabel.save(pet_sum_image, out_image_path)
         if verbose:
             print(f"(ImageOps4d): weighted sum image saved to {out_image_path}")
         image_io.safe_copy_meta(input_image_path=input_image_4d_path,
                                 out_image_path=out_image_path)
 
-    return pet_sum_image
+    return image_weighted_sum
 
 def weighted_series_sum_over_window_indecies(input_image_4d: ants.core.ANTsImage | str,
                                              output_image_path: str | None,
