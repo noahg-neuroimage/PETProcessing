@@ -215,10 +215,10 @@ def apply_xfm_ants(input_image_path: str,
         dim = 0
 
     xfm_img = ants.apply_transforms(fixed=ref_image_ants,
-                                      moving=pet_image_ants,
-                                      transformlist=xfm_paths,
-                                      imagetype=dim,
-                                      **kwargs)
+                                    moving=pet_image_ants,
+                                    transformlist=xfm_paths,
+                                    imagetype=dim,
+                                    **kwargs)
 
     ants.image_write(xfm_img, out_image_path)
 
