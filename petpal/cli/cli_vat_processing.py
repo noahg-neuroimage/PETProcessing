@@ -204,8 +204,11 @@ def vat_protocol(subjstring: str,
                                              start_time=suvr_start,
                                              end_time=suvr_end,
                                              out_image_path=wss_file_path)
-        image_operations_4d.suvr(input_image_path=wss_file_path, out_image_path=suvr_file_path,
-                                 segmentation_image_path=vat_wm_ref_segmentation_file, ref_region=1, verbose=True)
+        image_operations_4d.suvr(input_image_path=wss_file_path,
+                                 out_image_path=suvr_file_path,
+                                 segmentation_image_path=vat_wm_ref_segmentation_file,
+                                 ref_region=1,
+                                 verbose=True)
 
     if 'pvc' not in skip:
         suvr_pvc_path = vat_bids_filepath(suffix='pet',folder='pet',space='mpr',pvc='SGTM',desc='SUVR',ext='.tsv')
