@@ -477,6 +477,13 @@ def calc_vesselness_measure_image(input_image: ants.core.ANTsImage,
     in the output image. Optionally, a morphological opening operation can be
     applied to the result to refine the output and remove pepper-like artefacts.
 
+    From the docs of :func:`ants.hessian_objectness`:
+    '
+    Based on the paper by Westin et al., "Geometrical
+    Diffusion Measures for MRI from Tensor Basis Analysis" and Luca Antiga's
+    Insight Journal paper http://hdl.handle.net/1926/576.
+    '
+
     Args:
         input_image (ants.core.ANTsImage): Input 3D image for vesselness computation.
         sigma_min (float, optional): Minimum scale for multi-scale Hessian filtering
