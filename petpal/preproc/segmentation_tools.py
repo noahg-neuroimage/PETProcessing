@@ -383,12 +383,12 @@ def subcortical_mask(input_seg_path: str,
 
     segmentation = ants.image_read(input_seg_path)
     segmentation_np = segmentation.numpy()
-    subcortical_mask_img = np.zeros(segmentation_np.shape)
+    subcortical_mask_arr = np.zeros(segmentation_np.shape)
     for region in subcortical_regions:
         region_seg = np.where(segmentation_np==region)
-        subcortical_mask_img[region_seg] = 1
+        subcortical_mask_arr[region_seg] = 1
     subcortical_img = ants.from_numpy(
-        data=subcortical_mask_img,
+        data=subcortical_mask_arr,
         origin=segmentation.origin,
         spacing=segmentation.spacing,
         direction=segmentation.direction
