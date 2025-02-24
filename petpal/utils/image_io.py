@@ -598,6 +598,7 @@ def get_window_index_pairs_for_image(image_path: str, w_size: float):
     image_frame_info = get_frame_timing_info_for_nifti(image_path=image_path)
     return get_window_index_pairs_from_durations(frame_durations=image_frame_info['duration'], w_size=w_size)
 
+
 def infer_sub_ses_from_tac_path(tac_path: str):
     """
     Infers subject and session IDs from a TAC file path by analyzing the filename.
@@ -639,6 +640,7 @@ def infer_sub_ses_from_tac_path(tac_path: str):
         name_parts = sesname.split("-")
         sesname = ''.join(name_parts)
     return subname, sesname
+
 
 def km_regional_fits_to_tsv(fit_results_dir: str, out_tsv_dir: str):
     """
