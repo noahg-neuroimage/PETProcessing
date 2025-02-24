@@ -188,7 +188,7 @@ def apply_xfm_ants(input_image_path: str,
                    out_image_path: str,
                    xfm_paths: list[str],
                    copy_meta: bool = False,
-                   **kwargs):
+                   **kwargs) -> ants.ANTsImage:
     """
     Applies existing transforms in ANTs or ITK format to an input image, onto
     a reference image. This is useful for applying the same transform on
@@ -204,7 +204,7 @@ def apply_xfm_ants(input_image_path: str,
             for new image out_image_path.
 
     Returns:
-        xfm_image (ants.ANTsImage): The input image transformed with an ANTs transform file.
+        xfm_img (ants.ANTsImage): The input image transformed with an ANTs transform file.
     """
     pet_image_ants = ants.image_read(input_image_path)
     ref_image_ants = ants.image_read(ref_image_path)
@@ -214,18 +214,18 @@ def apply_xfm_ants(input_image_path: str,
     else:
         dim = 0
 
-    xfm_image = ants.apply_transforms(fixed=ref_image_ants,
+    xfm_img = ants.apply_transforms(fixed=ref_image_ants,
                                       moving=pet_image_ants,
                                       transformlist=xfm_paths,
                                       imagetype=dim,
                                       **kwargs)
 
-    ants.image_write(xfm_image, out_image_path)
+    ants.image_write(xfm_img, out_image_path)
 
     if copy_meta:
         image_io.safe_copy_meta(input_image_path=input_image_path,out_image_path=out_image_path)
 
-    return xfm_image
+    return xfm_img
 
 
 def apply_xfm_fsl(input_image_path: str,
