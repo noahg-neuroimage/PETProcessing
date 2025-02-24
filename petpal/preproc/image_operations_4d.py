@@ -410,7 +410,7 @@ def suvr(input_image_path: str,
          out_image_path: str,
          segmentation_image_path: str,
          ref_region: int,
-         verbose: bool):
+         verbose: bool) -> nibabel.nifti1.Nifti1Image:
     """
     Computes an ``SUVR`` (Standard Uptake Value Ratio) by taking the average of
     an input image within a reference region, and dividing the input image by
