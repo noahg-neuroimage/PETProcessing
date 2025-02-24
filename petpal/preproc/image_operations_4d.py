@@ -412,7 +412,7 @@ def suvr(input_image_path: str,
          out_image_path: str,
          segmentation_image_path: str,
          ref_region: int,
-         verbose: bool=False) -> nibabel.nifti1.Nifti1Image:
+         verbose: bool=False) -> ants.ANTsImage:
     """
     Computes an ``SUVR`` (Standard Uptake Value Ratio) by taking the average of
     an input image within a reference region, and dividing the input image by
@@ -427,6 +427,9 @@ def suvr(input_image_path: str,
         ref_region (int): Region number mapping to the reference region in the
             segmentation image.
         verbose (bool): Set to ``True`` to output processing information. Default is False.
+
+    Returns:
+        ants.ANTsImage: SUVR parametric image
     """
     pet_image = ants.image_read(filename=input_image_path)
     pet_data = pet_image.numpy()
