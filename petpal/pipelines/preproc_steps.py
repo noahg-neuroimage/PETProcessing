@@ -216,17 +216,19 @@ class TACsFromSegmentationStep(FunctionBasedStep):
         self.kwargs['input_image_path'] = input_image_path
         self._input_image = input_image_path
     
-    def set_input_as_output_from(self, sending_step):
+    def set_input_as_output_from(self, *sending_steps):
         """
         Sets the input image path based on the output from a specified sending step.
 
         Args:
             sending_step: The step from which to derive the input image path.
         """
-        if isinstance(sending_step, ImageToImageStep):
-            self.input_image_path = sending_step.output_image_path
-        else:
-            super().set_input_as_output_from(sending_step)
+        assert len(sending_steps) == 1, "TACsFromSegmentationStep can only receive a single sending step."
+        for sending_step in sending_steps:
+            if isinstance(sending_step, ImageToImageStep):
+                self.input_image_path = sending_step.output_image_path
+            else:
+                super().set_input_as_output_from(sending_step)
     
     def infer_outputs_from_inputs(self, out_dir: str, der_type: str, suffix: str=None, ext: str=None, **extra_desc):
         """
@@ -390,17 +392,18 @@ class ResampleBloodTACStep(FunctionBasedStep):
         self.kwargs['out_tac_path'] = resampled_tac_path
         self._resampled_tac_path = resampled_tac_path
     
-    def set_input_as_output_from(self, sending_step):
+    def set_input_as_output_from(self, *sending_steps):
         """
         Sets the input image path based on the output from a specified sending step.
 
         Args:
             sending_step: The step from which to derive the input image path.
         """
-        if isinstance(sending_step, ImageToImageStep):
-            self.input_image_path = sending_step.output_image_path
+        assert len(sending_steps) == 1, "ResampleBloodTACStep should only receive a single sending step."
+        if isinstance(sending_steps[0], ImageToImageStep):
+            self.input_image_path = sending_steps[0].output_image_path
         else:
-            super().set_input_as_output_from(sending_step)
+            super().set_input_as_output_from(sending_steps[0])
     
     def infer_outputs_from_inputs(self, out_dir: str, der_type, suffix='blood', ext='.tsv', **extra_desc):
         """
@@ -521,17 +524,18 @@ class ImageToImageStep(FunctionBasedStep):
         
         return "\n".join(sup_str_list)
     
-    def set_input_as_output_from(self, sending_step: FunctionBasedStep) -> None:
+    def set_input_as_output_from(self, *sending_steps) -> None:
         """
         Sets the input image path based on the output from a specified sending step.
 
         Args:
             sending_step (FunctionBasedStep): The step from which to derive the input image path.
         """
-        if isinstance(sending_step, ImageToImageStep):
-            self.input_image_path = sending_step.output_image_path
+        assert len(sending_steps) == 1, "ImageToImageStep must have 1 sending step."
+        if isinstance(sending_steps[0], ImageToImageStep):
+            self.input_image_path = sending_steps[0].output_image_path
         else:
-            super().set_input_as_output_from(sending_step)
+            super().set_input_as_output_from(sending_steps[0])
     
     def can_potentially_run(self):
         """

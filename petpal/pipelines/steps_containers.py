@@ -555,24 +555,24 @@ class StepsPipeline:
     def update_dependencies_for(self, step_name: str, verbose=False):
         """
         Updates the dependencies for a specified step, setting inputs from the outputs of its dependencies.
+        Gets the list of steps that are sending outputs to this step. The order of dependency may matter
+        depending on the implementation of `set_input_as_output_from` for the step.
 
         Args:
             step_name (str): The name of the step to update dependencies for.
             verbose (bool, optional): If True, prints detailed information during the update process. Defaults to False.
         """
-        sending_step = self.get_step_from_node_label(step_name)
-        for an_edge in self.dependency_graph[step_name]:
-            receiving_step = self.get_step_from_node_label(an_edge)
-            try:
-                receiving_step.set_input_as_output_from(sending_step)
-            except NotImplementedError:
-                if verbose:
-                    print(f"Step `{receiving_step.name}` of type `{type(receiving_step).__name__}` does not have a "
-                          f"set_input_as_output_from method implemented.\nSkipping.")
-            else:
-                if verbose:
-                    print(f"Updated input-output dependency between {sending_step.name} and {receiving_step.name}")
-    
+        input_edges = self.dependency_graph.in_edges(step_name)
+        input_step_names = [edge[0] for edge in input_edges]
+        if input_step_names:
+            input_steps = (self.get_step_from_node_label(step_name) for step_name in input_step_names)
+            receiving_step = self.get_step_from_node_label(step_name)
+            receiving_step.set_input_as_output_from(*input_steps)
+            if verbose:
+                print(f"Step {step_name} received inputs from:\n{input_step_names}")
+
+
+
     def update_dependencies(self, verbose=False):
         """
         Updates the dependencies for all steps in the pipeline.

@@ -4,7 +4,6 @@ Provides methods to motion correct 4D PET data. Includes method
 4D input data to optimize contrast when computing motion correction or
 registration.
 """
-from typing import Union
 import ants
 import numpy as np
 
@@ -17,7 +16,7 @@ from ..utils.image_io import (get_frame_timing_info_for_nifti,
 
 
 def motion_corr(input_image_4d_path: str,
-                motion_target_option: Union[str, tuple],
+                motion_target_option: str | tuple,
                 out_image_path: str,
                 verbose: bool,
                 type_of_transform: str = 'DenseRigid',
@@ -80,7 +79,7 @@ def motion_corr(input_image_4d_path: str,
 
 
 def motion_corr_frame_list(input_image_4d_path: str,
-                           motion_target_option: Union[str, tuple],
+                           motion_target_option: str | tuple,
                            out_image_path: str,
                            verbose: bool,
                            frames_list: list = None,
@@ -96,7 +95,7 @@ def motion_corr_frame_list(input_image_4d_path: str,
 
     Args:
         input_image_4d_path (str): Path to the input 4D PET image file.
-        motion_target_option (Union[str, tuple]): Option to determine the motion target. This can
+        motion_target_option (str | tuple): Option to determine the motion target. This can
             be a path to a specific image file, a tuple of frame indices to generate a target, or
             specific options recognized by :func:`determine_motion_target`.
         out_image_path (str): Path to save the motion-corrected output image.
@@ -185,7 +184,7 @@ def motion_corr_frame_list(input_image_4d_path: str,
 
 def motion_corr_frame_list_to_t1(input_image_4d_path: str,
                                  t1_image_path: str,
-                                 motion_target_option: Union[str, tuple],
+                                 motion_target_option: str | tuple,
                                  out_image_path: str,
                                  verbose: bool,
                                  frames_list: list = None,
@@ -300,7 +299,7 @@ def motion_corr_frame_list_to_t1(input_image_4d_path: str,
 
 def motion_corr_frames_above_mean_value(input_image_4d_path: str,
                                         out_image_path: str,
-                                        motion_target_option: Union[str, tuple],
+                                        motion_target_option: str | tuple,
                                         verbose: bool,
                                         type_of_transform: str = 'Affine',
                                         transform_metric: str = 'mattes',
@@ -316,7 +315,7 @@ def motion_corr_frames_above_mean_value(input_image_4d_path: str,
 
     Args:
         input_image_4d_path (str): Path to the input 4D PET image file.
-        motion_target_option (Union[str, tuple]): Option to determine the motion target. This can
+        motion_target_option (str | tuple): Option to determine the motion target. This can
             be a path to a specific image file, a tuple of frame indices to generate a target, or
             specific options recognized by :func:`determine_motion_target`.
         out_image_path (str): Path to save the motion-corrected output image.
@@ -373,7 +372,7 @@ def motion_corr_frames_above_mean_value(input_image_4d_path: str,
 
 def motion_corr_frames_above_mean_value_to_t1(input_image_4d_path: str,
                                               t1_image_path: str,
-                                              motion_target_option: Union[str, tuple],
+                                              motion_target_option: str | tuple,
                                               out_image_path: str,
                                               verbose: bool,
                                               type_of_transform: str = 'AffineFast',
@@ -392,7 +391,7 @@ def motion_corr_frames_above_mean_value_to_t1(input_image_4d_path: str,
     Args:
         input_image_4d_path (str): Path to the input 4D PET image file.
         t1_image_path (str): Path to the 3D T1 anatomical image.
-        motion_target_option (Union[str, tuple]): Option to determine the motion target. This can
+        motion_target_option (str | tuple): Option to determine the motion target. This can
             be a path to a specific image file, a tuple of frame indices to generate a target, or
             specific options recognized by :func:`determine_motion_target`.
         out_image_path (str): Path to save the motion-corrected output image.
