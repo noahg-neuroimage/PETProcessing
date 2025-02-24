@@ -18,6 +18,8 @@ TODO:
     * (stitch_broken_scans) Assumes non-BIDS key 'DecayFactor' instead of BIDS-required 'DecayCorrectionFactor' for
       ease-of-use with NIL data. Should be changed in the future.
     * (stitch_broken_scans) Currently writes intermediate files even if output_image_path is None.
+    * (suvr) Allow list to be passed as ref_region to use multiple regions together as a reference region (i.e. left
+    and right cerebellum gray matter).
 
 """
 import os
@@ -410,7 +412,7 @@ def suvr(input_image_path: str,
          out_image_path: str,
          segmentation_image_path: str,
          ref_region: int,
-         verbose: bool) -> nibabel.nifti1.Nifti1Image:
+         verbose: bool=False) -> nibabel.nifti1.Nifti1Image:
     """
     Computes an ``SUVR`` (Standard Uptake Value Ratio) by taking the average of
     an input image within a reference region, and dividing the input image by
@@ -424,7 +426,7 @@ def suvr(input_image_path: str,
             to compute average uptake value in the reference region.
         ref_region (int): Region number mapping to the reference region in the
             segmentation image.
-        verbose (bool): Set to ``True`` to output processing information.
+        verbose (bool): Set to ``True`` to output processing information. Default is False.
     """
     pet_nibabel = nibabel.load(filename=input_image_path)
     pet_image = pet_nibabel.get_fdata()
