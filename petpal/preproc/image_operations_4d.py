@@ -29,6 +29,7 @@ import ants
 import nibabel
 import numpy as np
 from scipy.ndimage import center_of_mass
+from sklearn.decomposition import PCA
 
 from ..utils.useful_functions import weighted_series_sum, check_physical_space_for_ants_image_pair
 from ..utils import image_io, math_lib
@@ -582,6 +583,52 @@ def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImag
     if verbose:
         print(f"(ImageOps): Output TACs have shape {out_voxels.shape}")
     return out_voxels
+
+
+def calculate_temporal_pca_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                                 mask_image: ants.core.ANTsImage,
+                                                 num_components: int = 3,
+                                                 svd_solver: str = 'full',
+                                                 whiten: bool = True,
+                                                 **sklearn_pca_kwargs) -> tuple[PCA, np.ndarray]:
+    assert len(input_image.shape) == 4, "Input image must be 4D."
+    assert check_physical_space_for_ants_image_pair(input_image, mask_image), (
+        "Images must have the same physical dimensions.")
+    mask_voxels = extract_roi_voxel_tacs_from_image_using_mask(input_image=input_image,
+                                                               mask_image=mask_image)
+    pca_obj = PCA(n_components=num_components, svd_solver=svd_solver, whiten=whiten, **sklearn_pca_kwargs)
+    pca_obj.fit(mask_voxels)
+    return pca_obj, np.ascontiguousarray(pca_obj.fit_transform(mask_voxels), float)
+
+
+def extract_temporal_pca_components_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                                          mask_image: ants.core.ANTsImage,
+                                                          num_components: int = 3,
+                                                          svd_solver: str = 'full',
+                                                          whiten: bool = True,
+                                                          **sklearn_pca_kwargs) -> np.ndarray:
+    pca_obj, _ = calculate_temporal_pca_from_image_using_mask(input_image=input_image,
+                                                           mask_image=mask_image,
+                                                           num_components=num_components,
+                                                           svd_solver=svd_solver,
+                                                           whiten=whiten,
+                                                           **sklearn_pca_kwargs)
+    return pca_obj.components_
+
+
+def extract_temporal_pca_projection_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                                          mask_image: ants.core.ANTsImage,
+                                                          num_components: int = 3,
+                                                          svd_solver: str = 'full',
+                                                          whiten: bool = True,
+                                                          **sklearn_pca_kwargs) -> np.ndarray:
+    _, transformed_voxels = calculate_temporal_pca_from_image_using_mask(input_image=input_image,
+                                                           mask_image=mask_image,
+                                                           num_components=num_components,
+                                                           svd_solver=svd_solver,
+                                                           whiten=whiten,
+                                                           **sklearn_pca_kwargs)
+    return transformed_voxels
 
 
 class SimpleAutoImageCropper(object):
