@@ -744,6 +744,61 @@ def extract_temporal_pca_projection_from_image_using_mask(input_image: ants.core
                                                           svd_solver: str = 'full',
                                                           whiten: bool = True,
                                                           **sklearn_pca_kwargs) -> np.ndarray:
+    """
+    Compute and extract the temporal PCA projections for a masked region in a 4D PET image.
+
+    This function carries out temporal Principal Component Analysis (PCA) on a 4D input image,
+    focusing on the region defined by the mask. It returns the projections (i.e., the representation
+    of each voxel in the reduced-dimensional space of principal components).
+
+    Args:
+        input_image (ants.core.ANTsImage):
+            A 4D PET image for temporal PCA analysis. The image should have 3 spatial
+            dimensions and one temporal dimension.
+        mask_image (ants.core.ANTsImage):
+            A binary mask specifying the region of interest (ROI) to include in the PCA analysis.
+            The mask must have the same physical and spatial dimensions as the input image.
+        num_components (int, optional):
+            The number of principal components to compute. Determines the dimensionality of
+            the reduced output space. Defaults to 3.
+        svd_solver (str, optional):
+            Determines the solver used for Singular Value Decomposition (SVD) during PCA.
+            Defaults to `"full"`.
+        whiten (bool, optional):
+            If set to `True`, components are scaled to have unit variance. This is often
+            useful when the output is used as input to further statistical or machine learning models.
+            Defaults to `True`.
+        **sklearn_pca_kwargs:
+            Additional keyword arguments for scikit-learn's `PCA` class, such as specification
+            of `random_state`, `tol`, etc.
+
+    Returns:
+        np.ndarray:
+            A 2D array of shape `(num_voxels, num_components)` containing the temporal PCA
+            projections for each voxel within the mask. Each row represents the reduced-dimensional
+            representation of a voxel's TAC within the selected components.
+
+    Raises:
+        AssertionError:
+            Raised if the `input_image` is not 4D, or if the physical dimensions of the
+            `mask_image` and `input_image` are not identical.
+        ValueError:
+            Raised if the number of PCA components exceeds the number of voxels included
+            in the mask.
+
+    Notes:
+        - The projections represent the linear combination of the temporal principal components
+          for each voxel, condensed into a reduced space.
+        - Ensure the input and mask are registered to the same coordinate space and dimensions
+          to avoid misalignment issues.
+        - For detailed analysis, consider reviewing the explained variance ratios from the
+          corresponding PCA computation.
+
+    See Also:
+        - :func:`calculate_temporal_pca_from_image_using_mask`: Performs the underlying PCA
+          calculation and provides both PCA projections and the PCA model.
+        - :class:`sklearn.decomposition.PCA`: Core implementation of the PCA used in this function.
+    """
     _, transformed_voxels = calculate_temporal_pca_from_image_using_mask(input_image=input_image,
                                                            mask_image=mask_image,
                                                            num_components=num_components,
@@ -761,6 +816,62 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
                                                                                      [0.5, 0.75, 0.9,
                                                                                       0.975]),
                                                                              **sklearn_pca_kwargs) -> np.ndarray:
+    """
+    Extract quantile-thresholded time-activity curve (TAC) values for temporal PCA components from a 4D PET image.
+
+    This function computes time-activity curve (TAC) statistics for masked regions in a 4D PET image, based on
+    Principal Component Analysis (PCA). It thresholds the PCA projections (for provided selected components) using
+    specified quantiles, and calculates the mean and standard deviation of the TACs for voxels exceeding the
+    thresholds. The output includes both the TAC mean and standard deviation across all components and quantile
+    thresholds.
+
+    Args:
+        input_image (ants.core.ANTsImage):
+            A 4D PET image.
+        mask_image (ants.core.ANTsImage):
+            A binary mask specifying the region of interest (ROI) in the image. Only voxels within this mask
+            are considered for the PCA analysis and TAC computation. This image is assumed to be aligned
+            to the input image.
+        num_components (int, optional):
+            The number of PCA components to use for reducing the dataset's dimensionality. Defaults to 3.
+        threshold_components (list[int] | None, optional):
+            A list of component indices (from 0 to `num_components - 1`) to use for thresholding.
+            Thresholding is applied to these PCA components using the given quantiles. If not set, defaults to `[0]`.
+        quantiles (np.ndarray, optional):
+            An array of quantiles (values between 0 and 1) to compute thresholds for the PCA projections.
+            Only voxels with PCA projection values above the corresponding quantile thresholds are included
+            when calculating TAC statistics. Defaults to `[0.5, 0.75, 0.9, 0.975]`.
+        **sklearn_pca_kwargs:
+            Additional keyword arguments passed to customize scikit-learn's PCA class (e.g., `svd_solver`,
+            `random_state`, etc.).
+
+    Returns:
+        np.ndarray:
+            A 2-element array containing `out_vals` (*np.ndarray*),  a 3D array of shape
+            `(num_components, num_quantiles, num_timepoints)`, containing the mean TAC values of
+            voxels exceeding the quantile thresholds for each component, and `out_stds` (*np.ndarray*),
+            a 3D array of the same shape as `out_vals`, containing the standard deviation of the TAC
+            values under the same conditions.
+
+    Raises:
+        AssertionError: `threshold_components` contains invalid indices (e.g., negative or greater than `num_components - 1`).
+        AssertionError: Quantiles are not within the [0, 1] range.
+
+    Notes:
+        - This function requires a properly aligned input image and mask image (both should share the same
+          dimensions in physical and voxel space).
+        - Thresholding PCA projections using quantiles isolates specific temporal dynamics for analysis,
+          which can provide insight into dominant trends in the time-activity data.
+        - Voxels not exceeding the quantile thresholds are excluded from the mean and standard deviation
+          calculations.
+
+    See Also:
+        - :func:`extract_temporal_pca_projection_from_image_using_mask`: Computes PCA projections used as input
+          for thresholding in this function.
+        - :func:`extract_roi_voxel_tacs_from_image_using_mask`: Extracts voxel-level TACs for regions of interest
+          in the input image, used in TAC calculations here.
+        - :class:`sklearn.decomposition.PCA`: Core PCA implementation used in this analysis.
+    """
 
     if threshold_components is None:
         threshold_components = [0]
