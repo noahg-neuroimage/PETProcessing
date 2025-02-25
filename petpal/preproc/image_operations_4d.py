@@ -673,6 +673,62 @@ def extract_temporal_pca_components_from_image_using_mask(input_image: ants.core
                                                           svd_solver: str = 'full',
                                                           whiten: bool = True,
                                                           **sklearn_pca_kwargs) -> np.ndarray:
+    """
+    Extract principal components from temporal PCA on a 4D PET image using a specified mask.
+
+    This function performs temporal Principal Component Analysis (PCA) on a 4D input image,
+    focusing on the region defined by the mask. It returns only the PCA components
+    (i.e., the eigenvectors that describe temporal variation) from the fitted PCA model.
+    These components might help you identify the primary kinetic components over the mask.
+
+    Args:
+        input_image (ants.core.ANTsImage):
+            The 4D PET image for temporal PCA analysis. The image should have 3 spatial
+            dimensions and one temporal dimension.
+        mask_image (ants.core.ANTsImage):
+            A binary mask defining the region of interest (ROI) in the input image.
+            Only voxels within this mask will be considered during PCA computation.
+            The mask and the input image must share the same physical and spatial dimensions.
+        num_components (int, optional):
+            The number of principal components to compute. Defaults to 3.
+        svd_solver (str, optional):
+            The type of SVD solver to use for PCA. Defaults to `"full"`.
+        whiten (bool, optional):
+            If set to `True`, the resulting components are scaled to have unit variance.
+            Defaults to `True`.
+        **sklearn_pca_kwargs:
+            Additional keyword arguments for customizing PCA behavior via scikit-learn's
+            `PCA` class, such as `random_state`, `tol`, etc.
+
+    Returns:
+        np.ndarray:
+            A 2D array of shape `(num_components, num_timepoints)` representing the PCA
+            components of temporal features. Each row corresponds to a principal component
+            in the temporal domain.
+
+    Raises:
+        AssertionError:
+            Raised if the input image is not 4D, or if the mask is not in the same
+            physical space as the input image.
+        ValueError:
+            Raised if the number of components exceeds the valid limits given the input
+            data size.
+
+    Notes:
+        - This function is a higher-level utility that focuses solely on extracting
+          PCA components for temporal dynamics, assuming the underlying computation is
+          performed via a separate PCA implementation.
+        - Ensure that the input and mask images are in the same coordinate space
+          (aligned and registered) to avoid errors or mismatched results.
+
+    See Also:
+        - :func:`calculate_temporal_pca_from_image_using_mask`: Performs full temporal PCA
+          and returns both the fitted PCA model and the projections of voxel time-activity
+          curves.
+        - :class:`sklearn.decomposition.PCA`: Core class for performing Principal
+          Component Analysis in scikit-learn.
+
+    """
     pca_obj, _ = calculate_temporal_pca_from_image_using_mask(input_image=input_image,
                                                            mask_image=mask_image,
                                                            num_components=num_components,
