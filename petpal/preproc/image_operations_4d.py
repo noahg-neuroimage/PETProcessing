@@ -574,6 +574,25 @@ def write_tacs(input_image_path: str,
 def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
                                                  mask_image: ants.core.ANTsImage,
                                                  verbose: bool = False) -> np.ndarray:
+    """
+    Function to extract ROI voxel tacs from an image using a mask image.
+
+    This function returns all the voxel TACs, and unlike :func:`extract_mean_roi_tac_from_nifti_using_segmentation`,
+    does not calculate the mean over all the voxels.
+
+    Args:
+        input_image (ants.core.ANTsImage): Input 4D-image from which to extract ROI voxel tacs.
+        mask_image (ants.core.ANTsImage): Mask image which determines which voxels to extract.
+        verbose (bool, optional): If True, prints information about the shape of extracted voxel tacs.
+
+    Returns:
+        out_voxels (np.ndarray): Array of voxel TACs of shape (num_voxels, num_frames)
+
+    Raises:
+         AssertionError: If input image is not 4D-image.
+         AssertionError: If mask image is not in the same physical space as the input image.
+
+    """
     assert len(input_image.shape) == 4, "Input image must be 4D."
     assert check_physical_space_for_ants_image_pair(input_image, mask_image), (
         "Images must have the same physical dimensions.")
