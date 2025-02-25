@@ -631,6 +631,47 @@ def extract_temporal_pca_projection_from_image_using_mask(input_image: ants.core
     return transformed_voxels
 
 
+def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                                                             mask_image: ants.core.ANTsImage,
+                                                                             num_components: int = 3,
+                                                                             threshold_components: list[int] | None = None,
+                                                                             quantiles: np.ndarray = np.asarray(
+                                                                                     [0.5, 0.75, 0.9,
+                                                                                      0.975]),
+                                                                             **sklearn_pca_kwargs) -> np.ndarray:
+
+    if threshold_components is None:
+        threshold_components = [0]
+
+    assert min(threshold_components) >= 0, "Threshold components must be integers >= 0."
+    assert max(threshold_components) < num_components, "Threshold components must be < num_components."
+    assert np.min(quantiles) >= 0, "Quantiles must be >= 0."
+    assert np.max(quantiles) <= 1, "Quantiles must be <= 1."
+
+    voxels_pca_fit = extract_temporal_pca_projection_from_image_using_mask(input_image=input_image,
+                                                                           mask_image=mask_image,
+                                                                           num_components=num_components,
+                                                                           **sklearn_pca_kwargs
+                                                                           )
+
+    num_frames = input_image.shape[-1]
+    num_quantiles = len(quantiles)
+    num_comps = len(threshold_components)
+    out_vals = np.zeros((num_comps, num_quantiles, num_frames), float)
+    out_stds = np.zeros_like(out_vals)
+
+    mask_voxels = extract_roi_voxel_tacs_from_image_using_mask(input_image=input_image,
+                                                               mask_image=mask_image)
+
+    for comp_id, thresh_comp in enumerate(threshold_components):
+        thresholds = np.quantile(voxels_pca_fit[:, thresh_comp], quantiles)
+        for thresh_id, thresh in enumerate(thresholds):
+            valid_pts = voxels_pca_fit[:, thresh_comp] > thresh
+            out_vals[comp_id, thresh_id] = np.nanmean(mask_voxels[valid_pts], axis=0)
+            out_stds[comp_id, thresh_id] = np.nanstd(mask_voxels[valid_pts], axis=0)
+        return np.asarray([out_vals, out_stds])
+
+
 class SimpleAutoImageCropper(object):
     r"""
     Class for automatically cropping 3D or 4D medical images based on pixel intensity thresholds.
