@@ -248,7 +248,7 @@ class TACsFromSegmentationStep(FunctionBasedStep):
         self.out_tacs_prefix = f'sub-{sub_id}_ses-{ses_id}_desc-{step_name_in_camel_case}'
     
     @classmethod
-    def default_write_tacs_from_segmentation_rois(cls):
+    def default_write_tacs_from_segmentation_rois(cls, **overrides):
         """
         Provides a class method to create an instance with default parameters. All paths
         are set to empty strings, `time_keyword=FrameReferenceTime`, and `verbose=False`.
@@ -256,13 +256,16 @@ class TACsFromSegmentationStep(FunctionBasedStep):
         Returns:
             TACsFromSegmentationStep: A new instance with default parameters.
         """
-        return cls(input_image_path='',
-                   segmentation_image_path='',
-                   segmentation_label_map_path='',
-                   out_tacs_dir='',
-                   out_tacs_prefix='',
-                   time_keyword='FrameReferenceTime',
-                   verbose=False)
+
+        defaults = dict(input_image_path='', segmentation_image_path='', segmentation_label_map_path='',
+                        out_tacs_dir='', out_tacs_prefix='', time_keyword='FrameReferenceTime', verbose=False)
+        override_dict = defaults | overrides
+
+        try:
+            return cls(**override_dict)
+        except RuntimeError as err:
+            warnings.warn(f'Invalid override: {err}. Using default instance instead.', stacklevel=2)
+            return cls(**defaults)
     
 
 class ResampleBloodTACStep(FunctionBasedStep):
