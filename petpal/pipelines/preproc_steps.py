@@ -645,14 +645,14 @@ class ImageToImageStep(FunctionBasedStep):
             return cls(**defaults)
 
     @classmethod
-    def default_register_pet_to_t1(cls, reference_image_path='', half_life='', verbose=False, **overrides):
+    def default_register_pet_to_t1(cls, reference_image_path='', half_life:float=None, verbose=False, **overrides):
         """
         Creates a default instance for registering PET to T1 image using :func:`register_pet<petpal.preproc.register.register_pet>`.
         All paths are empty-strings.
 
         Args:
             reference_image_path (str): Path to the reference image.
-            half_life (str): Half-life value, in seconds, for the radiotracer. Used to
+            half_life (float): Half-life value, in seconds, for the radiotracer. Used to
                 generate a weighted_series_sum image.
             verbose (bool): Whether to run in verbose mode.
             **overrides: Override default parameters.
