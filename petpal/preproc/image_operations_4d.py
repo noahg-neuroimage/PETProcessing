@@ -610,6 +610,53 @@ def calculate_temporal_pca_from_image_using_mask(input_image: ants.core.ANTsImag
                                                  svd_solver: str = 'full',
                                                  whiten: bool = True,
                                                  **sklearn_pca_kwargs) -> tuple[PCA, np.ndarray]:
+    """
+    Perform temporal PCA (Principal Component Analysis) on a 4D PET image using a specified mask.
+
+    This function analyzes the temporal dynamics of voxel time-activity curves (TACs) extracted
+    from the region specified by the input mask. PCA reduces the dimensionality of the dataset,
+    extracting a set of temporal features ranked by their contribution to variability across
+    voxels within the specified region. This approach effectively identifies the most prominent
+    temporal patterns in the PET image's dynamic data.
+
+    Args:
+        input_image (ants.core.ANTsImage):
+            The 4D PET image for temporal PCA analysis. The image must have 3 spatial dimensions
+            and one temporal dimension.
+        mask_image (ants.core.ANTsImage):
+            A binary mask representing the region of interest (ROI) in the input image.
+            Only voxels within this mask are included in the PCA computation. The mask and input
+            image must have the same physical dimensions.
+        num_components (int, optional):
+            The number of principal components to compute. Defaults to 3.
+        svd_solver (str, optional): The type of SVD solver to use for PCA. Defaults to `"full"`.
+        whiten (bool, optional):
+            If True, the output features are normalized to have unit variance. This is useful
+            for further statistical analysis of the temporal components. Defaults to True.
+        **sklearn_pca_kwargs:
+            Additional keyword arguments to customize the PCA behavior using scikit-learn's
+            `PCA` class (e.g., `random_state`, `tol`, etc.).
+
+    Returns:
+        tuple[PCA, np.ndarray]: Fitted PCA model object and voxel TACs projected onto the principal components.
+
+    Raises:
+        AssertionError: The input image is not 4D.
+        AssertionError: The input image and mask image are not in the same physical space or dimensions.
+
+    Notes:
+        - Ensure that the input image and mask image are pre-registered and aligned, with identical
+          spatial dimensions.
+        - The PCA algorithm identifies patterns across the temporal dynamics while minimizing loss
+          of information.
+        - Whitening normalizes the data, which can be important if further statistical operations
+          (e.g., clustering) are planned.
+
+    See Also:
+        - :func:`extract_roi_voxel_tacs_from_image_using_mask`: Extracts region-specific voxel-level
+          time-activity curves (TACs) needed for this PCA analysis.
+        - :class:`sklearn.decomposition.PCA`: Underlying PCA implementation used in this function.
+    """
     assert len(input_image.shape) == 4, "Input image must be 4D."
     assert check_physical_space_for_ants_image_pair(input_image, mask_image), (
         "Images must have the same physical dimensions.")
