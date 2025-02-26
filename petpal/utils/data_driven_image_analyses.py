@@ -6,12 +6,12 @@ from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_usin
 from .useful_functions import check_physical_space_for_ants_image_pair
 
 
-def calculate_temporal_pca_from_image_using_mask(input_image: ants.core.ANTsImage,
-                                                 mask_image: ants.core.ANTsImage,
-                                                 num_components: int = 3,
-                                                 svd_solver: str = 'full',
-                                                 whiten: bool = True,
-                                                 **sklearn_pca_kwargs) -> tuple[PCA, np.ndarray]:
+def temporal_pca_analysis_of_image_over_mask(input_image: ants.core.ANTsImage,
+                                             mask_image: ants.core.ANTsImage,
+                                             num_components: int = 3,
+                                             svd_solver: str = 'full',
+                                             whiten: bool = True,
+                                             **sklearn_pca_kwargs) -> tuple[PCA, np.ndarray]:
     """
     Perform temporal PCA (Principal Component Analysis) on a 4D PET image using a specified mask.
 
@@ -51,7 +51,7 @@ def calculate_temporal_pca_from_image_using_mask(input_image: ants.core.ANTsImag
         .. code-block:: python
 
             import ants
-            from petpal.utils.data_driven_image_analyses import calculate_temporal_pca_from_image_using_mask as tpca_func
+            from petpal.utils.data_driven_image_analyses import temporal_pca_analysis_of_image_over_mask as tpca_func
 
             pca_obj, pca_projections = tpca_func(input_image=ants.image_read('/path/to/4D/PET.nii.gz'),
                                                  mask_image=ants.image_read('/path/to/aligned/mask.nii.gz'),
@@ -84,12 +84,12 @@ def calculate_temporal_pca_from_image_using_mask(input_image: ants.core.ANTsImag
     return pca_obj, np.ascontiguousarray(pca_obj.fit_transform(mask_voxels), float)
 
 
-def extract_temporal_pca_components_from_image_using_mask(input_image: ants.core.ANTsImage,
-                                                          mask_image: ants.core.ANTsImage,
-                                                          num_components: int = 3,
-                                                          svd_solver: str = 'full',
-                                                          whiten: bool = True,
-                                                          **sklearn_pca_kwargs) -> np.ndarray:
+def extract_temporal_pca_components_of_image_over_mask(input_image: ants.core.ANTsImage,
+                                                       mask_image: ants.core.ANTsImage,
+                                                       num_components: int = 3,
+                                                       svd_solver: str = 'full',
+                                                       whiten: bool = True,
+                                                       **sklearn_pca_kwargs) -> np.ndarray:
     """
     Extract principal components from temporal PCA on a 4D PET image using a specified mask.
 
@@ -132,7 +132,7 @@ def extract_temporal_pca_components_from_image_using_mask(input_image: ants.core
         .. code-block:: python
 
             import ants
-            from petpal.utils.data_driven_image_analyses import extract_temporal_pca_components_from_image_using_mask as ext_tpca_comps_func
+            from petpal.utils.data_driven_image_analyses import extract_temporal_pca_components_of_image_over_mask as ext_tpca_comps_func
 
             pca_comps = ext_tpca_comps_func(input_image=ants.image_read('/path/to/4D/PET.nii.gz'),
                                             mask_image=ants.image_read('/path/to/aligned/mask.nii.gz'),
@@ -152,28 +152,28 @@ def extract_temporal_pca_components_from_image_using_mask(input_image: ants.core
           PCA components for temporal dynamics.
 
     See Also:
-        - :func:`calculate_temporal_pca_from_image_using_mask`: Performs full temporal PCA
+        - :func:`temporal_pca_analysis_of_image_over_mask`: Performs full temporal PCA
           and returns both the fitted PCA model and the projections of voxel time-activity
           curves.
         - :class:`sklearn.decomposition.PCA`: Core class for performing Principal
           Component Analysis in scikit-learn.
 
     """
-    pca_obj, _ = calculate_temporal_pca_from_image_using_mask(input_image=input_image,
-                                                           mask_image=mask_image,
-                                                           num_components=num_components,
-                                                           svd_solver=svd_solver,
-                                                           whiten=whiten,
-                                                           **sklearn_pca_kwargs)
+    pca_obj, _ = temporal_pca_analysis_of_image_over_mask(input_image=input_image,
+                                                          mask_image=mask_image,
+                                                          num_components=num_components,
+                                                          svd_solver=svd_solver,
+                                                          whiten=whiten,
+                                                          **sklearn_pca_kwargs)
     return pca_obj.components_
 
 
-def extract_temporal_pca_projection_from_image_using_mask(input_image: ants.core.ANTsImage,
-                                                          mask_image: ants.core.ANTsImage,
-                                                          num_components: int = 3,
-                                                          svd_solver: str = 'full',
-                                                          whiten: bool = True,
-                                                          **sklearn_pca_kwargs) -> np.ndarray:
+def extract_temporal_pca_projection_of_image_over_mask(input_image: ants.core.ANTsImage,
+                                                       mask_image: ants.core.ANTsImage,
+                                                       num_components: int = 3,
+                                                       svd_solver: str = 'full',
+                                                       whiten: bool = True,
+                                                       **sklearn_pca_kwargs) -> np.ndarray:
     """
     Compute and extract the temporal PCA projections for a masked region in a 4D PET image.
 
@@ -217,7 +217,7 @@ def extract_temporal_pca_projection_from_image_using_mask(input_image: ants.core
         .. code-block:: python
 
             import ants
-            from petpal.utils.data_driven_image_analyses import extract_temporal_pca_projection_from_image_using_mask as ext_tpca_proj_func
+            from petpal.utils.data_driven_image_analyses import extract_temporal_pca_projection_of_image_over_mask as ext_tpca_proj_func
 
             pca_proj = ext_tpca_proj_func(input_image=ants.image_read('/path/to/4D/PET.nii.gz'),
                                           mask_image=ants.image_read('/path/to/aligned/mask.nii.gz'),
@@ -236,28 +236,28 @@ def extract_temporal_pca_projection_from_image_using_mask(input_image: ants.core
           for each voxel, condensed into a reduced space.
 
     See Also:
-        - :func:`calculate_temporal_pca_from_image_using_mask`: Performs the underlying PCA
+        - :func:`temporal_pca_analysis_of_image_over_mask`: Performs the underlying PCA
           calculation and provides both PCA projections and the PCA model.
         - :class:`sklearn.decomposition.PCA`: Core implementation of the PCA used in this function.
     """
-    _, transformed_voxels = calculate_temporal_pca_from_image_using_mask(input_image=input_image,
-                                                           mask_image=mask_image,
-                                                           num_components=num_components,
-                                                           svd_solver=svd_solver,
-                                                           whiten=whiten,
-                                                           **sklearn_pca_kwargs)
+    _, transformed_voxels = temporal_pca_analysis_of_image_over_mask(input_image=input_image,
+                                                                     mask_image=mask_image,
+                                                                     num_components=num_components,
+                                                                     svd_solver=svd_solver,
+                                                                     whiten=whiten,
+                                                                     **sklearn_pca_kwargs)
     return transformed_voxels
 
 
-def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(input_image: ants.core.ANTsImage,
-                                                                             mask_image: ants.core.ANTsImage,
-                                                                             num_components: int = 3,
-                                                                             threshold_components: list[int] | None = None,
-                                                                             quantiles: np.ndarray = np.asarray(
+def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_image: ants.core.ANTsImage,
+                                                                       mask_image: ants.core.ANTsImage,
+                                                                       num_components: int = 3,
+                                                                       threshold_components: list[int] | None = None,
+                                                                       quantiles: np.ndarray = np.asarray(
                                                                                      [0.5, 0.75, 0.9,
                                                                                       0.975]),
-                                                                             direction: str = '>',
-                                                                             **sklearn_pca_kwargs) -> np.ndarray:
+                                                                       direction: str = '>',
+                                                                       **sklearn_pca_kwargs) -> np.ndarray:
     """
     Extract quantile-thresholded time-activity curve (TAC) values for temporal PCA components from a 4D PET image.
 
@@ -306,7 +306,7 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
         .. code-block:: python
 
             import ants
-            from petpal.utils.data_driven_image_analyses import extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask as ext_pca_q_func
+            from petpal.utils.data_driven_image_analyses import extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask as ext_pca_q_func
 
             tac_means, tac_stds = ext_pca_q_func(input_image=ants.image_read('/path/to/4D/PET.nii.gz'),
                                                  mask_image=ants.image_read('/path/to/aligned/mask.nii.gz'),
@@ -326,7 +326,7 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
           calculations.
 
     See Also:
-        - :func:`extract_temporal_pca_projection_from_image_using_mask`: Computes PCA projections used as input
+        - :func:`extract_temporal_pca_projection_of_image_over_mask`: Computes PCA projections used as input
           for thresholding in this function.
         - :func:`extract_roi_voxel_tacs_from_image_using_mask<petpal.preproc.image_operations_4d.extract_roi_voxel_tacs_from_image_using_mask>`: Extracts voxel-level TACs for regions of interest
           in the input image, used in TAC calculations here.
@@ -341,10 +341,10 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
     assert np.min(quantiles) >= 0, "Quantiles must be >= 0."
     assert np.max(quantiles) <= 1, "Quantiles must be <= 1."
 
-    voxels_pca_projs = extract_temporal_pca_projection_from_image_using_mask(input_image=input_image,
-                                                                            mask_image=mask_image,
-                                                                            num_components=num_components,
-                                                                            **sklearn_pca_kwargs)
+    voxels_pca_projs = extract_temporal_pca_projection_of_image_over_mask(input_image=input_image,
+                                                                          mask_image=mask_image,
+                                                                          num_components=num_components,
+                                                                          **sklearn_pca_kwargs)
     voxels_selected_pca = voxels_pca_projs[:, threshold_components]
 
     thresholds = np.quantile(voxels_selected_pca, quantiles, axis=0)
