@@ -18,8 +18,6 @@ TODO:
     * (stitch_broken_scans) Assumes non-BIDS key 'DecayFactor' instead of BIDS-required 'DecayCorrectionFactor' for
       ease-of-use with NIL data. Should be changed in the future.
     * (stitch_broken_scans) Currently writes intermediate files even if output_image_path is None.
-    * :func:`extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask` allow for users to select
-      direction of thresholding.
 
 """
 import os

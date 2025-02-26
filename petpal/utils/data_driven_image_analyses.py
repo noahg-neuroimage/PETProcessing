@@ -21,6 +21,10 @@ def calculate_temporal_pca_from_image_using_mask(input_image: ants.core.ANTsImag
     voxels within the specified region. This approach effectively identifies the most prominent
     temporal patterns in the PET image's dynamic data.
 
+    .. important::
+        Ensure that the input and mask images are in the same coordinate space
+        (aligned and registered) to avoid errors or mismatched results.
+
     Args:
         input_image (ants.core.ANTsImage):
             The 4D PET image for temporal PCA analysis. The image must have 3 spatial dimensions
@@ -66,8 +70,8 @@ def calculate_temporal_pca_from_image_using_mask(input_image: ants.core.ANTsImag
           (e.g., clustering) are planned.
 
     See Also:
-        - :func:`extract_roi_voxel_tacs_from_image_using_mask`: Extracts region-specific voxel-level
-          time-activity curves (TACs) needed for this PCA analysis.
+        - :func:`extract_roi_voxel_tacs_from_image_using_mask<petpal.preproc.image_operations_4d.extract_roi_voxel_tacs_from_image_using_mask>`: Extracts voxel-level TACs for regions of interest
+          in the input image, used in TAC calculations here.
         - :class:`sklearn.decomposition.PCA`: Underlying PCA implementation used in this function.
     """
     assert len(input_image.shape) == 4, "Input image must be 4D."
@@ -177,6 +181,10 @@ def extract_temporal_pca_projection_from_image_using_mask(input_image: ants.core
     focusing on the region defined by the mask. It returns the projections (i.e., the representation
     of each voxel in the reduced-dimensional space of principal components).
 
+    .. important::
+        Ensure that the input and mask images are in the same coordinate space
+        (aligned and registered) to avoid errors or mismatched results.
+
     Args:
         input_image (ants.core.ANTsImage):
             A 4D PET image for temporal PCA analysis. The image should have 3 spatial
@@ -226,10 +234,6 @@ def extract_temporal_pca_projection_from_image_using_mask(input_image: ants.core
     Notes:
         - The projections represent the linear combination of the temporal principal components
           for each voxel, condensed into a reduced space.
-        - Ensure the input and mask are registered to the same coordinate space and dimensions
-          to avoid misalignment issues.
-        - For detailed analysis, consider reviewing the explained variance ratios from the
-          corresponding PCA computation.
 
     See Also:
         - :func:`calculate_temporal_pca_from_image_using_mask`: Performs the underlying PCA
@@ -262,6 +266,10 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
     specified quantiles, and calculates the mean and standard deviation of the TACs for voxels exceeding the
     thresholds. The output includes both the TAC mean and standard deviation across all components and quantile
     thresholds.
+
+    .. important::
+        Ensure that the input and mask images are in the same coordinate space
+        (aligned and registered) to avoid errors or mismatched results.
 
     Args:
         input_image (ants.core.ANTsImage):
@@ -312,8 +320,6 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
         AssertionError: Quantiles are not within the [0, 1] range.
 
     Notes:
-        - This function requires a properly aligned input image and mask image (both should share the same
-          dimensions in physical and voxel space).
         - Thresholding PCA projections using quantiles isolates specific temporal dynamics for analysis,
           which can provide insight into dominant trends in the time-activity data.
         - Voxels not exceeding the quantile thresholds are excluded from the mean and standard deviation
@@ -322,7 +328,7 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
     See Also:
         - :func:`extract_temporal_pca_projection_from_image_using_mask`: Computes PCA projections used as input
           for thresholding in this function.
-        - :func:`extract_roi_voxel_tacs_from_image_using_mask`: Extracts voxel-level TACs for regions of interest
+        - :func:`extract_roi_voxel_tacs_from_image_using_mask<petpal.preproc.image_operations_4d.extract_roi_voxel_tacs_from_image_using_mask>`: Extracts voxel-level TACs for regions of interest
           in the input image, used in TAC calculations here.
         - :class:`sklearn.decomposition.PCA`: Core PCA implementation used in this analysis.
     """
