@@ -448,8 +448,8 @@ def _generate_quantiled_multi_tacs_header(threshold_components: list, quantiles:
 
     for a_comp in threshold_components:
         for a_quan in quantiles:
-            header.append(f'(c:{a_comp};q{direction}:{a_quan:.3f})_mean')  # Mean header entry
-            header.append(f'(c:{a_comp};q{direction}:{a_quan:.3f})_std')  # Std header entry
+            header.append(f'(c:{a_comp};q{direction}{a_quan:.3f})_mean')
+            header.append(f'(c:{a_comp};q{direction}{a_quan:.3f})_std')
 
     return "\t".join(header)
 
