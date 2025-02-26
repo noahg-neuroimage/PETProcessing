@@ -2,8 +2,8 @@ import ants
 import numpy as np
 from sklearn.decomposition import PCA
 
-from preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask
-from utils.useful_functions import check_physical_space_for_ants_image_pair
+from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask
+from .useful_functions import check_physical_space_for_ants_image_pair
 
 
 def calculate_temporal_pca_from_image_using_mask(input_image: ants.core.ANTsImage,
@@ -41,6 +41,17 @@ def calculate_temporal_pca_from_image_using_mask(input_image: ants.core.ANTsImag
 
     Returns:
         tuple[PCA, np.ndarray]: Fitted PCA model object and voxel TACs projected onto the principal components.
+
+    Example:
+
+        .. code-block:: python
+
+            import ants
+            from petpal.utils.data_driven_image_analyses import calculate_temporal_pca_from_image_using_mask as tpca_func
+
+            pca_obj, pca_projections = tpca_func(input_image=ants.image_read('/path/to/4D/PET.nii.gz'),
+                                                 mask_image=ants.image_read('/path/to/aligned/mask.nii.gz'),
+                                                 num_components=3)
 
     Raises:
         AssertionError: The input image is not 4D.
@@ -83,6 +94,10 @@ def extract_temporal_pca_components_from_image_using_mask(input_image: ants.core
     (i.e., the eigenvectors that describe temporal variation) from the fitted PCA model.
     These components might help you identify the primary kinetic components over the mask.
 
+    .. important::
+        Ensure that the input and mask images are in the same coordinate space
+        (aligned and registered) to avoid errors or mismatched results.
+
     Args:
         input_image (ants.core.ANTsImage):
             The 4D PET image for temporal PCA analysis. The image should have 3 spatial
@@ -108,6 +123,18 @@ def extract_temporal_pca_components_from_image_using_mask(input_image: ants.core
             components of temporal features. Each row corresponds to a principal component
             in the temporal domain.
 
+    Example:
+
+        .. code-block:: python
+
+            import ants
+            from petpal.utils.data_driven_image_analyses import extract_temporal_pca_components_from_image_using_mask as ext_tpca_comps_func
+
+            pca_comps = ext_tpca_comps_func(input_image=ants.image_read('/path/to/4D/PET.nii.gz'),
+                                            mask_image=ants.image_read('/path/to/aligned/mask.nii.gz'),
+                                            num_components=3)
+
+
     Raises:
         AssertionError:
             Raised if the input image is not 4D, or if the mask is not in the same
@@ -118,10 +145,7 @@ def extract_temporal_pca_components_from_image_using_mask(input_image: ants.core
 
     Notes:
         - This function is a higher-level utility that focuses solely on extracting
-          PCA components for temporal dynamics, assuming the underlying computation is
-          performed via a separate PCA implementation.
-        - Ensure that the input and mask images are in the same coordinate space
-          (aligned and registered) to avoid errors or mismatched results.
+          PCA components for temporal dynamics.
 
     See Also:
         - :func:`calculate_temporal_pca_from_image_using_mask`: Performs full temporal PCA
@@ -179,6 +203,17 @@ def extract_temporal_pca_projection_from_image_using_mask(input_image: ants.core
             A 2D array of shape `(num_voxels, num_components)` containing the temporal PCA
             projections for each voxel within the mask. Each row represents the reduced-dimensional
             representation of a voxel's TAC within the selected components.
+
+    Example:
+
+        .. code-block:: python
+
+            import ants
+            from petpal.utils.data_driven_image_analyses import extract_temporal_pca_projection_from_image_using_mask as ext_tpca_proj_func
+
+            pca_proj = ext_tpca_proj_func(input_image=ants.image_read('/path/to/4D/PET.nii.gz'),
+                                          mask_image=ants.image_read('/path/to/aligned/mask.nii.gz'),
+                                          num_components=3)
 
     Raises:
         AssertionError:
@@ -262,8 +297,8 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
 
         .. code-block:: python
 
-            from petpal.preproc.image_operations_4d import extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask as ext_pca_q_func
             import ants
+            from petpal.utils.data_driven_image_analyses import extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask as ext_pca_q_func
 
             tac_means, tac_stds = ext_pca_q_func(input_image=ants.image_read('/path/to/4D/PET.nii.gz'),
                                                  mask_image=ants.image_read('/path/to/aligned/mask.nii.gz'),
