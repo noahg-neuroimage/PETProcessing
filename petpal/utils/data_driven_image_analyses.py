@@ -4,6 +4,7 @@ from sklearn.decomposition import PCA
 
 from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask
 from .useful_functions import check_physical_space_for_ants_image_pair
+from .image_io import get_frame_timing_info_for_nifti
 
 
 def temporal_pca_analysis_of_image_over_mask(input_image: ants.core.ANTsImage,
@@ -253,9 +254,7 @@ def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_ima
                                                                        mask_image: ants.core.ANTsImage,
                                                                        num_components: int = 3,
                                                                        threshold_components: list[int] | None = None,
-                                                                       quantiles: np.ndarray = np.asarray(
-                                                                                     [0.5, 0.75, 0.9,
-                                                                                      0.975]),
+                                                                       quantiles: list[float] | None = None,
                                                                        direction: str = '>',
                                                                        **sklearn_pca_kwargs) -> np.ndarray:
     """
@@ -283,7 +282,7 @@ def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_ima
         threshold_components (list[int] | None, optional):
             A list of component indices (from 0 to `num_components - 1`) to use for thresholding.
             Thresholding is applied to these PCA components using the given quantiles. If not set, defaults to `[0]`.
-        quantiles (np.ndarray, optional):
+        quantiles (list[float], optional):
             An array of quantiles (values between 0 and 1) to compute thresholds for the PCA projections.
             Only voxels with PCA projection values above the corresponding quantile thresholds are included
             when calculating TAC statistics. Defaults to `[0.5, 0.75, 0.9, 0.975]`.
@@ -334,7 +333,10 @@ def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_ima
     """
 
     if threshold_components is None:
-        threshold_components = [0]
+        threshold_components = [0, 1]
+
+    if quantiles is None:
+        quantiles = [0.5, 0.75, 0.9, 0.975]
 
     assert min(threshold_components) >= 0, "Threshold components must be integers >= 0."
     assert max(threshold_components) < num_components, "Threshold components must be < num_components."
@@ -369,3 +371,119 @@ def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_ima
     tacs_std = np.moveaxis(tacs_std, 1, -1)
 
     return np.asarray([tacs_mean, tacs_std])
+
+
+
+
+
+def generate_temporal_pca_quantile_threshold_tacs_of_image_over_mask(input_image_path: str,
+                                                                     mask_image_path: str,
+                                                                     output_arrays_path: str | None,
+                                                                     num_components: int,
+                                                                     threshold_components: list | None,
+                                                                     quantiles: list | None,
+                                                                     direction: str = '<',
+                                                                     **sklearn_pca_kwargs
+                                                                     ):
+
+    if threshold_components is None:
+        threshold_components = [0, 1]
+
+    if quantiles is None:
+        quantiles = [0.5, 0.75, 0.9, 0.975]
+
+    image_timing_info = get_frame_timing_info_for_nifti(image_path=input_image_path)
+
+    tac_ref_times = (image_timing_info['start'] + image_timing_info['end']) / 2.0
+    if tac_ref_times[-1] > 200.0:
+        tac_ref_times /= 60.0
+
+    input_image = ants.image_read(input_image_path)
+    mask_image = ants.image_read(mask_image_path)
+
+    tacs_ext_func = extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask
+    tacs_mean, tacs_std = tacs_ext_func(input_image=input_image,
+                                        mask_image=mask_image,
+                                        num_components=num_components,
+                                        threshold_components=threshold_components,
+                                        quantiles=quantiles,
+                                        direction=direction,
+                                        **sklearn_pca_kwargs
+                                        )
+
+    if output_arrays_path is not None:
+        out_array = _gen_reshaped_quantiled_tacs(times=tac_ref_times,
+                                                 tacs_mean=tacs_mean,
+                                                 tacs_std=tacs_std)
+        out_header = _generate_quantiled_multi_tacs_header(threshold_components=threshold_components,
+                                                           quantiles=quantiles,
+                                                           direction=direction)
+        np.savetxt(fname=output_arrays_path,
+                   X=out_array.T,
+                   fmt='%.6e',
+                   delimiter='\t',
+                   header=out_header,
+                   comments='')
+
+    return np.asarray([tacs_mean, tacs_std])
+
+
+def _generate_quantiled_multi_tacs_header(threshold_components: list, quantiles: list, direction: str):
+    """
+    Generate the header for outputting multiple TACs generated by the quantile threshold function.
+
+    First column is assumed to be time in minutes, the second column is the mean tac values
+    of the first component and first quantile, the third column is the standard deviation,
+    and the rest of pairs of columns go over all the quantiles and then components in order.
+
+    Args:
+        threshold_components (list[int]): Indices of PCA components for thresholding.
+        quantiles (list[float]): List of quantile threshold values.
+        direction (str): '<' or '>'.
+
+    Returns:
+        str: A single string representing the tab-delimited header.
+    """
+    header = ['time(mins)']
+
+    for a_comp in threshold_components:
+        for a_quan in quantiles:
+            header.append(f'(c:{a_comp};q{direction}:{a_quan:.3f})_mean')  # Mean header entry
+            header.append(f'(c:{a_comp};q{direction}:{a_quan:.3f})_std')  # Std header entry
+
+    return "\t".join(header)
+
+
+def _gen_reshaped_quantiled_tacs(times: np.ndarray[float],
+                                 tacs_mean: np.ndarray[float],
+                                 tacs_std: np.ndarray[float]) -> np.ndarray:
+    """
+    Generate the aggregated multiple-tacs array for quantile threshold obtained tacs.
+
+    First column is assumed to be time in minutes, the second column is the mean tac values
+    of the first component and first quantile, the third column is the standard deviation,
+    and the rest of pairs of columns go over all the quantiles and then components in order.
+
+    Args:
+        times (np.ndarray[float]): The frame times corresponding to the TACs.
+        tacs_mean (np.ndarray[float]):
+            The mean tac values of the TACs over the threshold components and quantiles.
+        tacs_std (np.ndarray[float]):
+            The stderr value of the TACs over the threshold components and quantiles.
+    Returns:
+        np.ndarray:
+            Array containing the aggregated multiple-tacs array. The first column is the time,
+            the rest of the column pairs correspond to the threshold component and the quantile.
+    """
+    assert tacs_mean.shape == tacs_std.shape, (f"The TACs mean and stderrs must have the same shape."
+                                               f" mean:{tacs_mean.shape}, std:{tacs_std.shape}")
+    num_components, num_quantiles, num_frames = tacs_mean.shape
+    num_tacs = num_components * num_quantiles
+    num_columns = 2 * num_tacs + 1
+    out_tacs_array = np.zeros(shape=(num_columns, num_frames), dtype=float)
+
+    out_tacs_array[0] = times
+    out_tacs_array[1::2] = tacs_mean.reshape(num_tacs, num_frames)
+    out_tacs_array[2::2] = tacs_std.reshape(num_tacs, num_frames)
+
+    return out_tacs_array
