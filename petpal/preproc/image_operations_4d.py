@@ -817,6 +817,7 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
                                                                              quantiles: np.ndarray = np.asarray(
                                                                                      [0.5, 0.75, 0.9,
                                                                                       0.975]),
+                                                                             direction: str = '>',
                                                                              **sklearn_pca_kwargs) -> np.ndarray:
     """
     Extract quantile-thresholded time-activity curve (TAC) values for temporal PCA components from a 4D PET image.
@@ -843,6 +844,8 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
             An array of quantiles (values between 0 and 1) to compute thresholds for the PCA projections.
             Only voxels with PCA projection values above the corresponding quantile thresholds are included
             when calculating TAC statistics. Defaults to `[0.5, 0.75, 0.9, 0.975]`.
+        direction (str, optional):
+            An optional argument to switch from ``>`` to `<`. Defaults to ``>``.
         **sklearn_pca_kwargs:
             Additional keyword arguments passed to customize scikit-learn's PCA class (e.g., `svd_solver`,
             `random_state`, etc.).
@@ -883,28 +886,34 @@ def extract_temporal_pca_quantile_thresholded_tac_vals_from_image_using_mask(inp
     assert np.min(quantiles) >= 0, "Quantiles must be >= 0."
     assert np.max(quantiles) <= 1, "Quantiles must be <= 1."
 
-    voxels_pca_fit = extract_temporal_pca_projection_from_image_using_mask(input_image=input_image,
-                                                                           mask_image=mask_image,
-                                                                           num_components=num_components,
-                                                                           **sklearn_pca_kwargs
-                                                                           )
+    voxels_pca_projs = extract_temporal_pca_projection_from_image_using_mask(input_image=input_image,
+                                                                            mask_image=mask_image,
+                                                                            num_components=num_components,
+                                                                            **sklearn_pca_kwargs)
+    voxels_selected_pca = voxels_pca_projs[:, threshold_components]
 
-    num_frames = input_image.shape[-1]
-    num_quantiles = len(quantiles)
-    num_comps = len(threshold_components)
-    out_vals = np.zeros((num_comps, num_quantiles, num_frames), float)
-    out_stds = np.zeros_like(out_vals)
+    thresholds = np.quantile(voxels_selected_pca, quantiles, axis=0)
+    thresholds = np.expand_dims(thresholds.T, axis=0)
 
-    mask_voxels = extract_roi_voxel_tacs_from_image_using_mask(input_image=input_image,
-                                                               mask_image=mask_image)
+    voxels_selected_pca = voxels_selected_pca[..., None]
+    valid_voxels_mask = (voxels_selected_pca < thresholds) if direction == '<' else (voxels_selected_pca > thresholds)
+    valid_voxels_mask = np.expand_dims(valid_voxels_mask, axis=2)
 
-    for comp_id, thresh_comp in enumerate(threshold_components):
-        thresholds = np.quantile(voxels_pca_fit[:, thresh_comp], quantiles)
-        for thresh_id, thresh in enumerate(thresholds):
-            valid_pts = voxels_pca_fit[:, thresh_comp] > thresh
-            out_vals[comp_id, thresh_id] = np.nanmean(mask_voxels[valid_pts], axis=0)
-            out_stds[comp_id, thresh_id] = np.nanstd(mask_voxels[valid_pts], axis=0)
-        return np.asarray([out_vals, out_stds])
+    roi_voxels = extract_roi_voxel_tacs_from_image_using_mask(input_image=input_image, mask_image=mask_image)
+    num_voxels, num_frames = roi_voxels.shape
+    num_comps, num_quantiles = len(threshold_components), len(quantiles)
+
+    roi_voxels = np.expand_dims(roi_voxels, axis=(1,-1))
+    roi_voxels = np.broadcast_to(roi_voxels, (num_voxels, num_comps, num_frames, num_quantiles))
+
+    masked_voxels = np.where(valid_voxels_mask, roi_voxels, np.nan)
+    tacs_mean = np.nanmean(masked_voxels, axis=0)
+    tacs_std = np.nanstd(masked_voxels, axis=0)
+
+    tacs_mean = np.moveaxis(tacs_mean, 1, -1)
+    tacs_std = np.moveaxis(tacs_std, 1, -1)
+
+    return np.asarray([tacs_mean, tacs_std])
 
 
 class SimpleAutoImageCropper(object):
