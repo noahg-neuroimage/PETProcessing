@@ -382,10 +382,90 @@ def generate_temporal_pca_quantile_threshold_tacs_of_image_over_mask(input_image
                                                                      num_components: int,
                                                                      threshold_components: list | None,
                                                                      quantiles: list | None,
-                                                                     direction: str = '<',
+                                                                     direction: str = '>',
                                                                      **sklearn_pca_kwargs
                                                                      ):
+    """
+    Extract and compute time-activity curves (TACs) for an image using components of PCA projections
+    and quantile thresholds over a specified mask.
 
+    .. important::
+        Ensure that the input and mask images are in the same coordinate space
+        (aligned and registered) to avoid errors or mismatched results.
+
+    This function processes a 4D-PET image (`input_image`) with an accompanying mask,
+    computes PCA projections on the image data within the mask, thresholds these projections 
+    using specified quantiles, and extracts TAC statistics (mean and standard deviation) 
+    for each component-quantile pair.
+
+    The results can optionally be saved to a file, and the TAC means and standard deviations 
+    are returned as a NumPy array. The file written to disk has a different format than the array output
+    of this function. The written file will have the frame reference times as the first column. The rest of
+    the columns will come in pairs of mean and stderr of the TACs, iterated over the quantiles and then
+    the threshold components.
+
+    Args:
+        input_image_path (str): Path to the input image file (in NIfTI format or similar).
+        mask_image_path (str): Path to the mask image file (same dimensions as `input_image`).
+        output_arrays_path (str | None):
+            Path to save the output TAC arrays. If `None`, the arrays are not saved.
+        num_components (int): Number of PCA components to compute.
+        threshold_components (list[int] | None):
+            Indices of PCA components to apply thresholds on. Defaults to `[0, 1]` if `None`.
+        quantiles (list[float] | None):
+            Array of quantile thresholds for filtering the PCA projections.
+            Defaults to `[0.5, 0.75, 0.9, 0.975]` if `None`.
+        direction (str):
+            Comparison direction for the thresholds. Defaults to '>' (projection values
+            greater than the quantile threshold). Other options may include '<'.
+        **sklearn_pca_kwargs:
+            Additional keyword arguments to pass to the PCA implementation (from scikit-learn), if applicable.
+
+    Returns:
+        np.ndarray:
+            A NumPy array containing the mean and standard deviation TACs for each component-quantile pair,
+            with shape `(2, num_components, num_quantiles, num_frames)`.
+
+    Example:
+
+        .. code-block:: python
+
+                from petpal.utils.data_driven_image_analyses import generate_temporal_pca_quantile_threshold_tacs_of_image_over_mask
+
+
+                # Input paths
+                input_image_path = "example_input_image.nii"
+                mask_image_path = "example_mask_image.nii"
+                output_arrays_path = "output_tacs.txt"
+
+                # Parameters
+                num_components = 3
+                threshold_components = [0, 1]
+                quantiles = [0.5, 0.75, 0.95]
+                direction = '<'
+
+                # Run function
+                tpca_tacs_func = generate_temporal_pca_quantile_threshold_tacs_of_image_over_mask
+                tac_means, tac_stds = tpca_tacs_func(input_image_path=input_image_path,
+                                                     mask_image_path=mask_image_path,
+                                                     output_arrays_path=output_arrays_path,
+                                                     num_components=num_components,
+                                                     threshold_components=threshold_components,
+                                                     quantiles=quantiles,
+                                                     direction=direction)
+                # Output shape
+                print(tac_means.shape)
+
+    Raises:
+        AssertionError: If the shapes of the computed TAC mean and standard deviation arrays do not match.
+
+    See Also:
+        * :class:`sklearn.decomposition.PCA`: Core PCA implementation used in this analysis.
+        * :func:`extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask`: computes PCA projections
+        * :func:`_generate_quantiled_multi_tacs_header`: formats the output array header
+        * :func:`_gen_reshaped_quantiled_tacs`: reshapes the means and stds for writing to disk
+
+    """
     if threshold_components is None:
         threshold_components = [0, 1]
 
