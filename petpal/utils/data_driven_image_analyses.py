@@ -333,7 +333,7 @@ def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_ima
     """
 
     if threshold_components is None:
-        threshold_components = [0, 1]
+        threshold_components = np.arange(num_components)
 
     if quantiles is None:
         quantiles = [0.5, 0.75, 0.9, 0.975]
