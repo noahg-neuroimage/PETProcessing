@@ -333,7 +333,7 @@ def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_ima
     """
 
     if threshold_components is None:
-        threshold_components = [0, 1]
+        threshold_components = [i for i in range(num_components)]
 
     if quantiles is None:
         quantiles = [0.5, 0.75, 0.9, 0.975]
@@ -347,28 +347,25 @@ def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_ima
                                                                           mask_image=mask_image,
                                                                           num_components=num_components,
                                                                           **sklearn_pca_kwargs)
-    voxels_selected_pca = voxels_pca_projs[:, threshold_components]
-
-    thresholds = np.quantile(voxels_selected_pca, quantiles, axis=0)
-    thresholds = np.expand_dims(thresholds.T, axis=0)
-
-    voxels_selected_pca = voxels_selected_pca[..., None]
-    valid_voxels_mask = (voxels_selected_pca < thresholds) if direction == '<' else (voxels_selected_pca > thresholds)
-    valid_voxels_mask = np.expand_dims(valid_voxels_mask, axis=2)
+    voxels_pca_projs = voxels_pca_projs[:, threshold_components]
 
     roi_voxels = extract_roi_voxel_tacs_from_image_using_mask(input_image=input_image, mask_image=mask_image)
-    num_voxels, num_frames = roi_voxels.shape
-    num_comps, num_quantiles = len(threshold_components), len(quantiles)
 
-    roi_voxels = np.expand_dims(roi_voxels, axis=(1,-1))
-    roi_voxels = np.broadcast_to(roi_voxels, (num_voxels, num_comps, num_frames, num_quantiles))
+    num_components = len(threshold_components)
+    num_quantiles = len(quantiles)
+    num_frames = roi_voxels.shape[1]
 
-    masked_voxels = np.where(valid_voxels_mask, roi_voxels, np.nan)
-    tacs_mean = np.nanmean(masked_voxels, axis=0)
-    tacs_std = np.nanstd(masked_voxels, axis=0)
+    tacs_mean = np.zeros((num_components, num_quantiles, num_frames), float)
+    tacs_std = np.zeros_like(tacs_mean)
 
-    tacs_mean = np.moveaxis(tacs_mean, 1, -1)
-    tacs_std = np.moveaxis(tacs_std, 1, -1)
+
+    for comp_id, comp_pc_vals in enumerate(voxels_pca_projs.T):
+        thresh_vals_for_comp = np.quantile(comp_pc_vals, quantiles)
+        for thresh_id, a_thresh in enumerate(thresh_vals_for_comp):
+            valid_voxels_mask = comp_pc_vals < a_thresh if direction == '<' else comp_pc_vals > a_thresh
+            tmp_tacs = roi_voxels[valid_voxels_mask, :]
+            tacs_mean[comp_id, thresh_id, :] = np.nanmean(tmp_tacs, axis=0)
+            tacs_std[comp_id, thresh_id, :] = np.nanstd(tmp_tacs, axis=0)
 
     return np.asarray([tacs_mean, tacs_std])
 
