@@ -15,8 +15,6 @@ import numpy as np
 import ants
 import nibabel
 from nibabel import processing
-
-from petpal.preproc import motion_corr
 import pandas as pd
 
 from . import image_operations_4d, motion_corr
@@ -526,7 +524,7 @@ def calc_vesselness_measure_image(input_image: ants.core.ANTsImage,
     """
     assert len(input_image.shape) == 3, "Input image must be 3D."
 
-    tmp_img = input_image / input_image.max()
+    tmp_img: ants.core.ANTsImage = input_image / input_image.max()
     hess_objectness_img = tmp_img.hessian_objectness(sigma_min=sigma_min,
                                                      sigma_max=sigma_max,
                                                      gamma=gamma,
