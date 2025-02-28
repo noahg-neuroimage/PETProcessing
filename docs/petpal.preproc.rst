@@ -1,5 +1,5 @@
-petpal.preproc package
-======================
+PETPAL Preproc Sub-Package
+==========================
 
 Submodules
 ----------
@@ -7,6 +7,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   petpal.preproc.segmentation_tools
    petpal.preproc.image_operations_4d
    petpal.preproc.motion_corr
    petpal.preproc.partial_volume_corrections

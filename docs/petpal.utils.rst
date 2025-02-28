@@ -13,6 +13,7 @@ Submodules
    petpal.utils.testing_utils
    petpal.utils.useful_functions
    petpal.utils.time_activity_curve
+   petpal.utils.decorators
    petpal.utils.data_driven_image_analyses
 
 Module contents

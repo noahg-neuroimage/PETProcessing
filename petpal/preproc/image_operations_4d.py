@@ -309,7 +309,6 @@ def brain_mask(input_image_4d_path: str,
     mask = mask_on_pet.get_mask()
     ants.image_write(image=mask,filename=out_image_path)
 
-
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
                                                        segmentation_image_numpy: np.ndarray,
                                                        region: int,
