@@ -4,62 +4,6 @@ extend the functionality of functions that only work with objects or arrays.
 The extensions allow for the flexibility of passing in image
 paths or the image objects themselves, and allow the users to pass an
 optional path for saving the output of the decorated function.
-
-Example usage:
-
-    .. code-block:: python
-
-        import ants
-        from petpal.utils.decorators import ANTsImageToANTsImage
-        from petpal.preproc.segmentaion_tools import calc_vesselness_measure_image
-
-        # Defining the decorated function
-        @ANTsImageToANTsImage
-        def step_calc_vesselness_measure_image(input_image: ants.core.ANTsImage,
-                                               sigma_min: float = 2.0,
-                                               sigma_max: float = 8.0,
-                                               alpha: float = 0.5,
-                                               beta: float = 0.5,
-                                               gamma: float = 5.0,
-                                               morph_open_radius: int = 1,
-                                               **hessian_func_kwargs):
-            return calc_vesselness_measure_image(input_image=input_image,
-                                                 sigma_min=sigma_min,
-                                                 sigma_max=sigma_max,
-                                                 alpha=alpha,
-                                                 beta=beta,
-                                                 gamma=gamma,
-                                                 morph_open_radius=morph_open_radius,
-                                                 **hessian_func_kwargs)
-
-        # Conventional use of `calc_vesselness_measure_image`
-
-        input_img = ants.image_read('/path/to/3d/img/.nii.gz')
-        vess_img = calc_vesselness_measure_image(input_img) # Using all default values
-        ants.image_write(vess_img, '/path/to/out/img/.nii.gz')
-
-
-        # Using the decorated version
-        ## Using paths as inputs
-        vess_img = step_calc_vesselness_measure_image('/path/to/3d/img/.nii.gz',
-                                                      '/path/to/out/img/.nii.gz')
-
-        ### Not saving output image
-        vess_img = step_calc_vesselness_measure_image('/path/to/3d/img/.nii.gz',
-                                                      None)
-
-        ## Using images as inputs
-        input_img = ants.image_read('/path/to/3d/img/.nii.gz')
-        vess_img = step_calc_vesselness_measure_image(input_img,
-                                                      '/path/to/out/img/.nii.gz')
-
-        ## Ignoring the return value to just save image
-        step_calc_vesselness_measure_image('/path/to/3d/img/.nii.gz',
-                                           '/path/to/out/img/.nii.gz')
-
-
-
-
 """
 
 import functools
@@ -93,6 +37,59 @@ def ANTsImageToANTsImage(func):
             is not saved.
         *args: Additional positional arguments for the decorated function.
         **kwargs: Additional keyword arguments for the decorated function.
+
+    Example:
+
+        .. code-block:: python
+
+            import ants
+            from petpal.utils.decorators import ANTsImageToANTsImage
+            from petpal.preproc.segmentaion_tools import calc_vesselness_measure_image
+
+            # Defining the decorated function
+            @ANTsImageToANTsImage
+            def step_calc_vesselness_measure_image(input_image: ants.core.ANTsImage,
+                                                   sigma_min: float = 2.0,
+                                                   sigma_max: float = 8.0,
+                                                   alpha: float = 0.5,
+                                                   beta: float = 0.5,
+                                                   gamma: float = 5.0,
+                                                   morph_open_radius: int = 1,
+                                                   **hessian_func_kwargs):
+                return calc_vesselness_measure_image(input_image=input_image,
+                                                     sigma_min=sigma_min,
+                                                     sigma_max=sigma_max,
+                                                     alpha=alpha,
+                                                     beta=beta,
+                                                     gamma=gamma,
+                                                     morph_open_radius=morph_open_radius,
+                                                     **hessian_func_kwargs)
+
+            # Conventional use of `calc_vesselness_measure_image`
+
+            input_img = ants.image_read('/path/to/3d/img/.nii.gz')
+            vess_img = calc_vesselness_measure_image(input_img) # Using all default values
+            ants.image_write(vess_img, '/path/to/out/img/.nii.gz')
+
+
+            # Using the decorated version
+            ## Using paths as inputs
+            vess_img = step_calc_vesselness_measure_image('/path/to/3d/img/.nii.gz',
+                                                          '/path/to/out/img/.nii.gz')
+
+            ### Not saving output image
+            vess_img = step_calc_vesselness_measure_image('/path/to/3d/img/.nii.gz',
+                                                          None)
+
+            ## Using images as inputs
+            input_img = ants.image_read('/path/to/3d/img/.nii.gz')
+            vess_img = step_calc_vesselness_measure_image(input_img,
+                                                          '/path/to/out/img/.nii.gz')
+
+            ## Ignoring the return value to just save image
+            step_calc_vesselness_measure_image('/path/to/3d/img/.nii.gz',
+                                               '/path/to/out/img/.nii.gz')
+
 
     Raises:
         TypeError: If `in_img` is not a string or `ants.core.ANTsImage`.
