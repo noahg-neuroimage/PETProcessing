@@ -30,14 +30,6 @@ def ANTsImageToANTsImage(func):
             - Passes an `ants.core.ANTsImage` object to the decorated function.
             - Saves the output image to the specified file path if `out_path` is provided.
 
-    Wrapper Parameters:
-        in_img (ants.core.ANTsImage | str): Input image, either an ANTsImage object or
-            the file path to a NIfTI image.
-        out_path (str): File path to save the output image. If `None`, the output image
-            is not saved.
-        *args: Additional positional arguments for the decorated function.
-        **kwargs: Additional keyword arguments for the decorated function.
-
     Example:
 
         .. code-block:: python
@@ -65,7 +57,7 @@ def ANTsImageToANTsImage(func):
                                                      morph_open_radius=morph_open_radius,
                                                      **hessian_func_kwargs)
 
-            # Conventional use of `calc_vesselness_measure_image`
+            # Conventional use of calc_vesselness_measure_image
 
             input_img = ants.image_read('/path/to/3d/img/.nii.gz')
             vess_img = calc_vesselness_measure_image(input_img) # Using all default values
