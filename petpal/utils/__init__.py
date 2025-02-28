@@ -4,6 +4,7 @@ from . import math_lib
 from . import testing_utils
 from . import useful_functions
 from . import time_activity_curve
+from . import decorators
 
 def main():
     print("PETPAL - Utilities")
