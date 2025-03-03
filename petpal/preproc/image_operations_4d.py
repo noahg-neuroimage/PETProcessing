@@ -26,13 +26,12 @@ import os
 import pathlib
 import datetime
 import tempfile
-import re
 import ants
 import nibabel
 import numpy as np
 from scipy.ndimage import center_of_mass
 
-from ..utils.useful_functions import weighted_series_sum
+from ..utils.useful_functions import weighted_series_sum, check_physical_space_for_ants_image_pair
 from ..utils import image_io, math_lib
 from ..preproc.decay_correction import undo_decay_correction, decay_correct
 
@@ -312,11 +311,10 @@ def brain_mask(input_image_4d_path: str,
     mask = mask_on_pet.get_mask()
     ants.image_write(image=mask,filename=out_image_path)
 
-
-def extract_tac_from_nifty_using_mask(input_image_4d_numpy: np.ndarray,
-                                      segmentation_image_numpy: np.ndarray,
-                                      region: int,
-                                      verbose: bool) -> np.ndarray:
+def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
+                                                       segmentation_image_numpy: np.ndarray,
+                                                       region: int,
+                                                       verbose: bool) -> np.ndarray:
     """
     Creates a time-activity curve (TAC) by computing the average value within a region, for each 
     frame in a 4D PET image series. Takes as input a PET image, which has been registered to
@@ -441,11 +439,11 @@ def suvr(input_image_path: str,
         raise ValueError("SUVR input image is not 3D. If your image is dynamic, try running 'weighted_series_sum'"
                          " first.")
 
-    ref_region_avg = extract_tac_from_nifty_using_mask(input_image_4d_numpy=pet_arr,
-                                                       segmentation_image_numpy=segmentation_arr,
-                                                       region=ref_region,
-                                                       verbose=verbose)
-
+    ref_region_avg = extract_mean_roi_tac_from_nifty_using_segmentation(input_image_4d_numpy=pet_arr,
+                                                                        segmentation_image_numpy=segmentation_arr,
+                                                                        region=ref_region,
+                                                                        verbose=verbose)
+    
     suvr_arr = pet_arr / ref_region_avg[0]
 
     out_img = ants.from_numpy_like(data=suvr_arr,
@@ -522,7 +520,7 @@ def roi_tac(input_image_4d_path: str,
                          "'FrameReferenceTime' or 'FrameTimesStart'")
 
     pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_4d_path)
-    tac_extraction_func = extract_tac_from_nifty_using_mask
+    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
     pet_numpy = nibabel.load(input_image_4d_path).get_fdata()
     seg_numpy = nibabel.load(roi_image_path).get_fdata()
 
@@ -559,7 +557,7 @@ def write_tacs(input_image_path: str,
     regions_abrev = label_map['abbreviation']
     regions_map = label_map['mapping']
 
-    tac_extraction_func = extract_tac_from_nifty_using_mask
+    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
     pet_numpy = nibabel.load(input_image_path).get_fdata()
     seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
 
@@ -575,6 +573,39 @@ def write_tacs(input_image_path: str,
         else:
             out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
         np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
+
+
+def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                                 mask_image: ants.core.ANTsImage,
+                                                 verbose: bool = False) -> np.ndarray:
+    """
+    Function to extract ROI voxel tacs from an image using a mask image.
+
+    This function returns all the voxel TACs, and unlike :func:`extract_mean_roi_tac_from_nifti_using_segmentation`,
+    does not calculate the mean over all the voxels.
+
+    Args:
+        input_image (ants.core.ANTsImage): Input 4D-image from which to extract ROI voxel tacs.
+        mask_image (ants.core.ANTsImage): Mask image which determines which voxels to extract.
+        verbose (bool, optional): If True, prints information about the shape of extracted voxel tacs.
+
+    Returns:
+        out_voxels (np.ndarray): Array of voxel TACs of shape (num_voxels, num_frames)
+
+    Raises:
+         AssertionError: If input image is not 4D-image.
+         AssertionError: If mask image is not in the same physical space as the input image.
+
+    """
+    assert len(input_image.shape) == 4, "Input image must be 4D."
+    assert check_physical_space_for_ants_image_pair(input_image, mask_image), (
+        "Images must have the same physical dimensions.")
+
+    x_inds, y_inds, z_inds = mask_image.nonzero()
+    out_voxels = input_image.numpy()[x_inds, y_inds, z_inds, :]
+    if verbose:
+        print(f"(ImageOps): Output TACs have shape {out_voxels.shape}")
+    return out_voxels
 
 
 class SimpleAutoImageCropper(object):

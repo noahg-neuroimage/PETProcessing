@@ -23,8 +23,8 @@ class TACPlots(object):
     .. code-block:: python
 
         tac_plots = TACPlots()
-        tac_plots.add_tac(tac_times_in_minutes, tac_vals, label='TAC 1', pl_kwargs={'color': 'blue'})
-        tac_plots.add_tac(tac_times_2, tac_vals_2, label='TAC 2', pl_kwargs={'color': 'red'})
+        tac_plots.add_tac(tac_times_in_minutes, tac_vals, label='TAC 1', color='blue')
+        tac_plots.add_tac(tac_times_2, tac_vals_2, label='TAC 2', color='red')
         tac_plots.gen_legend()
         plt.show()
 
@@ -47,23 +47,17 @@ class TACPlots(object):
         self.fax[0].set(ylabel=ylabel, title='Linear')
         self.fax[1].set(xscale='log', title='SemiLog-X')
     
-    def add_tac(self, tac_times: np.ndarray, tac_vals: np.ndarray, label: str = None, pl_kwargs: dict = None):
+    def add_tac(self, tac_times: np.ndarray, tac_vals: np.ndarray, **kwargs):
         r"""
         Add a TAC to both subplots.
 
         Args:
             tac_times (np.ndarray): The time points for the TAC.
             tac_vals (np.ndarray): The corresponding values for the TAC.
-            label (str): The label for the TAC in the legend. Defaults to no label.
-            pl_kwargs (dict): Additional keyword arguments for the plot() function. Defaults to an empty dictionary.
+            kwargs (dict): Additional keyword arguments for the plot() function.
         """
-        if pl_kwargs is None:
-            pl_kwargs = {'lw': 2, 'alpha': 0.8}
-        if label is None:
-            [ax.plot(tac_times, tac_vals, **pl_kwargs) for ax in self.fax]
-        else:
-            [ax.plot(tac_times, tac_vals, label=label, **pl_kwargs) for ax in self.fax]
-    
+        [ax.plot(tac_times, tac_vals, **kwargs) for ax in self.fax]
+
     def gen_legend(self):
         r"""
         Generate a legend using the labels provided in the add_tac() method.
@@ -73,7 +67,9 @@ class TACPlots(object):
         generated will not be included in the legend.
         
         """
-        self.fig.legend(*self.fax[0].get_legend_handles_labels(), bbox_to_anchor=(1.0, 0.5), loc='center left')
+        handles, labels = self.fax[0].get_legend_handles_labels()
+        if handles:
+            self.fig.legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
 
 
 def generate_random_parameter_samples(num_samples, num_params, hi, lo):

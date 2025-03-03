@@ -31,12 +31,12 @@ class StepsAPI:
 
     """
     
-    def set_input_as_output_from(self, sending_step):
+    def set_input_as_output_from(self, *sending_steps):
         """
-        Sets the input of the current step as the output from a specified sending step.
+        Sets the input of the current step as the output from a list of steps.
 
         Args:
-            sending_step: The previous step from which the output will be used as input for the current step.
+            *sending_steps: The previous steps from which the output will be used as input for the current step.
 
         Raises:
             NotImplementedError: This method should be implemented by subclasses.
@@ -44,6 +44,10 @@ class StepsAPI:
         Notes:
             For a concrete example, take a look at:
             :meth:`TACsFromSegmentationStep<petpal.pipelines.preproc_steps.TACsFromSegmentationStep.set_input_as_output_from>`
+
+        .. important::
+           If a step takes multiple input steps. the implementation will have a defined order for steps.
+
         """
         raise NotImplementedError
     

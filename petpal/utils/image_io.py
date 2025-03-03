@@ -4,7 +4,7 @@ Image IO
 PET radionuclide half life source: code borrowed from DynamicPET
 (https://github.com/bilgelm/dynamicpet/blob/main/src/dynamicpet/petbids/petbidsjson.py), derived
 from TPC (turkupetcentre.net/petanalysis/decay.html). This source is from:
-Table of Isotopes, Sixth edition, edited by C.M. Lederer, J.M. Hollander, I. Perlman. WILEY, 1967. 
+Table of Isotopes, Sixth edition, edited by C.M. Lederer, J.M. Hollander, I. Perlman. WILEY, 1967.
 """
 import json
 import re
@@ -140,8 +140,8 @@ def load_metadata_for_nifti_with_same_filename(image_path) -> dict:
 
 def flatten_metadata(metadata: dict) -> dict:
     """
-    Given a metadata dictionary, return an identical dictionary with any list-like or dict-like 
-    data replaced with individual values. Useful when converting several JSON files into a TSV 
+    Given a metadata dictionary, return an identical dictionary with any list-like or dict-like
+    data replaced with individual values. Useful when converting several JSON files into a TSV
     file.
 
     Args:
@@ -245,7 +245,7 @@ def get_half_life_from_radionuclide(meta_data_file_path: str) -> float:
 
 def get_half_life_from_meta(meta_data_file_path: str):
     """
-    Extracts the radionuclide half-life (usually in seconds) from a nifti metadata file. 
+    Extracts the radionuclide half-life (usually in seconds) from a nifti metadata file.
 
     Args:
         meta_data_file_path (str): Path to the nifti metadata file.
@@ -295,7 +295,7 @@ def get_half_life_from_nifti(image_path:str):
 def get_frame_timing_info_for_nifti(image_path: str) -> dict[str, np.ndarray]:
     r"""
     Extracts frame timing information and decay factors from a NIfTI image metadata.
-    Expects that the JSON metadata file has ``FrameDuration`` and ``DecayFactor`` or 
+    Expects that the JSON metadata file has ``FrameDuration`` and ``DecayFactor`` or
     ``DecayCorrectionFactor`` keys.
 
     .. important::
@@ -598,6 +598,7 @@ def get_window_index_pairs_for_image(image_path: str, w_size: float):
     image_frame_info = get_frame_timing_info_for_nifti(image_path=image_path)
     return get_window_index_pairs_from_durations(frame_durations=image_frame_info['duration'], w_size=w_size)
 
+
 def infer_sub_ses_from_tac_path(tac_path: str):
     """
     Infers subject and session IDs from a TAC file path by analyzing the filename.
@@ -639,6 +640,7 @@ def infer_sub_ses_from_tac_path(tac_path: str):
         name_parts = sesname.split("-")
         sesname = ''.join(name_parts)
     return subname, sesname
+
 
 def km_regional_fits_to_tsv(fit_results_dir: str, out_tsv_dir: str):
     """
