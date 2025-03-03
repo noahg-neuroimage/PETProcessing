@@ -439,7 +439,7 @@ def suvr(input_image_path: str,
         raise ValueError("SUVR input image is not 3D. If your image is dynamic, try running 'weighted_series_sum'"
                          " first.")
 
-    ref_region_avg = extract_mean_roi_tac_from_nifty_using_segmentation(input_image_4d_numpy=pet_arr,
+    ref_region_avg = extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy=pet_arr,
                                                                         segmentation_image_numpy=segmentation_arr,
                                                                         region=ref_region,
                                                                         verbose=verbose)
