@@ -431,33 +431,33 @@ def suvr(input_image_path: str,
     Returns:
         ants.ANTsImage: SUVR parametric image
     """
-    pet_image = ants.image_read(filename=input_image_path)
-    pet_data = pet_image.numpy()
-    segmentation_image = ants.image_read(filename=segmentation_image_path,
+    pet_img = ants.image_read(filename=input_image_path)
+    pet_arr = pet_img.numpy()
+    segmentation_img = ants.image_read(filename=segmentation_image_path,
                                         pixeltype='unsigned int')
-    segmentation_data = segmentation_image.numpy()
+    segmentation_arr = segmentation_img.numpy()
 
-    if len(pet_data.shape)!=3:
+    if len(pet_arr.shape)!=3:
         raise ValueError("SUVR input image is not 3D. If your image is dynamic, try running 'weighted_series_sum'"
                          " first.")
 
-    ref_region_avg = extract_tac_from_nifty_using_mask(input_image_4d_numpy=pet_data,
-                                                       segmentation_image_numpy=segmentation_data,
+    ref_region_avg = extract_tac_from_nifty_using_mask(input_image_4d_numpy=pet_arr,
+                                                       segmentation_image_numpy=segmentation_arr,
                                                        region=ref_region,
                                                        verbose=verbose)
 
-    suvr_data = pet_data / ref_region_avg[0]
+    suvr_arr = pet_arr / ref_region_avg[0]
 
-    out_image = ants.from_numpy_like(data=suvr_data,
-                                     image=pet_image)
+    out_img = ants.from_numpy_like(data=suvr_arr,
+                                     image=pet_img)
 
     if out_image_path is not None:
-        ants.image_write(image=out_image,
+        ants.image_write(image=out_img,
                          filename=out_image_path)
         image_io.safe_copy_meta(input_image_path=input_image_path,
                                 out_image_path=out_image_path)
 
-    return out_image
+    return out_img
 
 
 def gauss_blur(input_image_path: str,
