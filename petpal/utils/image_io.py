@@ -312,6 +312,7 @@ def get_frame_timing_info_for_nifti(image_path: str) -> dict[str, np.ndarray]:
             - `duration` (np.ndarray): Frame durations in seconds.
             - `start` (np.ndarray): Frame start times in seconds.
             - `end` (np.ndarray): Frame end times in seconds.
+            - `center` (np.ndarray): Frame center times in seconds.
             - `decay` (np.ndarray): Decay factors for each frame.
     """
     _meta_data = load_metadata_for_nifti_with_same_filename(image_path=image_path)
@@ -325,14 +326,19 @@ def get_frame_timing_info_for_nifti(image_path: str) -> dict[str, np.ndarray]:
     except KeyError:
         frm_starts = np.diff(frm_ends)
     try:
-        decay = np.asarray(_meta_data['DecayCorrectionFactor'],float)
+        decay = np.asarray(_meta_data['DecayCorrectionFactor'], float)
     except KeyError:
-        decay = np.asarray(_meta_data['DecayFactor'],float)
+        decay = np.asarray(_meta_data['DecayFactor'], float)
+    try:
+        frm_centers = np.asarray(_meta_data['FrameReferenceTime'], float)
+    except KeyError:
+        frm_centers = np.asarray((frm_starts + frm_ends) / 2.0, float)
 
     frm_info = {'duration': frm_dur,
-                'start': frm_starts,
-                'end': frm_ends,
-                'decay': decay}
+                'start'   : frm_starts,
+                'end'     : frm_ends,
+                'center'  : frm_centers,
+                'decay'   : decay}
 
     return frm_info
 
