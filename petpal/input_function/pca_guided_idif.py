@@ -15,9 +15,19 @@ class PCAGuidedIdif(object):
         self.verbose = verbose
 
     @staticmethod
-    def _generate_quantile_params(num_compnents: int = 3,
+    def _generate_quantile_params(num_components: int = 3,
                                   value: float = 0.5,
                                   lower: float = 1e-4,
-                                  upper: float = 0.999):
+                                  upper: float = 0.999) -> lmfit.Parameters:
         tmp_dict = {'value': value, 'lower': lower, 'upper': upper}
-        return lmfit.create_params(**{f'pc{i}' : tmp_dict for i in range(num_compnents)})
+        return lmfit.create_params(**{f'pc{i}' : tmp_dict for i in range(num_components)})
+
+    @staticmethod
+    def calculate_voxel_mask_from_quantiles(params: lmfit.Parameters,
+                                            pca_values_per_voxel: np.ndarray[float],
+                                            quantile_flags: np.ndarray[bool]) -> np.ndarray[bool]:
+        voxel_mask = np.ones(len(pca_values_per_voxel), dtype=bool)
+        quantile_values = params.valuesdict().values()
+        for pca_component, quantile, flag in zip(pca_values_per_voxel.T, quantile_values, quantile_flags):
+            voxel_mask *= (pca_component > np.quantile(pca_component, quantile)) ^ flag
+        return voxel_mask
