@@ -6,8 +6,8 @@ import nibabel
 import numpy as np
 from scipy.interpolate import interp1d
 import ants
-from . import image_io, math_lib
 
+from . import image_io, math_lib
 
 FULL_NAME = [
     'Background',
@@ -210,7 +210,7 @@ def weighted_series_sum_over_window_indecies(input_image_4d: ants.core.ANTsImage
                                              window_start_id: int,
                                              window_end_id: int,
                                              half_life: float,
-                                             image_frame_info: dict, ):
+                                             image_frame_info: image_io.ScanTimingInfo) -> ants.core.ANTsImage | None:
     r"""
     Computes a weighted series sum over a specified window of indices for a 4D PET image.
 
@@ -220,10 +220,12 @@ def weighted_series_sum_over_window_indecies(input_image_4d: ants.core.ANTsImage
         window_start_id (int): Start index of the image window.
         window_end_id (int): End index of the image window.
         half_life (float): Radioactive tracer's half-life in seconds.
-        image_frame_info (dict): Frame timing information with keys:
-            - `start` (np.ndarray): Frame start times.
-            - `duration` (np.ndarray): Frame durations.
-            - `decay` (np.ndarray): Decay correction factors.
+        image_frame_info (image_io.ScanTimingInfo): Frame timing information with:
+            - duration (np.ndarray): Frame durations.
+            - start (np.ndarray): Frame start times.
+            - end (np.ndarray): Frame ends.
+            - center (np.ndarray): Frame centers.
+            - decay (np.ndarray): Decay correction factors.
 
     Returns:
         ants.core.ANTsImage: Resultant image after weighted sum computation.
@@ -243,9 +245,9 @@ def weighted_series_sum_over_window_indecies(input_image_4d: ants.core.ANTsImage
                                                                      window_start_id=window_start_id,
                                                                      window_end_id=window_end_id,
                                                                      half_life=half_life,
-                                                                     frame_starts=image_frame_info['start'],
-                                                                     frame_durations=image_frame_info['duration'],
-                                                                     decay_factors=image_frame_info['decay'],)
+                                                                     frame_starts=image_frame_info.start,
+                                                                     frame_durations=image_frame_info.duration,
+                                                                     decay_factors=image_frame_info.decay,)
 
     window_wss = ants.from_numpy(data=window_wss,
                                  origin=input_image_4d.origin[:-1],

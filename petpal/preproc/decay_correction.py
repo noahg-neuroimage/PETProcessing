@@ -45,7 +45,7 @@ def undo_decay_correction(input_image_path: str,
         json_data = image_io.load_metadata_for_nifti_with_same_filename(image_path=input_image_path)
 
     frame_info = image_io.get_frame_timing_info_for_nifti(image_path=input_image_path)
-    decay_factors = frame_info['decay']
+    decay_factors = frame_info.decay
 
     uncorrected_image_numpy = decay_corrected_image.numpy()
 

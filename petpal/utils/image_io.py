@@ -633,7 +633,7 @@ def get_window_index_pairs_for_image(image_path: str, w_size: float):
         :func:`get_window_index_pairs_from_durations`
     """
     image_frame_info = get_frame_timing_info_for_nifti(image_path=image_path)
-    return get_window_index_pairs_from_durations(frame_durations=image_frame_info['duration'], w_size=w_size)
+    return get_window_index_pairs_from_durations(frame_durations=image_frame_info.duration, w_size=w_size)
 
 
 def infer_sub_ses_from_tac_path(tac_path: str):
