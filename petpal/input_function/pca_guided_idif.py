@@ -28,6 +28,11 @@ class PCAGuidedIdif(object):
         self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
         self.mask_std = np.mean(self.mask_voxel_tacs, axis=0)
 
+        self.mask_peak_arg = np.argmax(self.mask_avg)
+        self.mask_peak_val = self.mask_avg[self.mask_peak_arg]
+
+        self.tac_times_in_mins = self.get_frame_reference_times(image_path=self.image_path)
+
     @staticmethod
     def get_frame_reference_times(image_path: str) -> np.ndarray[float]:
         image_timing_info_dict = get_frame_timing_info_for_nifti(image_path=image_path)
@@ -55,6 +60,18 @@ class PCAGuidedIdif(object):
     def _objective_function_voxel_term(voxel_nums: float) -> float:
         return np.log(1.0 + np.exp(-voxel_nums / 6.0))
 
+    @staticmethod
+    def _objective_function_noise_term(tac_stderrs: np.ndarray[float]) -> float:
+        return np.sqrt(np.mean(tac_stderrs ** 2))
+
+    @staticmethod
+    def _objective_function_smoothness_term(tac_values: np.ndarray[float]) -> float:
+        return np.sum(np.abs(np.diff(tac_values, prepend=tac_values[0]) / np.max(tac_values)))
+
+    @staticmethod
+    def _objective_function_peak_term(tac_peak_ratio):
+        return np.log(1.0 + np.exp(-tac_peak_ratio * 1.5))
+
     def residual(self,
                  params: lmfit.Parameters,
                  pca_values_per_voxel: np.ndarray[float],
@@ -64,9 +81,18 @@ class PCAGuidedIdif(object):
                  beta: float,
                  mask_function: Callable) -> float:
         voxel_mask = mask_function(params, pca_values_per_voxel, quantile_flags)
-        valid_voxel_number = np.sum(voxel_mask)
+        valid_voxels_number = np.sum(voxel_mask)
         masked_voxels = voxel_tacs[voxel_mask]
 
+        tacs_avg = np.mean(masked_voxels, axis=0) if valid_voxels_number > 1 else self.mask_avg
+        tacs_std = np.std(masked_voxels, axis=0) if valid_voxels_number > 1 else self.mask_std
 
-        tacs_avg = np.mean(masked_voxels, axis=0) if valid_voxel_number > 1 else self.mask_avg
-        tacs_std = np.std(masked_voxels, axis=0) if valid_voxel_number > 1 else self.mask_std
+        voxel_term = self._objective_function_voxel_term(voxel_nums=valid_voxels_number)
+        noise_term = self._objective_function_noise_term(tac_stderrs=tacs_std)
+
+        peak_term = alpha * self._objective_function_peak_term(tac_peak_ratio=tacs_avg[self.mask_peak_arg]/self.mask_peak_val) if alpha != 0.0 else 0.0
+        smth_term = beta * self._objective_function_smoothness_term(tac_values=tacs_avg) if beta != 0.0 else 0.0
+
+        return voxel_term + noise_term + peak_term + smth_term
+
+
