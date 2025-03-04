@@ -263,6 +263,76 @@ def get_half_life_from_nifti(image_path:str):
 
 @dataclass
 class ScanTimingInfo:
+    """
+    A data structure to represent and streamline access to timing information for image scans.
+
+    This class encapsulates details about a scan's timing, including:
+    - Start and end times of each scan frame.
+    - Duration and center times of the frames.
+    - Decay values (if applicable).
+
+    Additionally, the class provides properties for easy conversion of timing values to minutes
+    if the times are given in seconds and exceed a threshold (assumed to be 200.0 seconds).
+
+    Attributes:
+        duration (np.ndarray[float]): Array of frame durations.
+        end (np.ndarray[float]): Array of frame end times.
+        start (np.ndarray[float]): Array of frame start times.
+        center (np.ndarray[float]): Array of frame center times (midpoints).
+        decay (np.ndarray[float]): Array of decay coefficients for the scan frames.
+
+    Properties:
+        duration_in_mins (np.ndarray[float]):
+            Returns the frame durations converted to minutes if `end` is >= 200.0 seconds.
+            Otherwise, returns the original durations.
+
+        end_in_mins (np.ndarray[float]):
+            Returns the frame end times converted to minutes if `end` is >= 200.0 seconds.
+            Otherwise, returns the original end times.
+
+        start_in_mins (np.ndarray[float]):
+            Returns the frame start times converted to minutes if `end` is >= 200.0 seconds.
+            Otherwise, returns the original start times.
+
+        center_in_mins (np.ndarray[float]):
+            Returns the frame center times converted to minutes if `end` is >= 200.0 seconds.
+            Otherwise, returns the original center times.
+
+    Examples:
+
+        .. code-block:: python
+
+            import numpy as np
+            from petpal.utils.image_io import ScanTimingInfo, get_frame_timing_info_for_nifti
+
+            # Explicitly setting the attributes
+            ## Define scan timing information
+            duration = np.array([60.0, 120.0, 180.0])  # seconds
+            start = np.array([0.0, 60.0, 180.0])
+            end = np.array([60.0, 180.0, 360.0])
+            center = (start + end) / 2.0  # Calculate the midpoints
+            decay = np.array([1.0, 0.9, 0.8])  # Example decay values
+
+            ## Create an instance of ScanTimingInfo
+            scan_timing_info = ScanTimingInfo(duration=duration, end=end, start=start, center=center, decay=decay)
+
+            ## Access original timing information
+            print(scan_timing_info.duration)  # [ 60. 120. 180.]
+            print(scan_timing_info.center)    # [30.  120. 270.]
+
+            ## Access timing as minutes (when times exceed 200.0 seconds)
+            print(scan_timing_info.duration_in_mins)  # [ 60. 120. 180.] (Unchanged)
+            print(scan_timing_info.center_in_mins)    # [30. 120. 270.] (Unchanged)
+
+            ## Example when `end` is greater than 200.0:
+            scan_timing_info.end = np.array([300.0, 400.0, 500.0])  # Update end times
+            print(scan_timing_info.end_in_mins)  # [5. 6.66666667 8.33333333] (Converted to minutes)
+            print(scan_timing_info.start_in_mins)  # [0. 1. 3.] (Converted to minutes)
+
+            # Getting the object directly from a nifty image file (assuming the metadata shares the name)
+            scan_timing_info = get_frame_timing_info_for_nifti("/path/to/image.nii.gz")
+
+    """
     duration: np.ndarray[float]
     end: np.ndarray[float]
     start: np.ndarray[float]
