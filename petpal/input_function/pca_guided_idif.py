@@ -31,11 +31,7 @@ class PCAGuidedIdif(object):
     @staticmethod
     def get_frame_reference_times(image_path: str) -> np.ndarray[float]:
         image_timing_info_dict = get_frame_timing_info_for_nifti(image_path=image_path)
-        frame_reference_times = image_timing_info_dict['center']
-        if frame_reference_times[-1] >=_MAX_SCAN_IN_MINS_:
-            return frame_reference_times / 60.0
-        else:
-            return frame_reference_times
+        return image_timing_info_dict.center_in_mins
 
     @staticmethod
     def _generate_quantile_params(num_components: int = 3,
