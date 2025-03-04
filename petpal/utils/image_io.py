@@ -345,12 +345,12 @@ def get_frame_timing_info_for_nifti(image_path: str) -> ScanTimingInfo:
         image_path (str): Path to the NIfTI image file.
 
     Returns:
-        dict: Frame timing information with the following keys:
-            - `duration` (np.ndarray): Frame durations in seconds.
-            - `start` (np.ndarray): Frame start times in seconds.
-            - `end` (np.ndarray): Frame end times in seconds.
-            - `center` (np.ndarray): Frame center times in seconds.
-            - `decay` (np.ndarray): Decay factors for each frame.
+        :class:`ScanTimingInfo`: Frame timing information with the following elements:
+            - duration (np.ndarray): Frame durations in seconds.
+            - start (np.ndarray): Frame start times in seconds.
+            - end (np.ndarray): Frame end times in seconds.
+            - center (np.ndarray): Frame center times in seconds.
+            - decay (np.ndarray): Decay factors for each frame.
     """
     _meta_data = load_metadata_for_nifti_with_same_filename(image_path=image_path)
     frm_dur = np.asarray(_meta_data['FrameDuration'], float)
