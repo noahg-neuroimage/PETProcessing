@@ -16,6 +16,7 @@ import nibabel
 from nibabel.filebasedimages import FileBasedHeader
 import numpy as np
 import pandas as pd
+from dataclasses import dataclass
 
 from . import useful_functions
 
@@ -291,6 +292,42 @@ def get_half_life_from_nifti(image_path:str):
         half_life = get_half_life_from_meta(meta_path)
     return half_life
 
+
+@dataclass
+class ScanTimingInfo:
+    duration: np.ndarray[float]
+    end: np.ndarray[float]
+    start: np.ndarray[float]
+    center: np.ndarray[float]
+    decay: np.ndarray[float]
+
+    @property
+    def duration_in_mins(self) -> np.ndarray[float]:
+        if self.end >= 200.0:
+            return self.duration / 60.0
+        else:
+            return self.duration
+
+    @property
+    def end_in_mins(self) -> np.ndarray[float]:
+        if self.end >= 200.0:
+            return self.end / 60.0
+        else:
+            return self.end
+
+    @property
+    def start_in_mins(self) -> np.ndarray[float]:
+        if self.end >= 200.0:
+            return self.start / 60.0
+        else:
+            return self.start
+
+    @property
+    def center_in_mins(self) -> np.ndarray[float]:
+        if self.end >= 200.0:
+            return self.center / 60.0
+        else:
+            return self.center
 
 def get_frame_timing_info_for_nifti(image_path: str) -> dict[str, np.ndarray]:
     r"""
