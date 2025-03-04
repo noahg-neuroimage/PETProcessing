@@ -18,9 +18,6 @@ import numpy as np
 import pandas as pd
 from dataclasses import dataclass
 
-from . import useful_functions
-
-
 _HALFLIVES_ = {
     "c11": 1224,
     "n13": 599,
@@ -48,35 +45,6 @@ def write_dict_to_json(meta_data_dict: dict, out_path: str):
     with open(out_path, 'w', encoding='utf-8') as copy_file:
         json.dump(meta_data_dict, copy_file, indent=4)
 
-
-def convert_ctab_to_dseg(ctab_path: str,
-                         dseg_path: str,
-                         column_names: list[str]=None):
-    """
-    Convert a FreeSurfer compatible color table into a BIDS compatible label
-    map ``dseg.tsv``.
-
-    Args:
-        ctab_path (str): Path to FreeSurfer compatible color table.
-        dseg_path (str): Path to ``dseg.tsv`` label mapfile to save.
-        column_names (list[str]): List of columns present in color table. Must
-            include 'mapping' and 'name'.
-    """
-    if column_names==None:
-        column_names = ['mapping','name','r','g','b','a','ttype']
-    fs_ctab = pd.read_csv(ctab_path,
-                          delim_whitespace=True,
-                          header=None,
-                          comment='#',
-                          names=column_names)
-    label_names = {'name': fs_ctab['name'],
-                   'mapping': fs_ctab['mapping'],
-                   'abbreviation': useful_functions.build_label_map(fs_ctab['name'])}
-    label_map = pd.DataFrame(data=label_names,
-                             columns=['name','abbreviation','mapping']).rename_axis('index')
-    label_map = label_map.sort_values(by=['mapping'])
-    label_map.to_csv(dseg_path,sep='\t')
-    return label_map
 
 def _gen_meta_data_filepath_for_nifti(nifty_path:str):
     """
