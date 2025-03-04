@@ -57,19 +57,19 @@ class PCAGuidedIdif(object):
         return voxel_mask
 
     @staticmethod
-    def _objective_function_voxel_term(voxel_nums: float) -> float:
+    def _voxel_term_func(voxel_nums: float) -> float:
         return np.log(1.0 + np.exp(-voxel_nums / 6.0))
 
     @staticmethod
-    def _objective_function_noise_term(tac_stderrs: np.ndarray[float]) -> float:
+    def _noise_term_func(tac_stderrs: np.ndarray[float]) -> float:
         return np.sqrt(np.mean(tac_stderrs ** 2))
 
     @staticmethod
-    def _objective_function_smoothness_term(tac_values: np.ndarray[float]) -> float:
+    def _smoothness_term_func(tac_values: np.ndarray[float]) -> float:
         return np.sum(np.abs(np.diff(tac_values, prepend=tac_values[0]) / np.max(tac_values)))
 
     @staticmethod
-    def _objective_function_peak_term(tac_peak_ratio):
+    def _peak_term_func(tac_peak_ratio):
         return np.log(1.0 + np.exp(-tac_peak_ratio * 1.5))
 
     def residual(self,
@@ -87,11 +87,12 @@ class PCAGuidedIdif(object):
         tacs_avg = np.mean(masked_voxels, axis=0) if valid_voxels_number > 1 else self.mask_avg
         tacs_std = np.std(masked_voxels, axis=0) if valid_voxels_number > 1 else self.mask_std
 
-        voxel_term = self._objective_function_voxel_term(voxel_nums=valid_voxels_number)
-        noise_term = self._objective_function_noise_term(tac_stderrs=tacs_std)
+        voxel_term = self._voxel_term_func(voxel_nums=valid_voxels_number)
+        noise_term = self._noise_term_func(tac_stderrs=tacs_std)
 
-        peak_term = alpha * self._objective_function_peak_term(tac_peak_ratio=tacs_avg[self.mask_peak_arg]/self.mask_peak_val) if alpha != 0.0 else 0.0
-        smth_term = beta * self._objective_function_smoothness_term(tac_values=tacs_avg) if beta != 0.0 else 0.0
+        peak_ratio = tacs_avg[self.mask_peak_arg] / self.mask_peak_val
+        peak_term = alpha * self._peak_term_func(tac_peak_ratio=peak_ratio) if alpha != 0.0 else 0.0
+        smth_term = beta * self._smoothness_term_func(tac_values=tacs_avg) if beta != 0.0 else 0.0
 
         return voxel_term + noise_term + peak_term + smth_term
 
