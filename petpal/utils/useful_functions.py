@@ -329,7 +329,7 @@ def convert_ctab_to_dseg(ctab_path: str,
                           names=column_names)
     label_names = {'name': fs_ctab['name'],
                    'mapping': fs_ctab['mapping'],
-                   'abbreviation': useful_functions.build_label_map(fs_ctab['name'])}
+                   'abbreviation': build_label_map(fs_ctab['name'])}
     label_map = pd.DataFrame(data=label_names,
                              columns=['name','abbreviation','mapping']).rename_axis('index')
     label_map = label_map.sort_values(by=['mapping'])
