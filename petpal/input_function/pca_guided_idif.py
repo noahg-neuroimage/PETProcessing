@@ -43,6 +43,10 @@ class PCAGuidedIdif(object):
             voxel_mask *= (pca_component > np.quantile(pca_component, quantile)) ^ flag
         return voxel_mask
 
+    @staticmethod
+    def _objective_function_voxel_term(voxel_nums: float) -> float:
+        return np.log(1.0 + np.exp(-voxel_nums / 6.0))
+
     def residual(self,
                  params: lmfit.Parameters,
                  pca_values_per_voxel: np.ndarray[float],
