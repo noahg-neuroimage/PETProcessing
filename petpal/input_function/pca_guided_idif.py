@@ -4,6 +4,9 @@ import numpy as np
 import ants
 
 from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask
+from ..utils.image_io import get_frame_timing_info_for_nifti
+
+_MAX_SCAN_IN_MINS_ = 200.0
 
 class PCAGuidedIdif(object):
     def __init__(self,
@@ -24,6 +27,15 @@ class PCAGuidedIdif(object):
 
         self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
         self.mask_std = np.mean(self.mask_voxel_tacs, axis=0)
+
+    @staticmethod
+    def get_frame_reference_times(image_path: str) -> np.ndarray[float]:
+        image_timing_info_dict = get_frame_timing_info_for_nifti(image_path=image_path)
+        frame_reference_times = image_timing_info_dict['center']
+        if frame_reference_times[-1] >=_MAX_SCAN_IN_MINS_:
+            return frame_reference_times / 60.0
+        else:
+            return frame_reference_times
 
     @staticmethod
     def _generate_quantile_params(num_components: int = 3,
