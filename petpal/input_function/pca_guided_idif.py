@@ -1,6 +1,7 @@
 import lmfit
 import numpy as np
 import ants
+from lmfit.minimizer import MinimizerResult
 
 from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask as extract_masked_voxels
 from ..utils.image_io import get_frame_timing_info_for_nifti
@@ -50,6 +51,28 @@ class PCAGuidedIdif(object):
                                            params=self._fitting_params,
                                            fcn_args=(self.pca_fit, self.pca_filter_flags, self.mask_voxel_tacs,
                                                      self.alpha, self.beta))
+
+        self.fit_result: MinimizerResult | None = None
+        self.result_params: lmfit.Parameters | None = None
+        self.fit_quantiles: np.ndarray | None = None
+        self.fit_voxel_mask: np.ndarray | None = None
+        self.fit_mask_voxel_tacs: np.ndarray | None = None
+
+        self.idif_vals : np.ndarray | None = None
+        self.idif_errs : np.ndarray | None = None
+
+
+    def run(self, method: str = 'ampgo', **method_kwargs):
+        self.fit_result = self.fitting_obj.minimize(method=method, **method_kwargs)
+        self.result_params = self.fit_result.params
+        self.fit_quantiles = np.asarray(list(self.fit_result.params.valuesdict().values()))
+        self.fit_voxel_mask = self.calculate_voxel_mask_from_quantiles(params=self.fit_result.params,
+                                                                       pca_values_per_voxel=self.pca_fit,
+                                                                       quantile_flags=self.pca_filter_flags,)
+        self.fit_mask_voxel_tacs = self.mask_voxel_tacs[self.fit_voxel_mask]
+
+        self.idif_vals = np.mean(self.fit_mask_voxel_tacs, axis=0)
+        self.idif_errs = np.std(self.fit_mask_voxel_tacs, axis=0)
 
     @staticmethod
     def get_pca_component_filter_flags(pca_components: np.ndarray[float],
