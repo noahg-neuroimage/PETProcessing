@@ -3,8 +3,9 @@ import lmfit
 import numpy as np
 import ants
 
-from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask
+from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask as extract_masked_voxels
 from ..utils.image_io import get_frame_timing_info_for_nifti
+from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_over_mask as temporal_pca_over_mask
 
 _MAX_SCAN_IN_MINS_ = 200.0
 
@@ -21,9 +22,9 @@ class PCAGuidedIdif(object):
         self.num_components = num_pca_components
         self.verbose = verbose
 
-        self.mask_voxel_tacs = extract_roi_voxel_tacs_from_image_using_mask(input_image=ants.image_read(self.image_path),
-                                                                            mask_image=ants.image_read(self.mask_path),
-                                                                            verbose=self.verbose)
+        self.mask_voxel_tacs = extract_masked_voxels(input_image=ants.image_read(self.image_path),
+                                                     mask_image=ants.image_read(self.mask_path),
+                                                     verbose=self.verbose)
 
         self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
         self.mask_std = np.mean(self.mask_voxel_tacs, axis=0)
@@ -32,6 +33,11 @@ class PCAGuidedIdif(object):
         self.mask_peak_val = self.mask_avg[self.mask_peak_arg]
 
         self.tac_times_in_mins = self.get_frame_reference_times(image_path=self.image_path)
+
+        self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
+                                                            mask_image=ants.image_read(self.mask_path),
+                                                            num_components=self.num_components)
+
 
     @staticmethod
     def get_frame_reference_times(image_path: str) -> np.ndarray[float]:
@@ -94,5 +100,3 @@ class PCAGuidedIdif(object):
         smth_term = beta * self._smoothness_term_func(tac_values=tacs_avg) if beta != 0.0 else 0.0
 
         return voxel_term + noise_term + peak_term + smth_term
-
-
