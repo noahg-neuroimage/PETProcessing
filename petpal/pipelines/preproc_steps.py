@@ -703,6 +703,26 @@ class ImagePairToArrayStep(FunctionBasedStep):
                  output_array_path: str,
                  *args,
                  **kwargs):
+        """
+        Initializes an ImagePairToArrayStep with specified parameters.
+
+        Args:
+            name (str): The name of the step.
+            function (Callable): The function that uses the two input images and outputs an array.
+            input_image_path (str): Path to the first input image file.
+            second_image_path (str): Path to the second input image file.
+            output_array_path (str): Path to the output array file.
+            *args: Additional positional arguments for the processing function.
+            **kwargs: Additional keyword arguments for the processing function.
+
+        Notes:
+            The passed function (``func``) must have the following arguments order:
+            ``func(input_image, second_image, output_array, *args, **kwargs)`` where ``input_image``, ``second_image``,
+            and ``output_array`` can be named something else. The first argument must be an input image path,
+            the second argument must be the path to the second image, and the third argument must be an output
+            array path.
+
+        """
         super().__init__(name, function,
                          *(input_image_path, output_array_path,
                            second_image_path, *args),
