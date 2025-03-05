@@ -733,6 +733,13 @@ class ImagePairToArrayStep(FunctionBasedStep):
         self.args = copy.copy(self.args[3:])
 
     def execute(self):
+        """
+        Executes the function to process the two input images into an output array.
+
+        The specified function will be called with the paths to the two input images, the output array,
+        any additional arguments, and keyword arguments.
+
+        """
         print(f"(Info): Executing {self.name}")
         self.function(self.input_image_path,
                       self.second_image_path,
@@ -742,6 +749,18 @@ class ImagePairToArrayStep(FunctionBasedStep):
         print(f"(Info): Finished {self.name}")
 
     def set_input_as_output_from(self, *sending_steps) -> None:
+        """
+        Sets the input image paths based on the output paths from other steps in the pipeline.
+        The first sending step will set the input image path, and the second sending step will
+        set the second image path.
+
+        Args:
+            sending_steps (tuple[FunctionBasedStep]): Two pipeline steps whose outputs will be used
+                as the input image path and second image input path.
+
+        Raises:
+            AssertionError: If the number of provided sending steps is not exactly two.
+        """
         assert len(sending_steps) == 2, "ImagePairToArrayStep must have 2 sending ImageToImageStep steps."
         if isinstance(sending_steps[0], ImageToImageStep):
             self.input_image_path = sending_steps[0].output_image_path
@@ -758,8 +777,20 @@ class ImagePairToArrayStep(FunctionBasedStep):
                                   suffix: str = 'tac',
                                   ext: str = '.tsv',
                                   **extra_desc):
-        sub_id, ses_id = parse_path_to_get_subject_and_session_id(
-            self.input_image_path)
+        """
+        Infers the output array path based on the inputs and specified parameters.
+
+        This method generates a BIDS-like derivatives filepath for the output based on the subject and
+        session IDs extracted from the input image path.
+
+        Args:
+            out_dir (str): Directory where the output array will be saved.
+            der_type (str, optional): Type of derivative. Will set the sub-directory in `out_dir`. Defaults to 'tacs'.
+            suffix (str, optional): Suffix for the output filename. Defaults to 'tac'.
+            ext (str, optional): File extension for the output file. Defaults to '.tsv'.
+            **extra_desc: Additional descriptive parameters for the output filename.
+        """
+        sub_id, ses_id = parse_path_to_get_subject_and_session_id(self.input_image_path)
         step_name_in_camel_case = snake_to_camel_case(self.name)
         filepath = gen_bids_like_filepath(sub_id=sub_id, ses_id=ses_id, suffix=suffix, bids_dir=out_dir,
                                           modality=der_type, ext=ext, desc=step_name_in_camel_case, **extra_desc)
