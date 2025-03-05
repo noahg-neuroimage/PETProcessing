@@ -673,6 +673,28 @@ class ImageToImageStep(FunctionBasedStep):
 
 
 class ImagePairToArrayStep(FunctionBasedStep):
+    """
+    A step in a processing pipeline for transforming two input image files into an output array.
+
+    This class extends the :class:`FunctionBasedStep<petpal.pipelines.steps_base.FunctionBasedStep>` and is designed
+    for tasks that require combining or processing information from two image inputs and outputing an array e.g.
+    getting the mean activity from a 4D-PET image given a voxel mask image. It handles input image paths, output
+    array paths, and provides methods for setting inputs from connected pipeline steps or for inferring output
+    array paths.
+
+    .. attention::
+
+       The passed function must have the following arguments order:
+       ``func(input_image, second_image, output_array, *args, **kwargs)`` where ``input_image`` and ``output_image``
+       can be named something else. The first argument must be an input image path, the second argument must be the
+       path to the second image, and the third argument must be an output array path.
+
+    Attributes:
+        input_image_path (str): Path to the first input image file.
+        second_image_path (str): Path to the second input image file.
+        output_array_path (str): Path to the output array file.
+
+    """
     def __init__(self,
                  name: str,
                  function: Callable,
