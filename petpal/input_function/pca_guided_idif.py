@@ -14,12 +14,16 @@ class PCAGuidedIdif(object):
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
+                 alpha: float,
+                 beta: float,
                  verbose: bool = False):
         self.image_path = input_image_path
         self.mask_path = mask_image_path
         self.output_tac_path = output_tac_path
         self.num_components = num_pca_components
         self.verbose = verbose
+        self.alpha = alpha
+        self.beta = beta
 
         self.mask_voxel_tacs = extract_masked_voxels(input_image=ants.image_read(self.image_path),
                                                      mask_image=ants.image_read(self.mask_path),
@@ -39,6 +43,13 @@ class PCAGuidedIdif(object):
 
         self.pca_filter_flags = self.get_pca_component_filter_flags(self.pca_obj.components_)
         self.filter_signs = self.get_pca_filter_signs_from_flags(self.pca_filter_flags)
+
+        self._fitting_params = self._generate_quantile_params(num_components=self.num_components)
+
+        self.fitting_obj = lmfit.Minimizer(userfcn=self.residual,
+                                           params=self._fitting_params,
+                                           fcn_args=(self.pca_fit, self.pca_filter_flags, self.mask_voxel_tacs,
+                                                     self.alpha, self.beta))
 
     @staticmethod
     def get_pca_component_filter_flags(pca_components: np.ndarray[float],
@@ -94,8 +105,8 @@ class PCAGuidedIdif(object):
     def residual(self,
                  params: lmfit.Parameters,
                  pca_values_per_voxel: np.ndarray[float],
-                 voxel_tacs: np.ndarray,
                  quantile_flags: np.ndarray[bool],
+                 voxel_tacs: np.ndarray,
                  alpha: float,
                  beta: float) -> float:
         voxel_mask = self.calculate_voxel_mask_from_quantiles(params, pca_values_per_voxel, quantile_flags)
