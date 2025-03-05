@@ -1,4 +1,3 @@
-from typing import Callable
 import lmfit
 import numpy as np
 import ants
@@ -38,6 +37,20 @@ class PCAGuidedIdif(object):
                                                             mask_image=ants.image_read(self.mask_path),
                                                             num_components=self.num_components)
 
+        self.pca_filter_flags = self.get_pca_component_filter_flags(self.pca_obj.components_)
+        self.filter_signs = self.get_pca_filter_signs_from_flags(self.pca_filter_flags)
+
+    @staticmethod
+    def get_pca_component_filter_flags(pca_components: np.ndarray[float],
+                                       comp_min_val: float = 0.0,
+                                       threshold: float = 0.1) -> np.ndarray[bool]:
+        pca_components_positive_pts = np.mean(pca_components > comp_min_val, axis=1)
+        pca_components_filter_flags = ~(pca_components_positive_pts > threshold)
+        return pca_components_filter_flags
+
+    @staticmethod
+    def get_pca_filter_signs_from_flags(pca_component_filter_flags: np.ndarray[bool]) -> list[str]:
+        return ['>' if sgn else '<' for sgn in ~pca_component_filter_flags]
 
     @staticmethod
     def get_frame_reference_times(image_path: str) -> np.ndarray[float]:
