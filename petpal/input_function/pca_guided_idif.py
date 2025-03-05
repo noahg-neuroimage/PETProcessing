@@ -78,9 +78,8 @@ class PCAGuidedIdif(object):
                  voxel_tacs: np.ndarray,
                  quantile_flags: np.ndarray[bool],
                  alpha: float,
-                 beta: float,
-                 mask_function: Callable) -> float:
-        voxel_mask = mask_function(params, pca_values_per_voxel, quantile_flags)
+                 beta: float) -> float:
+        voxel_mask = self.calculate_voxel_mask_from_quantiles(params, pca_values_per_voxel, quantile_flags)
         valid_voxels_number = np.sum(voxel_mask)
         masked_voxels = voxel_tacs[voxel_mask]
 
