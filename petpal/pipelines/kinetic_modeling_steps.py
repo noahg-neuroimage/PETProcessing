@@ -4,7 +4,11 @@ from ..kinetic_modeling import parametric_images
 from ..kinetic_modeling import tac_fitting
 from ..kinetic_modeling import rtm_analysis as pet_rtms
 from ..kinetic_modeling import graphical_analysis as pet_grph
-from .preproc_steps import TACsFromSegmentationStep, ResampleBloodTACStep, PreprocStepType, ImageToImageStep
+from .preproc_steps import (PcaGuidedIDIFStep,
+                            TACsFromSegmentationStep,
+                            ResampleBloodTACStep,
+                            PreprocStepType,
+                            ImageToImageStep)
 from ..utils.bids_utils import parse_path_to_get_subject_and_session_id, gen_bids_like_dir_path
 
 class TACAnalysisStepMixin(StepsAPI):
@@ -259,6 +263,8 @@ class TACAnalysisStepMixin(StepsAPI):
                 self.roi_tacs_dir = sending_step.out_tacs_dir
             elif isinstance(sending_step, ResampleBloodTACStep):
                 self.input_tac_path = sending_step.resampled_tac_path
+            elif isinstance(sending_step, PcaGuidedIDIFStep):
+                self.input_tac_path = sending_step.output_array_path
             else:
                 super().set_input_as_output_from(sending_step)
 

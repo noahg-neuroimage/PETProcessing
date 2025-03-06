@@ -818,5 +818,40 @@ class PcaGuidedIDIFStep(ObjectBasedStep):
                                               'verbose':verbose
                                               },
                                  call_kwargs={'alpha':alpha, 'beta':beta, 'method':method, **meth_kwargs},)
+        self.input_image_path = input_image_path
+        self.mask_image_path = mask_image_path
+        self.output_array_path = output_array_path
+        self.num_pca_components = num_pca_components
+        self.verbose = verbose
+        self.alpha = alpha
+        self.beta = beta
+        self.method = method
+
+        @property
+        def input_image_path(self):
+            return self.init_kwargs['input_image_path']
+
+        @input_image_path.setter
+        def input_image_path(self, value):
+            self.init_kwargs['input_image_path'] = value
+
+        @property
+        def mask_image_path(self):
+            return self.init_kwargs['mask_image_path']
+
+        @mask_image_path.setter
+        def mask_image_path(self, value):
+            self.init_kwargs['mask_image_path'] = value
+
+        @property
+        def output_array_path(self):
+            return self.init_kwargs['output_array_path']
+
+        @output_array_path.setter
+        def output_array_path(self, value):
+            self.init_kwargs['output_array_path'] = value
+
+
+
 
 PreprocStepType = Union[TACsFromSegmentationStep, ResampleBloodTACStep, ImageToImageStep, ImagePairToArrayStep]
