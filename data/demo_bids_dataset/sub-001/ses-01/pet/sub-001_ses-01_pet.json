@@ -1,0 +1,61 @@
+{
+    "TracerName": "ExampleTracer",
+    "TracerRadionuclide": "C11",
+    "InjectedRadioactivity": 1.0,
+    "InjectedRadioactivityUnits": "MBq",
+    "InjectedMass": "n/a",
+    "InjectedMassUnits": "n/a",
+    "SpecificRadioactivity": "n/a",
+    "SpecificRadioactivityUnits": "n/a",
+    "ModeOfAdministration": "bolus",
+    "TimeZero": "00:00:00",
+    "ScanStart": 0.0,
+    "InjectionStart": 0,
+	"Modality": "PT",
+	"Manufacturer": "n/a",
+	"ManufacturersModelName": "n/a",
+	"InstitutionName": "Washington University School of Medicine",
+	"InstitutionalDepartmentName": "Neuroimaging Laboratories",
+	"InstitutionAddress": "St Louis, MO",
+    "AcquisitionMode": "list mode",
+    "ImageDecayCorrected": true,
+    "ImageDecayCorrectionTime": 0,
+	"DoseCalibrationFactor": 1,
+	"Units": "CPS",
+	"DecayCorrection": "START",
+	"ReconMethodName": "3D OSEM",
+    "ReconMethodParameterLabels": ["subsets","iterations"],
+    "ReconMethodParameterUnits": ["none","none"],
+    "ReconMethodParameterValues": [5,8],
+    "ReconFilterType": "none",
+    "ReconFilterSize": 1,
+    "AttenuationCorrection": "CT",
+    
+	"FrameTimesStart": [
+		0,
+        1,
+        2
+    	],
+	"FrameDuration": [
+        1.0,
+        1.0,
+        1.0
+    	],
+	"FrameReferenceTime": [
+		0.5,
+        1.5,
+        2.5
+    	],
+	"SliceThickness": 1.0,
+	"SpacingBetweenSlices": 1.0,
+	"ImageOrientationPatientDICOM": [
+		-1,
+		0,
+		-0,
+		0,
+		-1,
+		0	],
+	"BidsGuess": ["PET","PET"],
+	"ConversionSoftware": "dcm2niix",
+	"ConversionSoftwareVersion": "v1.0.20240202"
+}
