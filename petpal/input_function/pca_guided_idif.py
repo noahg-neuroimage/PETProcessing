@@ -166,4 +166,18 @@ class PCAGuidedIdif(object):
             self.idif_vals /= rescale_constant
         if self.idif_errs is not None:
             self.idif_errs /= rescale_constant
+        return None
+
+    def save(self):
+        assert self.idif_vals is not None, "The .run() has not been called yet."
+
+        out_arr = np.asarray([self.tac_times_in_mins, self.idif_vals]).T
+
+        np.savetxt(fname=self.output_tac_path, X=out_arr,
+                   fmt='%.6e', delimiter='\t', comments='',
+                   header='time,\tactivity')
+
+    def __call__(self, alpha: float, beta: float, method: str, **meth_kwargs) -> None:
+        self.run(alpha=alpha, beta=beta, method=method, **meth_kwargs)
+        self.save()
 
