@@ -6,7 +6,7 @@ from ..preproc.image_operations_4d import SimpleAutoImageCropper, write_tacs
 from ..preproc.register import register_pet
 from ..preproc.motion_corr import (motion_corr_frames_above_mean_value,
                                    windowed_motion_corr_to_target)
-from ..input_function import blood_input
+from ..input_function import blood_input, pca_guided_idif
 from ..utils.bids_utils import parse_path_to_get_subject_and_session_id, snake_to_camel_case, gen_bids_like_dir_path, gen_bids_like_filepath
 from ..utils.image_io import safe_copy_meta
 
@@ -796,5 +796,27 @@ class ImagePairToArrayStep(FunctionBasedStep):
                                           modality=der_type, ext=ext, desc=step_name_in_camel_case, **extra_desc)
         self.output_array_path = filepath
 
+
+class PcaGuidedIDIFStep(ObjectBasedStep):
+    def __init__(self,
+                 input_image_path,
+                 mask_image_path,
+                 output_array_path,
+                 num_pca_components,
+                 verbose,
+                 alpha,
+                 beta,
+                 method,
+                 **meth_kwargs):
+        ObjectBasedStep.__init__(self,
+                                 name='pca_guided_idif',
+                                 class_type=pca_guided_idif.PCAGuidedIdif,
+                                 init_kwargs={'input_image_path':input_image_path,
+                                              'mask_image_path':mask_image_path,
+                                              'output_tac_path':output_array_path,
+                                              'num_pca_components':num_pca_components,
+                                              'verbose':verbose
+                                              },
+                                 call_kwargs={'alpha':alpha, 'beta':beta, 'method':method, **meth_kwargs},)
 
 PreprocStepType = Union[TACsFromSegmentationStep, ResampleBloodTACStep, ImageToImageStep, ImagePairToArrayStep]

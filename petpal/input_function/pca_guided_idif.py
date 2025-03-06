@@ -41,6 +41,7 @@ class PCAGuidedIdif(object):
                                                             mask_image=ants.image_read(self.mask_path),
                                                             num_components=self.num_components)
 
+        # TODO: Let the user pass in the min value and threshold in init
         self.pca_filter_flags = self.get_pca_component_filter_flags(self.pca_obj.components_)
         self.filter_signs = self.get_pca_filter_signs_from_flags(self.pca_filter_flags)
 
