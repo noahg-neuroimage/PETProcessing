@@ -96,7 +96,7 @@ class PCAGuidedIdif(object):
                                   value: float = 0.5,
                                   lower: float = 1e-4,
                                   upper: float = 0.999) -> lmfit.Parameters:
-        tmp_dict = {'value': value, 'lower': lower, 'upper': upper}
+        tmp_dict = {'value': value, 'min': lower, 'max': upper}
         return lmfit.create_params(**{f'pc{i}': tmp_dict for i in range(num_components)})
 
     @staticmethod
