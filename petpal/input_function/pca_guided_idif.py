@@ -125,7 +125,7 @@ class PCAGuidedIdif(object):
         return np.sum(np.abs(np.diff(tac_values, prepend=tac_values[0]) / np.max(tac_values)))
 
     @staticmethod
-    def _peak_term_func(tac_peak_ratio):
+    def _peak_term_func(tac_peak_ratio: float) -> float:
         return np.log(1.0 + np.exp(-tac_peak_ratio * 1.5))
 
     def residual(self,
@@ -150,3 +150,19 @@ class PCAGuidedIdif(object):
         smth_term = beta * self._smoothness_term_func(tac_values=tacs_avg) if beta != 0.0 else 0.0
 
         return voxel_term + noise_term + peak_term + smth_term
+
+    def rescale_tacs(self, rescale_constant: float = 37000.0) -> None:
+        assert rescale_constant > 0.0, "rescale_constant must be > 0.0"
+
+        self.mask_voxel_tacs /= rescale_constant
+        self.mask_avg /= rescale_constant
+        self.mask_std /= rescale_constant
+        self.mask_peak_val /= rescale_constant
+
+        if self.fit_mask_voxel_tacs is not None:
+            self.fit_mask_voxel_tacs /= rescale_constant
+        if self.idif_vals is not None:
+            self.idif_vals /= rescale_constant
+        if self.idif_errs is not None:
+            self.idif_errs /= rescale_constant
+
