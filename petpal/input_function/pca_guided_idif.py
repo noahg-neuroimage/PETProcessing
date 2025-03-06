@@ -1,6 +1,7 @@
-import lmfit
 import numpy as np
 import ants
+import lmfit
+from lmfit import Minimizer
 from lmfit.minimizer import MinimizerResult
 
 from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask as extract_masked_voxels
@@ -15,16 +16,14 @@ class PCAGuidedIdif(object):
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 alpha: float,
-                 beta: float,
                  verbose: bool = False):
-        self.image_path = input_image_path
-        self.mask_path = mask_image_path
-        self.output_tac_path = output_tac_path
-        self.num_components = num_pca_components
-        self.verbose = verbose
-        self.alpha = alpha
-        self.beta = beta
+        self.image_path: str = input_image_path
+        self.mask_path: str = mask_image_path
+        self.output_tac_path: str = output_tac_path
+        self.num_components: int = num_pca_components
+        self.verbose: bool = verbose
+        self.alpha: float | None = None
+        self.beta: float | None = None
 
         self.mask_voxel_tacs = extract_masked_voxels(input_image=ants.image_read(self.image_path),
                                                      mask_image=ants.image_read(self.mask_path),
@@ -47,10 +46,7 @@ class PCAGuidedIdif(object):
 
         self._fitting_params = self._generate_quantile_params(num_components=self.num_components)
 
-        self.fitting_obj = lmfit.Minimizer(userfcn=self.residual,
-                                           params=self._fitting_params,
-                                           fcn_args=(self.pca_fit, self.pca_filter_flags, self.mask_voxel_tacs,
-                                                     self.alpha, self.beta))
+        self.fitting_obj: Minimizer | None = None
 
         self.fit_result: MinimizerResult | None = None
         self.result_params: lmfit.Parameters | None = None
@@ -62,7 +58,14 @@ class PCAGuidedIdif(object):
         self.idif_errs : np.ndarray | None = None
 
 
-    def run(self, method: str = 'ampgo', **method_kwargs):
+    def run(self, alpha: float, beta: float,
+            method: str = 'ampgo', **method_kwargs):
+        self.alpha = alpha
+        self.beta = beta
+        self.fitting_obj = lmfit.Minimizer(userfcn=self.residual,
+                                           params=self._fitting_params,
+                                           fcn_args=(self.pca_fit, self.pca_filter_flags, self.mask_voxel_tacs,
+                                                     alpha, beta))
         self.fit_result = self.fitting_obj.minimize(method=method, **method_kwargs)
         self.result_params = self.fit_result.params
         self.fit_quantiles = np.asarray(list(self.fit_result.params.valuesdict().values()))
