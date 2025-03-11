@@ -61,7 +61,7 @@ def undo_decay_correction(input_image_path: str,
 
         json_data['DecayFactor'] = list(np.ones_like(decay_factors))
         json_data['ImageDecayCorrected'] = "false"
-        output_json_path = image_io._gen_meta_data_filepath_for_nifti(nifty_path=output_image_path)
+        output_json_path = image_io.gen_meta_data_filepath_for_nifti(nifty_path=output_image_path)
         image_io.write_dict_to_json(meta_data_dict=json_data,
                                     out_path=output_json_path)
 
@@ -124,7 +124,7 @@ def decay_correct(input_image_path: str,
     if output_image_path is not None:
         ants.image_write(image=corrected_image,
                          filename=output_image_path)
-        output_json_path = image_io._gen_meta_data_filepath_for_nifti(nifty_path=output_image_path)
+        output_json_path = image_io.gen_meta_data_filepath_for_nifti(nifty_path=output_image_path)
         json_data['DecayFactor'] = new_decay_factors
         json_data['ImageDecayCorrected'] = "true"
         json_data['ImageDecayCorrectionTime'] = 0

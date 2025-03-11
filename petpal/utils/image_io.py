@@ -77,7 +77,7 @@ def convert_ctab_to_dseg(ctab_path: str,
     label_map.to_csv(dseg_path,sep='\t')
     return label_map
 
-def _gen_meta_data_filepath_for_nifti(nifty_path:str):
+def gen_meta_data_filepath_for_nifti(nifty_path:str):
     """
     Generates the corresponding metadata file path for a given nifti file path.
 
@@ -132,7 +132,7 @@ def load_metadata_for_nifti_with_same_filename(image_path) -> dict:
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image file {image_path} not found.")
 
-    meta_path = _gen_meta_data_filepath_for_nifti(image_path)
+    meta_path = gen_meta_data_filepath_for_nifti(image_path)
     metadata = safe_load_meta(input_metadata_file=meta_path)
 
     return metadata
@@ -213,7 +213,7 @@ def safe_copy_meta(input_image_path: str,
             generating a new image.
         out_image_path (str): Path to the output file written by the function.
     """
-    copy_meta_path = _gen_meta_data_filepath_for_nifti(out_image_path)
+    copy_meta_path = gen_meta_data_filepath_for_nifti(out_image_path)
     meta_data_dict = load_metadata_for_nifti_with_same_filename(input_image_path)
     write_dict_to_json(meta_data_dict=meta_data_dict, out_path=copy_meta_path)
 
@@ -284,7 +284,7 @@ def get_half_life_from_nifti(image_path:str):
     """
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image file {image_path} not found")
-    meta_path = _gen_meta_data_filepath_for_nifti(image_path)
+    meta_path = gen_meta_data_filepath_for_nifti(image_path)
     try:
         half_life = get_half_life_from_radionuclide(meta_path)
     except KeyError:
