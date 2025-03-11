@@ -10,11 +10,10 @@ TODO:
 """
 import os
 
-import petpal.utils.useful_functions
+from ..utils.useful_functions import weighted_series_sum
 from ..visualizations import qc_plots
 from . import register, image_operations_4d, motion_corr, segmentation_tools
 
-weighted_series_sum = petpal.utils.useful_functions.weighted_series_sum
 write_tacs = image_operations_4d.write_tacs
 roi_tac = image_operations_4d.roi_tac
 resample_segmentation = segmentation_tools.resample_segmentation

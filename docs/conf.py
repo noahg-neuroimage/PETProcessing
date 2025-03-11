@@ -3,10 +3,10 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../petpal'))
 
-project = 'PET Processing Module'
+project = 'PETPAL (Positron Emission Tomography Analysis Library)'
 copyright = '2024, Furqan Dar, Bradley Judge, Noah Goldman'
-author = 'Furqan Dar, Bradley Judge, Noah Goldman'
-release = '0.0.1'
+author = 'Furqan Dar, Bradley Judge, Noah Goldman, Kenan Oestreich'
+release = '0.0.2'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -51,7 +51,7 @@ autodoc_default_options = {'members': True,
                            'inherited-members': False,
                            'show-inheritance': True}
 
-html_title = 'PET Processing Module'
+html_title = 'PETPAL'
 
 
 intersphinx_mapping = {
@@ -59,4 +59,5 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'numba': ('https://numba.readthedocs.io/en/stable/', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None),
 }

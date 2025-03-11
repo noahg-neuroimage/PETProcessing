@@ -247,19 +247,20 @@ class TACAnalysisStepMixin(StepsAPI):
         self.infer_prefix_from_input_tac_path()
         self.infer_output_directory_from_input_tac_path(out_dir=out_dir, der_type=der_type)
     
-    def set_input_as_output_from(self, sending_step: PreprocStepType) -> None:
+    def set_input_as_output_from(self, *sending_steps) -> None:
         """
         Sets the input parameters based on the output from a specified sending step.
 
         Args:
             sending_step (PreprocStepType): The step from which to derive the input parameters.
         """
-        if isinstance(sending_step, TACsFromSegmentationStep):
-            self.roi_tacs_dir = sending_step.out_tacs_dir
-        elif isinstance(sending_step, ResampleBloodTACStep):
-            self.input_tac_path = sending_step.resampled_tac_path
-        else:
-            super().set_input_as_output_from(sending_step)
+        for sending_step in sending_steps:
+            if isinstance(sending_step, TACsFromSegmentationStep):
+                self.roi_tacs_dir = sending_step.out_tacs_dir
+            elif isinstance(sending_step, ResampleBloodTACStep):
+                self.input_tac_path = sending_step.resampled_tac_path
+            else:
+                super().set_input_as_output_from(sending_step)
 
 
 class GraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
@@ -643,7 +644,7 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
         self._input_image_path = input_image_path
         self.init_kwargs['pet4D_img_path'] = input_image_path
     
-    def set_input_as_output_from(self, sending_step: PreprocStepType) -> None:
+    def set_input_as_output_from(self, *sending_steps: PreprocStepType) -> None:
         """
         Sets the input paths based on the outputs of a sending preprocessing step.
         
@@ -655,12 +656,13 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
         Args:
             sending_step (PreprocStepType): The preprocessing step which provides the input paths.
         """
-        if isinstance(sending_step, ResampleBloodTACStep):
-            self.input_tac_path = sending_step.resampled_tac_path
-        elif isinstance(sending_step, ImageToImageStep):
-            self.input_image_path = sending_step.output_image_path
-        else:
-            super().set_input_as_output_from(sending_step)
+        for sending_step in sending_steps:
+            if isinstance(sending_step, ResampleBloodTACStep):
+                self.input_tac_path = sending_step.resampled_tac_path
+            elif isinstance(sending_step, ImageToImageStep):
+                self.input_image_path = sending_step.output_image_path
+            else:
+                raise NotImplementedError
     
     @classmethod
     def default_patlak(cls):

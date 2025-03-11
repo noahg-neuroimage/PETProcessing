@@ -205,9 +205,9 @@ def vat_protocol(subjstring: str,
                                              end_time=suvr_end,
                                              out_image_path=wss_file_path)
         image_operations_4d.suvr(input_image_path=wss_file_path,
+                                 out_image_path=suvr_file_path,
                                  segmentation_image_path=vat_wm_ref_segmentation_file,
                                  ref_region=1,
-                                 out_image_path=suvr_file_path,
                                  verbose=True)
 
     if 'pvc' not in skip:

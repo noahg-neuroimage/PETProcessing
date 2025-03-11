@@ -2,14 +2,11 @@
 Module to handle abstracted functionalities
 """
 import os
-
-from petpal.utils import image_io, math_lib
-
 import nibabel
 import numpy as np
 from scipy.interpolate import interp1d
 import ants
-from petpal.utils import image_io, math_lib
+from . import image_io, math_lib
 
 
 FULL_NAME = [
@@ -92,7 +89,7 @@ def build_label_map(region_names: list[str]):
 def weighted_series_sum(input_image_4d_path: str,
                         out_image_path: str,
                         half_life: float,
-                        verbose: bool,
+                        verbose: bool=False,
                         start_time: float=0,
                         end_time: float=-1) -> np.ndarray:
     r"""
@@ -122,6 +119,7 @@ def weighted_series_sum(input_image_4d_path: str,
     indicates the total quantity computed over all frames, and :math:`S(f)` is the final weighted
     sum image.
 
+    # TODO: Determine half_life from .json rather than passing as argument.
 
     Args:
         input_image_4d_path (str): Path to a .nii or .nii.gz file containing a 4D
@@ -129,9 +127,9 @@ def weighted_series_sum(input_image_4d_path: str,
             file exists with the same path and file name, but with extension .json,
             and follows BIDS standard.
         out_image_path (str): Path to a .nii or .nii.gz file to which the weighted
-            sum is written.
+            sum is written. If none, will not write output to a file.
         half_life (float): Half life of the PET radioisotope in seconds.
-        verbose (bool): Set to ``True`` to output processing information.
+        verbose (bool): Set to ``True`` to output processing information. Default is False.
         start_time (float): Time, relative to scan start in seconds, at which
             calculation begins. Must be used with ``end_time``. Default value 0.
         end_time (float): Time, relative to scan start in seconds, at which
@@ -195,17 +193,17 @@ def weighted_series_sum(input_image_4d_path: str,
                              frame_start=frame_start_adjusted,
                              decay_correction=decay_correction_adjusted)
 
-    pet_sum_image = nibabel.nifti1.Nifti1Image(dataobj=image_weighted_sum,
-                                               affine=pet_image.affine,
-                                               header=pet_image.header)
     if out_image_path is not None:
+        pet_sum_image = nibabel.nifti1.Nifti1Image(dataobj=image_weighted_sum,
+                                                   affine=pet_image.affine,
+                                                   header=pet_image.header)
         nibabel.save(pet_sum_image, out_image_path)
         if verbose:
             print(f"(ImageOps4d): weighted sum image saved to {out_image_path}")
         image_io.safe_copy_meta(input_image_path=input_image_4d_path,
                                 out_image_path=out_image_path)
 
-    return pet_sum_image
+    return image_weighted_sum
 
 def weighted_series_sum_over_window_indecies(input_image_4d: ants.core.ANTsImage | str,
                                              output_image_path: str | None,
@@ -276,3 +274,31 @@ def read_plasma_glucose_concentration(file_path: str, correction_scale: float = 
         float: Corrected plasma glucose concentration value.
     """
     return correction_scale * float(np.loadtxt(file_path))
+
+
+def check_physical_space_for_ants_image_pair(image_1: ants.core.ANTsImage,
+                                             image_2: ants.core.ANTsImage) -> bool:
+    """
+    Determines whether two ANTs images share the same physical space. This function works
+    when comparing 4D-images with 3D-images, as opposed to
+    :func:`ants.image_physical_space_consistency`.
+
+    This function validates whether the direction matrices, spacing values, and origins
+    of the two provided ANTs images are consistent, ensuring they reside in the same
+    physical space.
+
+    Args:
+        image_1 (ants.core.ANTsImage): The first ANTs image for comparison.
+        image_2 (ants.core.ANTsImage): The second ANTs image for comparison.
+
+    Returns:
+        bool: `True` if both images share the same physical space, `False` otherwise.
+
+    """
+
+
+    dir_cons = np.allclose(image_1.direction[:3,:3], image_2.direction[:3,:3])
+    spc_cons = np.allclose(image_1.spacing[:3], image_2.spacing[:3])
+    org_cons = np.allclose(image_1.origin[:3], image_2.origin[:3])
+
+    return dir_cons and spc_cons and org_cons

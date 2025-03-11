@@ -10,14 +10,13 @@ TODO:
  * Find a more efficient way to find the region mask in :meth:`segmentations_merge` that works for region=1
 
 """
-import ants
 import numpy as np
+import ants
 import nibabel
 from nibabel import processing
-
-from petpal.preproc import motion_corr
 import pandas as pd
-from . import image_operations_4d
+
+from . import image_operations_4d, motion_corr
 from ..utils import math_lib
 
 
@@ -359,18 +358,181 @@ def gw_segmentation(freesurfer_path: str,
     ants.image_write(gw_map_4d,output_path)
 
 
-def subcortical_mask(input_seg_path, output_seg_path,subcortical_regions=[7,8,10,11,12,13,49,50,51,52,173,174,175]):
+def subcortical_mask(input_seg_path: str,
+                     output_seg_path: str=None,
+                     subcortical_regions: list=None):
+    """
+    Gets a mask for subcortical regions from a FreeSurfer label image.
+
+    Args:
+        input_seg_path (str): Path to segmentation label image.
+        output_seg_path (str): Path to which subcortical mask is saved.
+        subcortical regions (list): Regions to include in the subcortical mask. Uses a built in
+            list of subcortical mappings unless overridden by the user.
+
+    Returns:
+        subcortical_img (ants.ANTsImage): Subcortical mask image.
+
+    .. important::
+        * Subcortical mappings are assumed to correspond to a subset of FreeSurfer subcortical
+            regions
+        * Default regions: whole cerebellum, thalamus, caudate, putamen, pallidum, brainstem.
+    """
+    subcortical_mappings = [7,8,10,11,12,13,16,49,50,51,52,173,174,175]
+
+    if subcortical_regions is None:
+        subcortical_regions = subcortical_mappings
+
     segmentation = ants.image_read(input_seg_path)
     segmentation_np = segmentation.numpy()
-    subcortical_mask = np.zeros(segmentation_np.shape)
+    subcortical_mask_arr = np.zeros(segmentation_np.shape)
     for region in subcortical_regions:
         region_seg = np.where(segmentation_np==region)
-        subcortical_mask[region_seg] = 1
+        subcortical_mask_arr[region_seg] = 1
     subcortical_img = ants.from_numpy(
-        data=subcortical_mask,
+        data=subcortical_mask_arr,
         origin=segmentation.origin,
         spacing=segmentation.spacing,
         direction=segmentation.direction
     )
-    ants.image_write(subcortical_img,output_seg_path)
+
+    if output_seg_path is not None:
+        ants.image_write(subcortical_img,output_seg_path)
+
     return subcortical_img
+
+
+def calc_vesselness_measure_image(input_image: ants.core.ANTsImage,
+                                  sigma_min: float = 2.0,
+                                  sigma_max: float = 8.0,
+                                  alpha: float = 0.5,
+                                  beta: float = 0.5,
+                                  gamma: float = 5.0,
+                                  morph_open_radius: int = 1,
+                                  **hessian_func_kwargs) -> ants.core.ANTsImage:
+    """
+    Computes a vesselness measure image using Hessian-based objectness filtering.
+
+    This function calculates the vesselness measure of a given 3D image using
+    multi-scale Hessian filtering with specified parameters. We call the
+    :func:`ants.hessian_objectness` after max-normalizing the input image.
+    It enhances tubular structures like vessels, making them more pronounced
+    in the output image. Optionally, a morphological opening operation can be
+    applied to the result to refine the output and remove pepper-like artefacts.
+
+    From the docs of :func:`ants.hessian_objectness`:
+    '
+    Based on the paper by Westin et al., "Geometrical
+    Diffusion Measures for MRI from Tensor Basis Analysis" and Luca Antiga's
+    Insight Journal paper http://hdl.handle.net/1926/576.
+    '
+
+    Args:
+        input_image (ants.core.ANTsImage): Input 3D image for vesselness computation.
+        sigma_min (float, optional): Minimum scale for multi-scale Hessian filtering
+            (default: 2.0).
+        sigma_max (float, optional): Maximum scale for multi-scale Hessian filtering
+            (default: 8.0).
+        alpha (float, optional): Alpha parameter for vesselness computation
+            (default: 0.5).
+        beta (float, optional): Beta parameter for vesselness computation
+            (default: 0.5).
+        gamma (float, optional): Gamma parameter for vesselness computation
+            (default: 5.0).
+        morph_open_radius (int, optional): Radius for the optional morphological
+            opening operation (default: 1). If set to 0, no morphological opening
+            will be applied.
+        **hessian_func_kwargs: Additional keyword arguments for the Hessian
+            objectness function.
+
+    Returns:
+        ants.core.ANTsImage: The vesselness-enhanced image.
+
+    Notes:
+        - Input image must be 3D; an assertion will fail if a non-3D image is provided.
+        - The input image is normalized before processing to ensure robustness.
+        - Morphological opening, if applied, uses a grayscale operation to refine
+          the tubular structures.
+        - The function has defaults for vesselness computation, but can be used to detect
+          globular or plate-like structures as well.
+
+    Raises:
+        AssertionError: If the input image is not 3D.
+
+    Workflow:
+        1. Normalize the input image to have values between 0 and 1.
+        2. Apply Hessian-based objectness filtering using the provided parameters
+           (`sigma_min`, `sigma_max`, `alpha`, `beta`, `gamma`).
+        3. Perform a morphological opening operation with the specified radius
+           (`morph_open_radius`), if applicable.
+        4. Return the computed vesselness image.
+    """
+    assert len(input_image.shape) == 3, "Input image must be 3D."
+
+    tmp_img: ants.core.ANTsImage = input_image / input_image.max()
+    hess_objectness_img = tmp_img.hessian_objectness(sigma_min=sigma_min,
+                                                     sigma_max=sigma_max,
+                                                     gamma=gamma,
+                                                     alpha=alpha,
+                                                     beta=beta,
+                                                     **hessian_func_kwargs)
+    if morph_open_radius > 0:
+        hess_objectness_img = hess_objectness_img.morphology(operation='open',
+                                                             radius=morph_open_radius,
+                                                             mtype='grayscale')
+    return hess_objectness_img
+
+
+def calc_vesselness_mask_from_quantiled_vesselness(input_image: ants.core.ANTsImage,
+                                                   min_quantile: float = 0.99,
+                                                   morph_dil_radius: int = 0,
+                                                   z_crop: int = 3) -> ants.core.ANTsImage:
+    """
+    Generates a binary vesselness mask from a given vesselness image using quantile-based thresholding.
+
+    This function creates a binary mask by thresholding a vesselness image at a specified
+    quantile of non-zero voxel values. Additionally, it allows for optional z-axis cropping
+    and morphological dilation to refine the mask.
+
+    Args:
+        input_image (ants.core.ANTsImage): Input vesselness image.
+        min_quantile (float, optional): Minimum quantile value for voxel thresholding
+            (default: 0.99). Must be in the range [0, 1).
+        morph_dil_radius (int, optional): Radius for morphological dilation to refine the
+            mask (default: 0). No dilation is applied if set to 0.
+        z_crop (int, optional): Number of slices to crop from the z-axis from the bottom
+            (default: 3).
+
+    Returns:
+        ants.core.ANTsImage: Binary vesselness mask.
+
+    Notes:
+        - The input image must be an ANTs image containing vesselness measures.
+        - The quantile value (`min_quartile`) determines the threshold value based on
+          non-zero voxel intensities.
+        - If `z_crop` is greater than 0, the z-axis is cropped from the top and bottom.
+        - Morphological dilation is applied to the binary mask with the specified radius,
+          if provided.
+          
+    Raises:
+        - AssertionError: If the input image is not 3D.
+        - AssertionError: If the provided quantile is not in the range [0, 1].
+        - AssertionError: If the provided z-crop is larger than the number of z-slices in the
+          input image.
+
+    """
+    assert 1 >= min_quantile >= 0, "Minimal quantile must be greater than 0 and less than 1."
+    assert len(input_image.shape) == 3, "Input image must be 3D."
+    assert z_crop < input_image.shape[2], "Z-crop must be less than input image's Z-dimension."
+
+    vess_vals_arr = input_image.numpy()
+    vess_vals_arr = vess_vals_arr[vess_vals_arr != 0].flatten()
+    thresh_val = np.quantile(vess_vals_arr, q=min_quantile)
+    vess_mask_img = input_image.threshold_image(low_thresh=thresh_val, high_thresh=None)
+
+    vess_mask_img[:, :, :z_crop] = 0
+
+    if morph_dil_radius > 0:
+        vess_mask_img = vess_mask_img.morphology(operation='dilate', radius=morph_dil_radius)
+    return vess_mask_img
+

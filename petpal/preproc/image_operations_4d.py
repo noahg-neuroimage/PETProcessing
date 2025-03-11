@@ -4,7 +4,7 @@ on 4D PET imaging series. These functions typically take one or more paths to im
 data in NIfTI format, and save modified data to a NIfTI file, and may return the
 modified imaging array as output.
 
-TODOs:
+TODO:
     * (weighted_series_sum) Refactor the DecayFactor key extraction into its own function
     * (weighted_series_sum) Refactor verbose reporting into the class as it is unrelated to
       computation
@@ -14,17 +14,121 @@ TODOs:
       such as finding the average uptake encompassing two regions.
     * Methods that create new images should copy over a previous metadata file, if one exists,
       and create a new one if it does not.
+    * (stitch_broken_scans) Separate 'add desc entity' section to its own function somewhere.
+    * (stitch_broken_scans) Assumes non-BIDS key 'DecayFactor' instead of BIDS-required 'DecayCorrectionFactor' for
+      ease-of-use with NIL data. Should be changed in the future.
+    * (stitch_broken_scans) Currently writes intermediate files even if output_image_path is None.
+    * (suvr) Allow list to be passed as ref_region to use multiple regions together as a reference region (i.e. left
+    and right cerebellum gray matter).
 
 """
 import os
+import pathlib
+import datetime
 import tempfile
 import ants
 import nibabel
 import numpy as np
 from scipy.ndimage import center_of_mass
-from ..utils.useful_functions import weighted_series_sum
-from ..utils import image_io, math_lib
 
+from ..utils.useful_functions import weighted_series_sum, check_physical_space_for_ants_image_pair
+from ..utils import image_io, math_lib
+from ..preproc.decay_correction import undo_decay_correction, decay_correct
+
+def stitch_broken_scans(input_image_path: str,
+                        output_image_path: str,
+                        noninitial_image_paths: list[str]) -> ants.ANTsImage:
+    """
+    'Stitch' together 2 or more images from one session into a single image.
+
+    This function takes multiple images (4D) from a single PET session in which the scan had to pause in the middle (a
+    'broken scan'), recomputes decay corrections for all noninitial images using the correct TimeZero (TimeZero for the
+    first image), then combines all the data into a single file to write (unless output_image_path is None, in which
+    case the function will pass the ANTsImage object.
+
+    Important: All noninitial images must be registered to the first image prior to calling this function.
+
+    Args:
+        input_image_path (str): Path to the initial image captured during PET session. 'TimeZero' from this image will be considered
+            as the true value to correct the rest of the images to.
+        output_image_path (str): Path to which the stitched image will be written. If None, no file will be written.
+        noninitial_image_paths (list[str]): Path(s) to 1 or more additional images containing data from broken sections
+            of the PET session. Note that all images must be registered to the first (input_image_path).
+
+    Returns:
+        ants.ANTsImage: stitched image
+    """
+
+    initial_image = ants.image_read(filename=input_image_path)
+    initial_image_data = initial_image.numpy()
+    initial_image_metadata = image_io.load_metadata_for_nifti_with_same_filename(image_path=input_image_path)
+    noninitial_image_metadata_dicts = [image_io.load_metadata_for_nifti_with_same_filename(image_path=path)
+                                       for path in noninitial_image_paths]
+
+    try:
+        noninitial_time_zeroes = [meta['TimeZero'] for meta in noninitial_image_metadata_dicts]
+        actual_time_zero = initial_image_metadata['TimeZero']
+    except KeyError:
+        raise KeyError(f'.json sidecar for one of your input images does not contain required BIDS key "TimeZero". '
+                       f'Aborting...')
+
+    initial_scan_time = datetime.time.fromisoformat(actual_time_zero)
+    placeholder_date = datetime.date.today()
+    initial_scan_datetime = datetime.datetime.combine(date=placeholder_date,
+                                                      time=initial_scan_time)
+    noninitial_scan_times = [datetime.time.fromisoformat(t) for t in noninitial_time_zeroes]
+    noninitial_scan_datetimes = [datetime.datetime.combine(date=placeholder_date, time=scan_time)
+                                 for scan_time in noninitial_scan_times]
+
+    times_since_timezero = [t - initial_scan_datetime for t in noninitial_scan_datetimes]
+
+    for t_d, additional_image_metadata in zip(times_since_timezero,noninitial_image_metadata_dicts):
+        original_frame_times_start = additional_image_metadata['FrameTimesStart']
+        additional_image_metadata['FrameTimesStart'] = [t+t_d.total_seconds() for t in original_frame_times_start]
+        additional_image_metadata['TimeZero'] = actual_time_zero
+
+    corrected_arrays = [initial_image_data]
+    new_metadata = initial_image_metadata
+
+    for additional_image_path, metadata in zip(noninitial_image_paths,noninitial_image_metadata_dicts):
+
+        original_path = pathlib.Path(additional_image_path)
+        original_stem = original_path.stem
+        split_stem = original_stem.split("_")
+        split_stem.insert(-1, "desc-nodecaycorrect")
+        new_stem = "_".join(split_stem)
+        new_path = str(original_path).replace(original_stem, new_stem)
+
+        undo_decay_correction(input_image_path=additional_image_path,
+                              output_image_path=new_path,
+                              metadata_dict=metadata)
+
+        corrected_image_path = new_path.replace("desc-nodecaycorrect", "desc-decayredone")
+        corrected_image = decay_correct(input_image_path=new_path,
+                                        output_image_path=corrected_image_path)
+
+        corrected_arrays.append(corrected_image.numpy())
+        updated_metadata = image_io.load_metadata_for_nifti_with_same_filename(image_path=corrected_image_path)
+        new_metadata['FrameTimesStart'].extend(updated_metadata['FrameTimesStart'])
+        new_metadata['FrameDuration'].extend(updated_metadata['FrameDuration'])
+        new_metadata['DecayFactor'].extend(updated_metadata['DecayFactor'])
+        new_metadata['ImageDecayCorrected'] = updated_metadata['ImageDecayCorrected']
+        new_metadata['ImageDecayCorrectionTime'] = updated_metadata['ImageDecayCorrectionTime']
+
+    stitched_image_array = np.concatenate(corrected_arrays, axis=3)
+
+    stitched_image = ants.from_numpy(data=stitched_image_array,
+                                     origin=initial_image.origin,
+                                     spacing=initial_image.spacing,
+                                     direction=initial_image.direction)
+
+    if output_image_path is not None:
+        ants.image_write(image=stitched_image,
+                         filename=output_image_path)
+        image_io.write_dict_to_json(meta_data_dict=new_metadata,
+                                    out_path=image_io._gen_meta_data_filepath_for_nifti(nifty_path=output_image_path))
+
+    return stitched_image
 
 def crop_image(input_image_path: str,
                out_image_path: str,
@@ -207,11 +311,10 @@ def brain_mask(input_image_4d_path: str,
     mask = mask_on_pet.get_mask()
     ants.image_write(image=mask,filename=out_image_path)
 
-
-def extract_tac_from_nifty_using_mask(input_image_4d_numpy: np.ndarray,
-                                      segmentation_image_numpy: np.ndarray,
-                                      region: int,
-                                      verbose: bool) -> np.ndarray:
+def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
+                                                       segmentation_image_numpy: np.ndarray,
+                                                       region: int,
+                                                       verbose: bool) -> np.ndarray:
     """
     Creates a time-activity curve (TAC) by computing the average value within a region, for each 
     frame in a 4D PET image series. Takes as input a PET image, which has been registered to
@@ -304,10 +407,10 @@ def get_average_of_timeseries(input_image: ants.ANTsImage):
 
 
 def suvr(input_image_path: str,
+         out_image_path: str | None,
          segmentation_image_path: str,
          ref_region: int,
-         out_image_path: str,
-         verbose: bool):
+         verbose: bool=False) -> ants.ANTsImage:
     """
     Computes an ``SUVR`` (Standard Uptake Value Ratio) by taking the average of
     an input image within a reference region, and dividing the input image by
@@ -316,38 +419,43 @@ def suvr(input_image_path: str,
     Args:
         input_image_path (str): Path to 3D weighted series sum or other
             parametric image on which we compute SUVR.
+        out_image_path (str): Path to output image file which is written to. If None, no output is written.
         segmentation_image_path (str): Path to segmentation image, which we use
             to compute average uptake value in the reference region.
         ref_region (int): Region number mapping to the reference region in the
             segmentation image.
-        out_image_path (str): Path to output image file which is written to.
-        verbose (bool): Set to ``True`` to output processing information.
+        verbose (bool): Set to ``True`` to output processing information. Default is False.
+
+    Returns:
+        ants.ANTsImage: SUVR parametric image
     """
-    pet_nibabel = nibabel.load(filename=input_image_path)
-    pet_image = pet_nibabel.get_fdata()
-    seg_nibabel = nibabel.load(filename=segmentation_image_path)
-    seg_image = seg_nibabel.get_fdata()
+    pet_img = ants.image_read(filename=input_image_path)
+    pet_arr = pet_img.numpy()
+    segmentation_img = ants.image_read(filename=segmentation_image_path,
+                                        pixeltype='unsigned int')
+    segmentation_arr = segmentation_img.numpy()
 
-    if len(pet_image.shape)!=3:
-        raise ValueError("SUVR input image is not 3D. If your image is dynamic"
-                         ", try running 'weighted_series_sum' first.")
+    if len(pet_arr.shape)!=3:
+        raise ValueError("SUVR input image is not 3D. If your image is dynamic, try running 'weighted_series_sum'"
+                         " first.")
 
-    ref_region_avg = extract_tac_from_nifty_using_mask(input_image_4d_numpy=pet_image,
-                                                       segmentation_image_numpy=seg_image,
-                                                       region=ref_region,
-                                                       verbose=verbose)
+    ref_region_avg = extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy=pet_arr,
+                                                                        segmentation_image_numpy=segmentation_arr,
+                                                                        region=ref_region,
+                                                                        verbose=verbose)
+    
+    suvr_arr = pet_arr / ref_region_avg[0]
 
-    suvr_image = pet_image / ref_region_avg[0]
+    out_img = ants.from_numpy_like(data=suvr_arr,
+                                     image=pet_img)
 
-    out_image = nibabel.nifti1.Nifti1Image(dataobj=suvr_image,
-                                           affine=pet_nibabel.affine,
-                                           header=pet_nibabel.header)
-    nibabel.save(img=out_image,filename=out_image_path)
+    if out_image_path is not None:
+        ants.image_write(image=out_img,
+                         filename=out_image_path)
+        image_io.safe_copy_meta(input_image_path=input_image_path,
+                                out_image_path=out_image_path)
 
-    image_io.safe_copy_meta(input_image_path=input_image_path,
-                            out_image_path=out_image_path)
-
-    return out_image
+    return out_img
 
 
 def gauss_blur(input_image_path: str,
@@ -412,7 +520,7 @@ def roi_tac(input_image_4d_path: str,
                          "'FrameReferenceTime' or 'FrameTimesStart'")
 
     pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_4d_path)
-    tac_extraction_func = extract_tac_from_nifty_using_mask
+    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
     pet_numpy = nibabel.load(input_image_4d_path).get_fdata()
     seg_numpy = nibabel.load(roi_image_path).get_fdata()
 
@@ -449,7 +557,7 @@ def write_tacs(input_image_path: str,
     regions_abrev = label_map['abbreviation']
     regions_map = label_map['mapping']
 
-    tac_extraction_func = extract_tac_from_nifty_using_mask
+    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
     pet_numpy = nibabel.load(input_image_path).get_fdata()
     seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
 
@@ -465,6 +573,39 @@ def write_tacs(input_image_path: str,
         else:
             out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
         np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
+
+
+def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
+                                                 mask_image: ants.core.ANTsImage,
+                                                 verbose: bool = False) -> np.ndarray:
+    """
+    Function to extract ROI voxel tacs from an image using a mask image.
+
+    This function returns all the voxel TACs, and unlike :func:`extract_mean_roi_tac_from_nifti_using_segmentation`,
+    does not calculate the mean over all the voxels.
+
+    Args:
+        input_image (ants.core.ANTsImage): Input 4D-image from which to extract ROI voxel tacs.
+        mask_image (ants.core.ANTsImage): Mask image which determines which voxels to extract.
+        verbose (bool, optional): If True, prints information about the shape of extracted voxel tacs.
+
+    Returns:
+        out_voxels (np.ndarray): Array of voxel TACs of shape (num_voxels, num_frames)
+
+    Raises:
+         AssertionError: If input image is not 4D-image.
+         AssertionError: If mask image is not in the same physical space as the input image.
+
+    """
+    assert len(input_image.shape) == 4, "Input image must be 4D."
+    assert check_physical_space_for_ants_image_pair(input_image, mask_image), (
+        "Images must have the same physical dimensions.")
+
+    x_inds, y_inds, z_inds = mask_image.nonzero()
+    out_voxels = input_image.numpy()[x_inds, y_inds, z_inds, :]
+    if verbose:
+        print(f"(ImageOps): Output TACs have shape {out_voxels.shape}")
+    return out_voxels
 
 
 class SimpleAutoImageCropper(object):
