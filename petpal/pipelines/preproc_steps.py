@@ -827,29 +827,77 @@ class PcaGuidedIDIFStep(ObjectBasedStep):
         self.beta = beta
         self.method = method
 
-        @property
-        def input_image_path(self):
-            return self.init_kwargs['input_image_path']
+    @property
+    def input_image_path(self):
+        return self.init_kwargs['input_image_path']
 
-        @input_image_path.setter
-        def input_image_path(self, value):
-            self.init_kwargs['input_image_path'] = value
+    @input_image_path.setter
+    def input_image_path(self, value):
+        self.init_kwargs['input_image_path'] = value
 
-        @property
-        def mask_image_path(self):
-            return self.init_kwargs['mask_image_path']
+    @property
+    def mask_image_path(self):
+        return self.init_kwargs['mask_image_path']
 
-        @mask_image_path.setter
-        def mask_image_path(self, value):
-            self.init_kwargs['mask_image_path'] = value
+    @mask_image_path.setter
+    def mask_image_path(self, value):
+        self.init_kwargs['mask_image_path'] = value
 
-        @property
-        def output_array_path(self):
-            return self.init_kwargs['output_array_path']
+    @property
+    def output_array_path(self):
+        return self.init_kwargs['output_array_path']
 
-        @output_array_path.setter
-        def output_array_path(self, value):
-            self.init_kwargs['output_array_path'] = value
+    @output_array_path.setter
+    def output_array_path(self, value):
+        self.init_kwargs['output_array_path'] = value
+
+    def set_input_as_output_from(self, *sending_steps: ImageToImageStep) -> None:
+        """
+        Sets the input image paths based on the output paths from other steps in the pipeline.
+        The first sending step will set the input image path, and the second sending step will
+        set the second image path.
+
+        Args:
+            sending_steps (tuple[ImageToImageStep]): Two pipeline steps whose outputs will be used
+                as the input image path and second image input path.
+
+        Raises:
+            AssertionError: If the number of provided sending steps is not exactly two.
+        """
+        assert len(sending_steps) == 2, "ImagePairToArrayStep must have 2 sending ImageToImageStep steps."
+        if isinstance(sending_steps[0], ImageToImageStep):
+            self.input_image_path = sending_steps[0].output_image_path
+        else:
+            super().set_input_as_output_from(sending_steps[0])
+        if isinstance(sending_steps[1], ImageToImageStep):
+            self.second_image_path = sending_steps[1].output_image_path
+        else:
+            super().set_input_as_output_from(sending_steps[1])
+
+    def infer_outputs_from_inputs(self,
+                                  out_dir: str,
+                                  der_type: str = 'tacs',
+                                  suffix: str = 'tac',
+                                  ext: str = '.tsv',
+                                  **extra_desc):
+        """
+        Infers the output array path based on the inputs and specified parameters.
+
+        This method generates a BIDS-like derivatives filepath for the output based on the subject and
+        session IDs extracted from the input image path.
+
+        Args:
+            out_dir (str): Directory where the output array will be saved.
+            der_type (str, optional): Type of derivative. Will set the sub-directory in `out_dir`. Defaults to 'tacs'.
+            suffix (str, optional): Suffix for the output filename. Defaults to 'tac'.
+            ext (str, optional): File extension for the output file. Defaults to '.tsv'.
+            **extra_desc: Additional descriptive parameters for the output filename.
+        """
+        sub_id, ses_id = parse_path_to_get_subject_and_session_id(self.input_image_path)
+        step_name_in_camel_case = snake_to_camel_case(self.name)
+        filepath = gen_bids_like_filepath(sub_id=sub_id, ses_id=ses_id, suffix=suffix, bids_dir=out_dir,
+                                          modality=der_type, ext=ext, desc=step_name_in_camel_case, **extra_desc)
+        self.output_array_path = filepath
 
 
 
