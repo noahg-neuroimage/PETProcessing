@@ -17,8 +17,6 @@ import nibabel
 import numpy as np
 import numba
 
-from petpal.kinetic_modeling.reference_tissue_models import (fit_mrtm2_2003_to_tac,
-                                                             calc_bp_from_mrtm2_2003_fit)
 from petpal.kinetic_modeling.fit_tac_with_rtms import (get_rtm_kwargs,
                                                        get_rtm_method,
                                                        get_rtm_output_size)
