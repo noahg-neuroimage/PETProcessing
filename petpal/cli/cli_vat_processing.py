@@ -7,8 +7,9 @@ from petpal.kinetic_modeling import graphical_analysis,rtm_analysis
 from petpal.preproc import image_operations_4d, motion_corr, register, segmentation_tools
 from petpal.preproc import symmetric_geometric_transfer_matrix as sgtm
 from petpal.utils.bids_utils import gen_bids_like_dir_path, gen_bids_like_filename, gen_bids_like_filepath
-from petpal.utils.image_io import _HALFLIVES_, km_regional_fits_to_tsv
+from petpal.utils.image_io import km_regional_fits_to_tsv
 from petpal.utils import useful_functions
+from petpal.utils.constants import HALF_LIVES
 
 
 _VAT_EXAMPLE_ = (r"""

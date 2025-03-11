@@ -18,22 +18,7 @@ import numpy as np
 import pandas as pd
 
 from . import useful_functions
-
-
-_HALFLIVES_ = {
-    "c11": 1224,
-    "n13": 599,
-    "o15": 123,
-    "f18": 6588,
-    "cu62": 582,
-    "cu64": 45721.1,
-    "ga68": 4080,
-    "ge68": 23760000,
-    "br76": 58700,
-    "rb82": 75,
-    "zr89": 282240,
-    "i124": 360806.4,
-}
+from .constants import HALF_LIVES
 
 
 def write_dict_to_json(meta_data_dict: dict, out_path: str):
@@ -241,7 +226,7 @@ def get_half_life_from_radionuclide(meta_data_file_path: str) -> float:
     except KeyError as exc:
         raise KeyError("Required BIDS metadata field 'TracerRadionuclide' not found.") from exc
 
-    return _HALFLIVES_[radionuclide]
+    return HALF_LIVES[radionuclide]
 
 def get_half_life_from_meta(meta_data_file_path: str):
     """
