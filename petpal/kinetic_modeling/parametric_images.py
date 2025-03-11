@@ -132,61 +132,6 @@ def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
     return slope_img, intercept_img
 
 
-def apply_mrtm2_to_all_voxels(tac_times_in_minutes: np.ndarray,
-                              tgt_image: np.ndarray,
-                              ref_tac_vals: np.ndarray,
-                              k2_prime: float,
-                              t_thresh_in_mins: float,
-                              mask_img: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Generates parametric images for 4D-PET data using the MRTM2 reference tissue method.
-
-    Args:
-        tac_times_in_minutes (np.ndarray): A 1D array representing the reference TAC and PET frame
-            times in minutes.
-        tgt_image (np.ndarray): A 4D array representing the 3D PET image over time.
-            The shape of this array should be (x, y, z, time).
-        ref_tac_vals (np.ndarray): A 1D array representing the reference TAC values. This array
-            should be of the same length as `tac_times_in_minutes`.
-        k2_prime (float): A float representing the k2' value to be used for MRTM2 analysis. This
-            is chosen based on the tracer or based on a regional MRTM1 analysis.
-        t_thresh_in_mins (float): A float representing the threshold time past which MRTM
-            parameters are calculated with a least squares fit.
-        mask_img (np.ndarray): A 3D array representing the brain mask for `tgt_image`, where brain
-            regions are labelled 1 and non-brain regions are labelled 0. This is made necessary in
-            order to save time during computation. 
-
-    Returns:
-        bp_img (np.ndarray): A 3D array with computed BP values based on the MRTM2 parameter fit
-            results. 
-        simulation_img (np.ndarray): A 4D array with the same shape as `tgt_image` where each voxel
-            is the best fit curve based on the solved parameters to the linear equation in MRTM2.
-    """
-    img_dims = tgt_image.shape
-
-    bp_img = np.zeros((img_dims[0], img_dims[1], img_dims[2]), float)
-    simulation_img = np.zeros_like(tgt_image)
-
-    for i in range(0, img_dims[0], 1):
-        for j in range(0, img_dims[1], 1):
-            for k in range(0, img_dims[2], 1):
-                if mask_img[i,j,k]>0.5:
-                    analysis_vals = fit_mrtm2_2003_to_tac(tac_times_in_minutes=tac_times_in_minutes,
-                                                          ref_tac_vals=ref_tac_vals,
-                                                          tgt_tac_vals=tgt_image[i, j, k, :],
-                                                          k2_prime=k2_prime,
-                                                          t_thresh_in_mins=t_thresh_in_mins)
-                    try:
-                        bp_img[i, j, k] = calc_bp_from_mrtm2_2003_fit(analysis_vals[0])
-                    except ValueError as exc:
-                        print("Error in estimating BP from parameters, setting BP to NaN."
-                              f"See: {exc}")
-                        bp_img[i, j, k] = np.nan
-                    simulation_img[i, j, k, :] = analysis_vals[1]
-
-    return bp_img, simulation_img
-
-
 def apply_rtm2_to_all_voxels(tac_times_in_minutes: np.ndarray,
                              tgt_image: np.ndarray,
                              ref_tac_vals: np.ndarray,
