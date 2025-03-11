@@ -819,6 +819,10 @@ class GraphicalAnalysisParametricImage:
             tTAC_img=nifty_pet4d_img.get_fdata() * image_scale,
             t_thresh_in_mins=t_thresh_in_mins, method_name=method_name)
 
+    def __call__(self, method_name, t_thresh_in_mins, image_scale):
+        self.run_analysis(method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, image_scale=image_scale)
+        self.save_analysis()
+
     def save_parametric_images(self):
         """
         Saves the slope and intercept images as NIfTI files in the specified output directory.
