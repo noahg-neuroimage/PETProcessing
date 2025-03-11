@@ -78,9 +78,9 @@ class StepsAPI:
         """
         raise NotImplementedError
 
-    def __call__(self):
+    def __call__(self, *args, **kwargs):
         if not self.skip_step:
-            self.execute()
+            self.execute(*args, **kwargs)
 
 
 
