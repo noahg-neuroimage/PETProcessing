@@ -30,7 +30,7 @@ def write_dict_to_json(meta_data_dict: dict, out_path: str):
         json.dump(meta_data_dict, copy_file, indent=4)
 
 
-def _gen_meta_data_filepath_for_nifti(nifty_path:str):
+def gen_meta_data_filepath_for_nifti(nifty_path:str):
     """
     Generates the corresponding metadata file path for a given nifti file path.
 

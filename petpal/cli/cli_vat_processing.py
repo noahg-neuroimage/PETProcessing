@@ -65,7 +65,7 @@ def vat_protocol(subjstring: str,
     segmentation_label_file = '/home/usr/goldmann/dseg.tsv'
     motion_target = (0,600)
     reg_pars = {'aff_metric': 'mattes','type_of_transform': 'DenseRigid'}
-    half_life = _HALFLIVES_['f18']
+    half_life = HALF_LIVES['f18']
     suvr_start = 1800
     suvr_end = 7200
     pvc_fwhm_mm = 4.2
