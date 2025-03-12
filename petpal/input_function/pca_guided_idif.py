@@ -2,6 +2,7 @@ import numpy as np
 from warnings import warn
 import ants
 import lmfit
+from sklearn.decomposition import PCA
 from lmfit import Minimizer
 from lmfit.minimizer import MinimizerResult
 
@@ -38,21 +39,24 @@ class PCAGuidedIdif(object):
             self.mask_voxel_tacs /= _KBQL_TO_NCiML_
 
         self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
-        self.mask_std = np.mean(self.mask_voxel_tacs, axis=0)
+        self.mask_std = np.std(self.mask_voxel_tacs, axis=0)
 
         self.mask_peak_arg = np.argmax(self.mask_avg)
         self.mask_peak_val = self.mask_avg[self.mask_peak_arg]
 
         self.tac_times_in_mins = self.get_frame_reference_times(image_path=self.image_path)
 
-        self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
-                                                            mask_image=ants.image_read(self.mask_path),
-                                                            num_components=self.num_components)
+        self.pca_obj: PCA | None = None
+        self.pca_fit: np.ndarray | None = None
 
-        self.pca_filter_flags = self.get_pca_component_filter_flags(pca_components=self.pca_obj.components_,
-                                                                    comp_min_val=pca_comp_filter_min_value,
-                                                                    threshold=pca_comp_threshold)
-        self.filter_signs = self.get_pca_filter_signs_from_flags(pca_component_filter_flags=self.pca_filter_flags)
+        self.pca_filter_flags: np.ndarray | None = None
+        self.filter_signs: np.ndarray | None = None
+
+        self.perform_temporal_pca()
+        self._pca_comp_filter_min_val = pca_comp_filter_min_value
+        self._pca_comp_filter_threshold = pca_comp_threshold
+        self.calculate_filter_flags_and_signs(comp_min_val=self.pca_comp_filter_min_val,
+                                              threshold=self.pca_comp_filter_flag_threshold)
 
         self._fitting_params = self._generate_quantile_params(num_components=self.num_components)
 
@@ -67,6 +71,34 @@ class PCAGuidedIdif(object):
         self.idif_vals : np.ndarray | None = None
         self.idif_errs : np.ndarray | None = None
 
+    @property
+    def pca_comp_filter_flag_threshold(self) -> float:
+        return self._pca_comp_filter_threshold
+
+    @pca_comp_filter_flag_threshold.setter
+    def pca_comp_filter_flag_threshold(self, val: float) -> None:
+        self._pca_comp_filter_threshold = val
+        self.calculate_filter_flags_and_signs(comp_min_val=self.pca_comp_filter_min_val, threshold=val)
+
+    @property
+    def pca_comp_filter_min_val(self) -> float:
+        return self._pca_comp_filter_min_val
+
+    @pca_comp_filter_min_val.setter
+    def pca_comp_filter_min_val(self, val: float):
+        self._pca_comp_filter_min_val = val
+        self.calculate_filter_flags_and_signs(comp_min_val=val, threshold=self.pca_comp_filter_flag_threshold)
+
+    def perform_temporal_pca(self):
+        self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
+                                                            mask_image=ants.image_read(self.mask_path),
+                                                            num_components=self.num_components)
+
+    def calculate_filter_flags_and_signs(self, comp_min_val: float, threshold: float):
+        self.pca_filter_flags = self.get_pca_component_filter_flags(pca_components=self.pca_obj.components_,
+                                                                    comp_min_val=comp_min_val,
+                                                                    threshold=threshold)
+        self.filter_signs = self.get_pca_filter_signs_from_flags(pca_component_filter_flags=self.pca_filter_flags)
 
     def run(self, alpha: float, beta: float,
             method: str = 'ampgo', **method_kwargs):
@@ -88,7 +120,7 @@ class PCAGuidedIdif(object):
         self.idif_errs = np.std(self.fit_mask_voxel_tacs, axis=0)
 
     @staticmethod
-    def get_pca_component_filter_flags(pca_components: np.ndarray[float],
+    def get_pca_component_filter_flags(pca_components: np.ndarray,
                                        comp_min_val: float = 0.0,
                                        threshold: float = 0.1) -> np.ndarray[bool]:
         pca_components_positive_pts = np.mean(pca_components > comp_min_val, axis=1)
