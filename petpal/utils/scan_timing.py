@@ -1,7 +1,10 @@
 """
 Module to handle timing information of PET scans.
 """
+from dataclasses import dataclass
 import numpy as np
+
+from .image_io import load_metadata_for_nifti_with_same_filename
 
 @dataclass
 class ScanTimingInfo:

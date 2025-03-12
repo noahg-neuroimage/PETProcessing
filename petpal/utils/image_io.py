@@ -16,7 +16,6 @@ import nibabel
 from nibabel.filebasedimages import FileBasedHeader
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass
 
 
 _HALFLIVES_ = {
