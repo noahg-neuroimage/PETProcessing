@@ -6,19 +6,19 @@ PET radionuclide half life source: code borrowed from DynamicPET
 from TPC (turkupetcentre.net/petanalysis/decay.html). This source is from:
 Table of Isotopes, Sixth edition, edited by C.M. Lederer, J.M. Hollander, I. Perlman. WILEY, 1967.
 """
-import json
-import re
-import os
 import glob
+import json
+import os
 import pathlib
-import ants
-import nibabel
-from nibabel.filebasedimages import FileBasedHeader
-import numpy as np
-import pandas as pd
+import re
 from dataclasses import dataclass
 
-from . import useful_functions
+import ants
+import nibabel
+import numpy as np
+import pandas as pd
+from nibabel.filebasedimages import FileBasedHeader
+
 from .constants import HALF_LIVES
 
 
