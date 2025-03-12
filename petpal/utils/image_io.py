@@ -21,22 +21,6 @@ from dataclasses import dataclass
 from . import useful_functions
 from .constants import HALF_LIVES
 
-_HALFLIVES_ = {
-    "c11": 1224,
-    "n13": 599,
-    "o15": 123,
-    "f18": 6588,
-    "cu62": 582,
-    "cu64": 45721.1,
-    "ga68": 4080,
-    "ge68": 23760000,
-    "br76": 58700,
-    "rb82": 75,
-    "zr89": 282240,
-    "i124": 360806.4,
-}
-
-
 
 def write_dict_to_json(meta_data_dict: dict, out_path: str):
     """
