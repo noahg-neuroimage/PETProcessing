@@ -1,10 +1,6 @@
 """
 Image IO
 
-PET radionuclide half life source: code borrowed from DynamicPET
-(https://github.com/bilgelm/dynamicpet/blob/main/src/dynamicpet/petbids/petbidsjson.py), derived
-from TPC (turkupetcentre.net/petanalysis/decay.html). This source is from:
-Table of Isotopes, Sixth edition, edited by C.M. Lederer, J.M. Hollander, I. Perlman. WILEY, 1967.
 """
 import glob
 import json
