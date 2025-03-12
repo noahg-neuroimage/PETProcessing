@@ -845,11 +845,11 @@ class PcaGuidedIDIFStep(ObjectBasedStep):
 
     @property
     def output_array_path(self):
-        return self.init_kwargs['output_array_path']
+        return self.init_kwargs['output_tac_path']
 
     @output_array_path.setter
     def output_array_path(self, value):
-        self.init_kwargs['output_array_path'] = value
+        self.init_kwargs['output_tac_path'] = value
 
     def set_input_as_output_from(self, *sending_steps: ImageToImageStep) -> None:
         """
@@ -870,7 +870,7 @@ class PcaGuidedIDIFStep(ObjectBasedStep):
         else:
             super().set_input_as_output_from(sending_steps[0])
         if isinstance(sending_steps[1], ImageToImageStep):
-            self.second_image_path = sending_steps[1].output_image_path
+            self.mask_image_path = sending_steps[1].output_image_path
         else:
             super().set_input_as_output_from(sending_steps[1])
 

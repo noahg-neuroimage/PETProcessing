@@ -326,8 +326,7 @@ class GraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
         in_kwargs = ArgsDict(dict(input_tac_path=self.input_tac_path, roi_tacs_dir=self.roi_tacs_dir,
                                   output_directory=self.output_directory, output_prefix=self.output_prefix,
                                   method=self.init_kwargs['method'],
-                                  fit_threshold_in_mins=self.init_kwargs['fit_thresh_in_mins'],
-                                  image_rescale=self.init_kwargs['image_rescale'], ))
+                                  fit_threshold_in_mins=self.init_kwargs['fit_thresh_in_mins'] ))
         
         for arg_name, arg_val in in_kwargs.items():
             info_str.append(f'{arg_name}={repr(arg_val)},')
@@ -667,6 +666,8 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
                 self.input_tac_path = sending_step.resampled_tac_path
             elif isinstance(sending_step, ImageToImageStep):
                 self.input_image_path = sending_step.output_image_path
+            elif isinstance(sending_step, PcaGuidedIDIFStep):
+                self.input_tac_path = sending_step.output_array_path
             else:
                 raise NotImplementedError
     
