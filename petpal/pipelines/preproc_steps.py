@@ -810,7 +810,7 @@ class PcaGuidedIDIFStep(ObjectBasedStep):
                  **meth_kwargs):
         ObjectBasedStep.__init__(self,
                                  name='pca_guided_idif',
-                                 class_type=pca_guided_idif.PCAGuidedIdif,
+                                 class_type=pca_guided_idif.PCAGuidedIdifFitter,
                                  init_kwargs={'input_image_path':input_image_path,
                                               'mask_image_path':mask_image_path,
                                               'output_tac_path':output_array_path,
