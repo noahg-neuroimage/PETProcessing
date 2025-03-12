@@ -152,3 +152,60 @@ def get_frame_timing_info_for_nifti(image_path: str) -> ScanTimingInfo:
         frm_centers = np.asarray(frm_starts + frm_dur / 2.0, float)
 
     return ScanTimingInfo(duration=frm_dur, start=frm_starts, end=frm_ends, center=frm_centers, decay=decay)
+
+
+def get_window_index_pairs_from_durations(frame_durations: np.ndarray, w_size: float):
+    r"""
+    Computes start and end index pairs for windows of a given size based on frame durations.
+
+    Args:
+        frame_durations (np.ndarray): Array of frame durations in seconds.
+        w_size (float): Window size in seconds.
+
+    Returns:
+        np.ndarray: Array of shape (2, N), where the first row contains start indices,
+            and the second row contains end indices for each window.
+
+    Raises:
+        ValueError: If `w_size` is less than or equal to 0.
+        ValueError: If `w_size` is greater than the total duration of all frames.
+    """
+    if w_size <= 0:
+        raise ValueError("Window size has to be > 0")
+    if w_size > np.sum(frame_durations):
+        raise ValueError("Window size is larger than the whole scan.")
+    _tmp_w_ids = [0]
+    _w_dur_sum = 0
+    for frm_id, frm_dur in enumerate(frame_durations):
+        _w_dur_sum += frm_dur
+        if _w_dur_sum >= w_size:
+            _tmp_w_ids.append(frm_id + 1)
+            _w_dur_sum = 0
+    w_start_ids = np.asarray(_tmp_w_ids[:-1])
+    w_end_ids = np.asarray(_tmp_w_ids[1:])
+    id_pairs = np.vstack((w_start_ids, w_end_ids))
+    return id_pairs
+
+
+def get_window_index_pairs_for_image(image_path: str, w_size: float):
+    """
+    Computes start and end index pairs for windows of a given size
+    based on the frame durations of a NIfTI image.
+
+    Args:
+        image_path (str): Path to the NIfTI image file.
+        w_size (float): Window size in seconds.
+
+    Returns:
+        np.ndarray: Array of shape (2, N), where the first row contains start indices,
+            and the second row contains end indices for each window.
+
+    Raises:
+        ValueError: If `w_size` is less than or equal to 0.
+        ValueError: If `w_size` is greater than the total duration of all frames.
+
+    See Also:
+        :func:`get_window_index_pairs_from_durations`
+    """
+    image_frame_info = get_frame_timing_info_for_nifti(image_path=image_path)
+    return get_window_index_pairs_from_durations(frame_durations=image_frame_info.duration, w_size=w_size)

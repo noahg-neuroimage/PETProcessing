@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 from dataclasses import dataclass
 
+
 _HALFLIVES_ = {
     "c11": 1224,
     "n13": 599,
@@ -467,8 +468,6 @@ def validate_two_images_same_dimensions(image_1: nibabel.nifti1.Nifti1Image,
 
     if not same_shape:
         raise ValueError(f'Got incompatible image sizes: {shape_1}, {shape_2}.')
-
-
 
 def infer_sub_ses_from_tac_path(tac_path: str):
     """
