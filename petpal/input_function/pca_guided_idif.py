@@ -1,4 +1,5 @@
 import numpy as np
+from warnings import warn
 import ants
 import lmfit
 from lmfit import Minimizer
@@ -8,7 +9,7 @@ from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_usin
 from ..utils.image_io import get_frame_timing_info_for_nifti
 from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_over_mask as temporal_pca_over_mask
 
-_MAX_SCAN_IN_MINS_ = 200.0
+_KBQL_TO_NCiML_ = 37000.0
 
 class PCAGuidedIdif(object):
     def __init__(self,
@@ -16,7 +17,8 @@ class PCAGuidedIdif(object):
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 verbose: bool = False):
+                 verbose: bool = False,
+                 auto_rescale_tacs: bool = False):
         self.image_path: str = input_image_path
         self.mask_path: str = mask_image_path
         self.output_tac_path: str = output_tac_path
@@ -28,6 +30,10 @@ class PCAGuidedIdif(object):
         self.mask_voxel_tacs = extract_masked_voxels(input_image=ants.image_read(self.image_path),
                                                      mask_image=ants.image_read(self.mask_path),
                                                      verbose=self.verbose)
+
+        if auto_rescale_tacs:
+            warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.")
+            self.mask_voxel_tacs /= _KBQL_TO_NCiML_
 
         self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
         self.mask_std = np.mean(self.mask_voxel_tacs, axis=0)
@@ -159,6 +165,7 @@ class PCAGuidedIdif(object):
         self.mask_avg /= rescale_constant
         self.mask_std /= rescale_constant
         self.mask_peak_val /= rescale_constant
+
 
         if self.fit_mask_voxel_tacs is not None:
             self.fit_mask_voxel_tacs /= rescale_constant
