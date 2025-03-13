@@ -251,7 +251,7 @@ class PCAGuidedIdifFitter(PCAGuidedIdifBase):
 
     @staticmethod
     def _voxel_term_func(voxel_nums: float) -> float:
-        return np.log(1.0 + np.exp(-voxel_nums / 6.0))
+        return np.log1p(np.exp(-voxel_nums / 6.0))
 
     @staticmethod
     def _noise_term_func(tac_stderrs: np.ndarray[float]) -> float:
@@ -263,4 +263,4 @@ class PCAGuidedIdifFitter(PCAGuidedIdifBase):
 
     @staticmethod
     def _peak_term_func(tac_peak_ratio: float) -> float:
-        return np.log(1.0 + np.exp(-tac_peak_ratio * 1.5))
+        return np.log1p(np.exp(-tac_peak_ratio * 1.5))
