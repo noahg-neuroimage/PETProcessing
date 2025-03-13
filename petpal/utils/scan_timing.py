@@ -113,10 +113,10 @@ class ScanTimingInfo:
             return self.center
 
 
-def get_frame_timing_info_for_metadata(metadata_path: str) -> ScanTimingInfo:
+def get_frame_timing_info_for_metadata(metadata_dict: dict) -> ScanTimingInfo:
     r"""
     Extracts frame timing information and decay factors from a json metadata.
-    Expects that the JSON metadata file has ``FrameDuration`` and ``DecayFactor`` or
+    Expects that the JSON metadata has ``FrameDuration`` and ``DecayFactor`` or
     ``DecayCorrectionFactor`` keys.
 
     .. important::
@@ -126,7 +126,7 @@ def get_frame_timing_info_for_metadata(metadata_path: str) -> ScanTimingInfo:
 
 
     Args:
-        metadata_path (str): Path to the json file.
+        metadata_dict (dict): The metadata dictionary, loaded into memory.
 
     Returns:
         :class:`ScanTimingInfo`: Frame timing information with the following elements:
@@ -136,26 +136,26 @@ def get_frame_timing_info_for_metadata(metadata_path: str) -> ScanTimingInfo:
             - center (np.ndarray): Frame center times in seconds.
             - decay (np.ndarray): Decay factors for each frame.
     """
-    _meta_data = safe_load_meta(input_metadata_file=metadata_path)
-    frm_dur = np.asarray(_meta_data['FrameDuration'], float)
+    frm_dur = np.asarray(metadata_dict['FrameDuration'], float)
     try:
-        frm_ends = np.asarray(_meta_data['FrameTimesEnd'], float)
+        frm_ends = np.asarray(metadata_dict['FrameTimesEnd'], float)
     except KeyError:
         frm_ends = np.cumsum(frm_dur)
     try:
-        frm_starts = np.asarray(_meta_data['FrameTimesStart'], float)
+        frm_starts = np.asarray(metadata_dict['FrameTimesStart'], float)
     except KeyError:
         frm_starts = np.diff(frm_ends)
     try:
-        decay = np.asarray(_meta_data['DecayCorrectionFactor'], float)
+        decay = np.asarray(metadata_dict['DecayCorrectionFactor'], float)
     except KeyError:
-        decay = np.asarray(_meta_data['DecayFactor'], float)
+        decay = np.asarray(metadata_dict['DecayFactor'], float)
     try:
-        frm_centers = np.asarray(_meta_data['FrameReferenceTime'], float)
+        frm_centers = np.asarray(metadata_dict['FrameReferenceTime'], float)
     except KeyError:
         frm_centers = np.asarray(frm_starts + frm_dur / 2.0, float)
 
     return ScanTimingInfo(duration=frm_dur, start=frm_starts, end=frm_ends, center=frm_centers, decay=decay)
+
 
 def get_frame_timing_info_for_nifti(image_path: str) -> ScanTimingInfo:
     r"""
