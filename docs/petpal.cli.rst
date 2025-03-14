@@ -7,7 +7,6 @@ Submodules
 .. toctree::
    :maxdepth: 2
 
-   petpal.cli.cli_bids
    petpal.cli.cli_graphical_analysis
    petpal.cli.cli_graphical_plots
    petpal.cli.cli_parametric_images
