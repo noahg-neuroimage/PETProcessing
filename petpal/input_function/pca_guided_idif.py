@@ -59,15 +59,15 @@ class PCAGuidedIdifBase(PCAGuidedIdifData):
         self.mask_voxel_tacs = extract_masked_voxels(input_image=ants.image_read(self.image_path),
                                                      mask_image=ants.image_read(self.mask_path),
                                                      verbose=self.verbose)
-
-        if auto_rescale_tacs:
+        self.auto_rescale_tacs = auto_rescale_tacs
+        if self.auto_rescale_tacs:
             warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
             self.mask_voxel_tacs /= _KBQL_TO_NCiML_
 
         self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
         self.mask_std = np.std(self.mask_voxel_tacs, axis=0)
         self.mask_peak_arg = np.argmax(self.mask_avg)
-        self.mask_peak_val = self.mask_avg[self.mask_peak_arg]
+        self.mask_peak_val = self.mask_avg[self.mask_peak_arg] + 3.0 * self.mask_std[self.mask_peak_arg]
 
         self.perform_temporal_pca()
         self._pca_comp_filter_min_val = pca_comp_filter_min_value
@@ -147,9 +147,15 @@ class PCAGuidedIdifBase(PCAGuidedIdifData):
         return voxel_mask
 
     def perform_temporal_pca(self):
-        self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
-                                                            mask_image=ants.image_read(self.mask_path),
-                                                            num_components=self.num_components)
+        if self.auto_rescale_tacs:
+            warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
+            self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path)/_KBQL_TO_NCiML_,
+                                                                mask_image=ants.image_read(self.mask_path),
+                                                                num_components=self.num_components)
+        else:
+            self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
+                                                                mask_image=ants.image_read(self.mask_path),
+                                                                num_components=self.num_components)
 
     def calculate_filter_flags_and_signs(self, comp_min_val: float, threshold: float):
         self.pca_filter_flags = self.get_pca_component_filter_flags(pca_components=self.pca_obj.components_,
