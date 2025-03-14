@@ -7,6 +7,7 @@ filepaths for efficient retrieval, and supporting various neuroimaging file type
 import os
 import pathlib
 
+
 from bids_validator import BIDSValidator
 
 
