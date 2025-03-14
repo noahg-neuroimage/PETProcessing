@@ -1,37 +1,21 @@
 """
 Image IO
 
-PET radionuclide half life source: code borrowed from DynamicPET
-(https://github.com/bilgelm/dynamicpet/blob/main/src/dynamicpet/petbids/petbidsjson.py), derived
-from TPC (turkupetcentre.net/petanalysis/decay.html). This source is from:
-Table of Isotopes, Sixth edition, edited by C.M. Lederer, J.M. Hollander, I. Perlman. WILEY, 1967.
 """
-import json
-import re
-import os
 import glob
+import json
+import os
 import pathlib
-import ants
-import nibabel
-from nibabel.filebasedimages import FileBasedHeader
-import numpy as np
-import pandas as pd
+import re
 from dataclasses import dataclass
 
-_HALFLIVES_ = {
-    "c11": 1224,
-    "n13": 599,
-    "o15": 123,
-    "f18": 6588,
-    "cu62": 582,
-    "cu64": 45721.1,
-    "ga68": 4080,
-    "ge68": 23760000,
-    "br76": 58700,
-    "rb82": 75,
-    "zr89": 282240,
-    "i124": 360806.4,
-}
+import ants
+import nibabel
+import numpy as np
+import pandas as pd
+from nibabel.filebasedimages import FileBasedHeader
+
+from .constants import HALF_LIVES
 
 
 def write_dict_to_json(meta_data_dict: dict, out_path: str):
@@ -46,7 +30,7 @@ def write_dict_to_json(meta_data_dict: dict, out_path: str):
         json.dump(meta_data_dict, copy_file, indent=4)
 
 
-def _gen_meta_data_filepath_for_nifti(nifty_path:str):
+def gen_meta_data_filepath_for_nifti(nifty_path:str):
     """
     Generates the corresponding metadata file path for a given nifti file path.
 
@@ -101,7 +85,7 @@ def load_metadata_for_nifti_with_same_filename(image_path) -> dict:
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image file {image_path} not found.")
 
-    meta_path = _gen_meta_data_filepath_for_nifti(image_path)
+    meta_path = gen_meta_data_filepath_for_nifti(image_path)
     metadata = safe_load_meta(input_metadata_file=meta_path)
 
     return metadata
@@ -182,7 +166,7 @@ def safe_copy_meta(input_image_path: str,
             generating a new image.
         out_image_path (str): Path to the output file written by the function.
     """
-    copy_meta_path = _gen_meta_data_filepath_for_nifti(out_image_path)
+    copy_meta_path = gen_meta_data_filepath_for_nifti(out_image_path)
     meta_data_dict = load_metadata_for_nifti_with_same_filename(input_image_path)
     write_dict_to_json(meta_data_dict=meta_data_dict, out_path=copy_meta_path)
 
@@ -210,7 +194,7 @@ def get_half_life_from_radionuclide(meta_data_file_path: str) -> float:
     except KeyError as exc:
         raise KeyError("Required BIDS metadata field 'TracerRadionuclide' not found.") from exc
 
-    return _HALFLIVES_[radionuclide]
+    return HALF_LIVES[radionuclide]
 
 def get_half_life_from_meta(meta_data_file_path: str):
     """
@@ -253,7 +237,7 @@ def get_half_life_from_nifti(image_path:str):
     """
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image file {image_path} not found")
-    meta_path = _gen_meta_data_filepath_for_nifti(image_path)
+    meta_path = gen_meta_data_filepath_for_nifti(image_path)
     try:
         half_life = get_half_life_from_radionuclide(meta_path)
     except KeyError:
