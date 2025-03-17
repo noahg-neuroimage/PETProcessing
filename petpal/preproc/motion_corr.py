@@ -174,7 +174,7 @@ def motion_corr_frame_list(input_image_4d_path: str,
 
     if verbose:
         print("... done!\n")
-    tmp_image = _gen_nd_image_based_on_image_list(out_image)
+    tmp_image = gen_nd_image_based_on_image_list(out_image)
     out_image = ants.list_to_ndimage(tmp_image, out_image)
     ants.image_write(image=out_image,filename=out_image_path)
 
@@ -289,7 +289,7 @@ def motion_corr_frame_list_to_t1(input_image_4d_path: str,
 
     if verbose:
         print("... done!\n")
-    tmp_image = _gen_nd_image_based_on_image_list(out_image)
+    tmp_image = gen_nd_image_based_on_image_list(out_image)
     out_image = ants.list_to_ndimage(tmp_image, out_image)
     ants.image_write(image=out_image,filename=out_image_path)
 
@@ -547,11 +547,11 @@ def gen_timeseries_from_image_list(image_list: list[ants.core.ANTsImage]) -> ant
     Returns:
         ants.core.ANTsImage: 4D ndimage.
     """
-    tmp_image = _gen_nd_image_based_on_image_list(image_list)
+    tmp_image = gen_nd_image_based_on_image_list(image_list)
     return ants.list_to_ndimage(tmp_image, image_list)
 
 
-def _gen_nd_image_based_on_image_list(image_list: list[ants.core.ants_image.ANTsImage]):
+def gen_nd_image_based_on_image_list(image_list: list[ants.core.ants_image.ANTsImage]):
     r"""
     Generate a 4D ANTsImage based on a list of 3D ANTsImages.
 
