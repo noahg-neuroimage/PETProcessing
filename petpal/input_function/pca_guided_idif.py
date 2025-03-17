@@ -107,35 +107,7 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
         self.selected_component: int | None = None
 
 
-class PCAGuidedIdifFitterData(PCAGuidedIdifBase):
-    def __init__(self,
-                 input_image_path: str,
-                 mask_image_path: str,
-                 output_tac_path: str,
-                 num_pca_components: int,
-                 verbose: bool,
-                 auto_rescale_tacs: bool = False):
-        PCAGuidedIdifBase.__init__(self,
-                                   input_image_path=input_image_path,
-                                   mask_image_path=mask_image_path,
-                                   output_tac_path=output_tac_path,
-                                   num_pca_components=num_pca_components,
-                                   verbose=verbose,
-                                   auto_rescale_tacs=auto_rescale_tacs)
-        self.alpha: float | None = None
-        self.beta: float | None = None
-
-        self.pca_filter_flags: np.ndarray | None = None
-        self.filter_signs: np.ndarray | None = None
-
-        self._fitting_params: lmfit.Parameters | None = None
-        self.fitting_obj: Minimizer | None = None
-        self.fit_result: MinimizerResult | None = None
-        self.result_params: lmfit.Parameters | None = None
-        self.fit_quantiles: np.ndarray | None = None
-
-
-class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
+class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
@@ -154,11 +126,21 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
                                    auto_rescale_tacs=auto_rescale_tacs
                                    )
         self.mask_peak_val += self.mask_std[self.mask_peak_arg] * 3.
+        self.alpha: float | None = None
+        self.beta: float | None = None
+
+        self.pca_filter_flags: np.ndarray | None = None
+        self.filter_signs: np.ndarray | None = None
+
+        self._fitting_params: lmfit.Parameters | None = None
+        self.fitting_obj: Minimizer | None = None
+        self.fit_result: MinimizerResult | None = None
+        self.result_params: lmfit.Parameters | None = None
+        self.fit_quantiles: np.ndarray | None = None
         self._pca_comp_filter_min_val = pca_comp_filter_min_value
         self._pca_comp_filter_threshold = pca_comp_threshold
         self.calculate_filter_flags_and_signs(comp_min_val=self.pca_comp_filter_min_val,
                                               threshold=self.pca_comp_filter_flag_threshold)
-
         self._fitting_params = self._generate_quantile_params(num_components=self.num_components)
 
     @property
