@@ -52,6 +52,8 @@ class PCAGuidedIdifBase(object):
         self.selected_voxels_mask: np.ndarray | None = None
         self.selected_voxels_tacs: np.ndarray | float = None
 
+        self.analysis_has_run: bool = False
+
 
     def perform_temporal_pca(self):
         if self.auto_rescale_tacs:
@@ -79,6 +81,26 @@ class PCAGuidedIdifBase(object):
 
         return None
 
+    def save(self):
+        assert self.analysis_has_run is not None, "The .run() has not been called yet."
+        out_arr = np.asarray([self.tac_times_in_mins, self.idif_vals, self.idif_errs, self.mask_avg, self.mask_std]).T
+        np.savetxt(fname=self.output_tac_path, X=out_arr,
+                   fmt='%.6e', delimiter='\t', comments='',
+                   header='time,\tactivity')
+
+    def calculate_tacs_from_mask(self) -> None:
+        assert self.analysis_has_run, "The .run() has not been called yet."
+        self.selected_voxels_tacs = self.mask_voxel_tacs[self.selected_voxels_mask]
+        self.idif_vals = np.mean(self.selected_voxels_tacs, axis=0)
+        self.idif_errs = np.std(self.selected_voxels_tacs, axis=0)
+
+    def run(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def __call__(self, *args, **kwargs):
+        self.run(*args, **kwargs)
+        self.save()
+
     @property
     def idif_tac(self):
         return np.asarray([self.tac_times_in_mins, self.idif_vals])
@@ -105,6 +127,23 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
                                    auto_rescale_tacs=auto_rescale_tacs)
         self.num_of_voxels: int | None = None
         self.selected_component: int | None = None
+
+    @staticmethod
+    def calculate_top_pc_voxels_mask(pca_obj: PCA, pca_fit: np.ndarray, pca_component: int, number_of_voxels: int) -> np.ndarray:
+        assert pca_obj.n_components > pca_component >= 0, "PCA component index must be >= 0 and less than the number of total components."
+        pc_comp_argsort = np.argsort(pca_fit[:, pca_component])[::-1]
+        return pc_comp_argsort[:number_of_voxels]
+
+    def run(self, selected_component: int, num_of_voxels: int) -> None:
+        assert num_of_voxels > 2, "num_of_voxels must be greater than 2."
+        self.selected_component = selected_component
+        self.num_of_voxels = num_of_voxels
+        self.selected_voxels_mask = self.calculate_top_pc_voxels_mask(pca_obj = self.pca_obj,
+                                                                      pca_fit = self.pca_fit,
+                                                                      pca_component = self.selected_component,
+                                                                      number_of_voxels = self.num_of_voxels)
+        self.analysis_has_run = True
+        self.calculate_tacs_from_mask()
 
 
 class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
@@ -137,6 +176,7 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
         self.fit_result: MinimizerResult | None = None
         self.result_params: lmfit.Parameters | None = None
         self.fit_quantiles: np.ndarray | None = None
+
         self._pca_comp_filter_min_val = pca_comp_filter_min_value
         self._pca_comp_filter_threshold = pca_comp_threshold
         self.calculate_filter_flags_and_signs(comp_min_val=self.pca_comp_filter_min_val,
@@ -252,22 +292,11 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
         self.fit_result = self.fitting_obj.minimize(method=method, **method_kwargs)
         self.result_params = self.fit_result.params
         self.fit_quantiles = np.asarray(list(self.fit_result.params.valuesdict().values()))
-        self.fit_voxel_mask = self.calculate_voxel_mask_from_quantiles(params=self.fit_result.params,
+        self.selected_voxels_mask = self.calculate_voxel_mask_from_quantiles(params=self.fit_result.params,
                                                                        pca_values_per_voxel=self.pca_fit,
                                                                        quantile_flags=self.pca_filter_flags,)
-        self.fit_mask_voxel_tacs = self.mask_voxel_tacs[self.fit_voxel_mask]
-
-        self.idif_vals = np.mean(self.fit_mask_voxel_tacs, axis=0)
-        self.idif_errs = np.std(self.fit_mask_voxel_tacs, axis=0)
-
-    def save(self):
-        assert self.idif_vals is not None, "The .run() has not been called yet."
-
-        out_arr = np.asarray([self.tac_times_in_mins, self.idif_vals, self.idif_errs, self.mask_avg, self.mask_std]).T
-
-        np.savetxt(fname=self.output_tac_path, X=out_arr,
-                   fmt='%.6e', delimiter='\t', comments='',
-                   header='time,\tactivity')
+        self.analysis_has_run = True
+        self.calculate_tacs_from_mask()
 
     def __call__(self, alpha: float, beta: float, method: str, **meth_kwargs) -> None:
         self.run(alpha=alpha, beta=beta, method=method, **meth_kwargs)
