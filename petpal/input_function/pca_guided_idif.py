@@ -18,19 +18,27 @@ class PCAGuidedIdifData(object):
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 verbose: bool,
-                 ):
+                 verbose: bool):
         self.image_path: str = input_image_path
         self.mask_path: str = mask_image_path
         self.output_tac_path: str = output_tac_path
         self.num_components: int = num_pca_components
         self.verbose: bool = verbose
 
-        self.idif_vals: np.ndarray | None = None
-        self.idif_errs: np.ndarray | None = None
+        self.tac_times_in_mins: np.ndarray = get_frame_timing_info_for_nifti(image_path=self.image_path).center_in_mins
+        self.idif_vals: np.ndarray = np.zeros_like(self.tac_times_in_mins)
+        self.idif_errs: np.ndarray = np.zeros_like(self.tac_times_in_mins)
 
         self.pca_obj: PCA | None = None
         self.pca_fit: np.ndarray | None = None
+
+    @property
+    def idif_tac(self):
+        return np.asarray([self.tac_times_in_mins, self.idif_vals])
+
+    @property
+    def idif_tac_werr(self):
+        return np.asarray([self.tac_times_in_mins, self.idif_vals, self.idif_errs])
 
 
 class PCAGuidedIdifFitterData(PCAGuidedIdifData):
@@ -39,7 +47,7 @@ class PCAGuidedIdifFitterData(PCAGuidedIdifData):
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 verbose: bool,):
+                 verbose: bool):
         PCAGuidedIdifData.__init__(self,
                                    input_image_path=input_image_path,
                                    mask_image_path=mask_image_path,
@@ -79,13 +87,8 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
                                    num_pca_components=num_pca_components,
                                    verbose=verbose
                                    )
-        self.image_path: str = input_image_path
-        self.mask_path: str = mask_image_path
-        self.output_tac_path: str = output_tac_path
-        self.num_components: int = num_pca_components
-        self.verbose: bool = verbose
 
-        self.tac_times_in_mins = self.get_frame_reference_times(image_path=self.image_path)
+
         self.mask_voxel_tacs = extract_masked_voxels(input_image=ants.image_read(self.image_path),
                                                      mask_image=ants.image_read(self.mask_path),
                                                      verbose=self.verbose)
