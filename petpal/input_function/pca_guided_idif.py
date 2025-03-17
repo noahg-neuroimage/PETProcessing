@@ -12,13 +12,14 @@ from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_ov
 
 _KBQL_TO_NCiML_ = 37000.0
 
-class PCAGuidedIdifData(object):
+class PCAGuidedIdifBase(object):
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 verbose: bool):
+                 verbose: bool,
+                 auto_rescale_tacs: bool = False):
         self.image_path: str = input_image_path
         self.mask_path: str = mask_image_path
         self.output_tac_path: str = output_tac_path
@@ -31,6 +32,40 @@ class PCAGuidedIdifData(object):
 
         self.pca_obj: PCA | None = None
         self.pca_fit: np.ndarray | None = None
+        self.auto_rescale_tacs: bool = auto_rescale_tacs
+
+        self.mask_voxel_tacs = extract_masked_voxels(input_image=ants.image_read(self.image_path),
+                                                     mask_image=ants.image_read(self.mask_path),
+                                                     verbose=self.verbose)
+        self.auto_rescale_tacs = auto_rescale_tacs
+        if self.auto_rescale_tacs:
+            warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
+            self.mask_voxel_tacs /= _KBQL_TO_NCiML_
+
+        self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
+        self.mask_std = np.std(self.mask_voxel_tacs, axis=0)
+
+    def perform_temporal_pca(self):
+        if self.auto_rescale_tacs:
+            warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
+            self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path)/_KBQL_TO_NCiML_,
+                                                                mask_image=ants.image_read(self.mask_path),
+                                                                num_components=self.num_components)
+        else:
+            self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
+                                                                mask_image=ants.image_read(self.mask_path),
+                                                                num_components=self.num_components)
+
+    def rescale_tacs(self, rescale_constant: float = 37000.0) -> None:
+        assert rescale_constant > 0.0, "rescale_constant must be > 0.0"
+
+        self.mask_voxel_tacs /= rescale_constant
+        self.mask_avg /= rescale_constant
+        self.mask_std /= rescale_constant
+        self.idif_vals /= rescale_constant
+        self.idif_errs /= rescale_constant
+
+        return None
 
     @property
     def idif_tac(self):
@@ -41,14 +76,35 @@ class PCAGuidedIdifData(object):
         return np.asarray([self.tac_times_in_mins, self.idif_vals, self.idif_errs])
 
 
-class PCAGuidedIdifFitterData(PCAGuidedIdifData):
+class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
+    def __init__(self,
+                 input_image_path: str,
+                 mask_image_path: str,
+                 output_tac_path: str,
+                 num_pca_components: int,
+                 verbose: bool,
+                 auto_rescale_tacs: bool = False):
+        PCAGuidedIdifBase.__init__(self,
+                                   input_image_path=input_image_path,
+                                   mask_image_path=mask_image_path,
+                                   output_tac_path=output_tac_path,
+                                   num_pca_components=num_pca_components,
+                                   verbose=verbose,
+                                   auto_rescale_tacs=auto_rescale_tacs)
+        self.num_of_voxels: int | None= None
+        self.selected_component: int | None = None
+
+
+
+
+class PCAGuidedIdifFitterData(PCAGuidedIdifBase):
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
                  verbose: bool):
-        PCAGuidedIdifData.__init__(self,
+        PCAGuidedIdifBase.__init__(self,
                                    input_image_path=input_image_path,
                                    mask_image_path=mask_image_path,
                                    output_tac_path=output_tac_path,
@@ -80,25 +136,14 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
                  pca_comp_threshold: float,
                  verbose: bool,
                  auto_rescale_tacs: bool):
-        PCAGuidedIdifData.__init__(self,
+        PCAGuidedIdifBase.__init__(self,
                                    input_image_path=input_image_path,
                                    mask_image_path=mask_image_path,
                                    output_tac_path=output_tac_path,
                                    num_pca_components=num_pca_components,
-                                   verbose=verbose
+                                   verbose=verbose,
+                                   auto_rescale_tacs=auto_rescale_tacs
                                    )
-
-
-        self.mask_voxel_tacs = extract_masked_voxels(input_image=ants.image_read(self.image_path),
-                                                     mask_image=ants.image_read(self.mask_path),
-                                                     verbose=self.verbose)
-        self.auto_rescale_tacs = auto_rescale_tacs
-        if self.auto_rescale_tacs:
-            warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
-            self.mask_voxel_tacs /= _KBQL_TO_NCiML_
-
-        self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
-        self.mask_std = np.std(self.mask_voxel_tacs, axis=0)
         self.mask_peak_arg = np.argmax(self.mask_avg)
         self.mask_peak_val = self.mask_avg[self.mask_peak_arg] + 3.0 * self.mask_std[self.mask_peak_arg]
 
@@ -179,17 +224,6 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
             voxel_mask *= (pca_component > np.quantile(pca_component, quantile)) ^ flag
         return voxel_mask
 
-    def perform_temporal_pca(self):
-        if self.auto_rescale_tacs:
-            warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
-            self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path)/_KBQL_TO_NCiML_,
-                                                                mask_image=ants.image_read(self.mask_path),
-                                                                num_components=self.num_components)
-        else:
-            self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
-                                                                mask_image=ants.image_read(self.mask_path),
-                                                                num_components=self.num_components)
-
     def calculate_filter_flags_and_signs(self, comp_min_val: float, threshold: float):
         self.pca_filter_flags = self.get_pca_component_filter_flags(pca_components=self.pca_obj.components_,
                                                                     comp_min_val=comp_min_val,
@@ -197,20 +231,12 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
         self.filter_signs = self.get_pca_filter_signs_from_flags(pca_component_filter_flags=self.pca_filter_flags)
 
     def rescale_tacs(self, rescale_constant: float = 37000.0) -> None:
-        assert rescale_constant > 0.0, "rescale_constant must be > 0.0"
+        PCAGuidedIdifFitterBase.rescale_tacs(self, rescale_constant=rescale_constant)
 
-        self.mask_voxel_tacs /= rescale_constant
-        self.mask_avg /= rescale_constant
-        self.mask_std /= rescale_constant
         self.mask_peak_val /= rescale_constant
-
 
         if self.fit_mask_voxel_tacs is not None:
             self.fit_mask_voxel_tacs /= rescale_constant
-        if self.idif_vals is not None:
-            self.idif_vals /= rescale_constant
-        if self.idif_errs is not None:
-            self.idif_errs /= rescale_constant
         return None
 
     def residual(self,
