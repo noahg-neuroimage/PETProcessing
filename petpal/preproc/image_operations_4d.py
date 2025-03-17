@@ -126,7 +126,7 @@ def stitch_broken_scans(input_image_path: str,
         ants.image_write(image=stitched_image,
                          filename=output_image_path)
         image_io.write_dict_to_json(meta_data_dict=new_metadata,
-                                    out_path=image_io._gen_meta_data_filepath_for_nifti(nifty_path=output_image_path))
+                                    out_path=image_io.gen_meta_data_filepath_for_nifti(nifty_path=output_image_path))
 
     return stitched_image
 
