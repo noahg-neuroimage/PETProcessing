@@ -45,6 +45,8 @@ class PCAGuidedIdifBase(object):
         self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
         self.mask_std = np.std(self.mask_voxel_tacs, axis=0)
 
+        self.perform_temporal_pca()
+
     def perform_temporal_pca(self):
         if self.auto_rescale_tacs:
             warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
@@ -103,13 +105,19 @@ class PCAGuidedIdifFitterData(PCAGuidedIdifBase):
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 verbose: bool):
+                 verbose: bool,
+                 auto_rescale_tacs: bool = False):
         PCAGuidedIdifBase.__init__(self,
                                    input_image_path=input_image_path,
                                    mask_image_path=mask_image_path,
                                    output_tac_path=output_tac_path,
                                    num_pca_components=num_pca_components,
-                                   verbose=verbose)
+                                   verbose=verbose,
+                                   auto_rescale_tacs=auto_rescale_tacs)
+
+        self.mask_peak_arg = np.argmax(self.mask_avg)
+        self.mask_peak_val = self.mask_avg[self.mask_peak_arg] + 3.0 * self.mask_std[self.mask_peak_arg]
+
         self.alpha: float | None = None
         self.beta: float | None = None
 
@@ -124,6 +132,7 @@ class PCAGuidedIdifFitterData(PCAGuidedIdifBase):
         self.fit_quantiles: np.ndarray | None = None
         self.fit_voxel_mask: np.ndarray | None = None
         self.fit_mask_voxel_tacs: np.ndarray | None = None
+
 
 
 class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
@@ -144,10 +153,6 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
                                    verbose=verbose,
                                    auto_rescale_tacs=auto_rescale_tacs
                                    )
-        self.mask_peak_arg = np.argmax(self.mask_avg)
-        self.mask_peak_val = self.mask_avg[self.mask_peak_arg] + 3.0 * self.mask_std[self.mask_peak_arg]
-
-        self.perform_temporal_pca()
         self._pca_comp_filter_min_val = pca_comp_filter_min_value
         self._pca_comp_filter_threshold = pca_comp_threshold
         self.calculate_filter_flags_and_signs(comp_min_val=self.pca_comp_filter_min_val,
