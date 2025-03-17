@@ -15,19 +15,23 @@ _KBQL_TO_NCiML_ = 37000.0
 class PCAGuidedIdifData(object):
     def __init__(self):
 
-        self.alpha: float | None = None
-        self.beta: float | None = None
-
         self.idif_vals: np.ndarray | None = None
         self.idif_errs: np.ndarray | None = None
 
         self.pca_obj: PCA | None = None
         self.pca_fit: np.ndarray | None = None
 
+
+class PCAGuidedIdifFitterBase(PCAGuidedIdifData):
+    def __init__(self):
+        PCAGuidedIdifData.__init__(self)
+        self.alpha: float | None = None
+        self.beta: float | None = None
+
         self.pca_filter_flags: np.ndarray | None = None
         self.filter_signs: np.ndarray | None = None
 
-        self._fitting_params: lmfit.Parameters | None= None
+        self._fitting_params: lmfit.Parameters | None = None
         self.fitting_obj: Minimizer | None = None
         self.fit_result: MinimizerResult | None = None
         self.result_params: lmfit.Parameters | None = None
@@ -37,8 +41,7 @@ class PCAGuidedIdifData(object):
         self.fit_mask_voxel_tacs: np.ndarray | None = None
 
 
-
-class PCAGuidedIdifBase(PCAGuidedIdifData):
+class PCAGuidedIdifBase(PCAGuidedIdifFitterBase):
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
