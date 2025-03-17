@@ -127,6 +127,7 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
                                    auto_rescale_tacs=auto_rescale_tacs)
         self.num_of_voxels: int | None = None
         self.selected_component: int | None = None
+        self.project_to_pca: bool = False
 
     @staticmethod
     def calculate_top_pc_voxels_mask(pca_obj: PCA, pca_fit: np.ndarray, pca_component: int, number_of_voxels: int) -> np.ndarray:
@@ -134,16 +135,25 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
         pc_comp_argsort = np.argsort(pca_fit[:, pca_component])[::-1]
         return pc_comp_argsort[:number_of_voxels]
 
-    def run(self, selected_component: int, num_of_voxels: int) -> None:
+    def run(self, selected_component: int, num_of_voxels: int, project_to_pca: bool) -> None:
         assert num_of_voxels > 2, "num_of_voxels must be greater than 2."
         self.selected_component = selected_component
         self.num_of_voxels = num_of_voxels
+        self.project_to_pca = project_to_pca
         self.selected_voxels_mask = self.calculate_top_pc_voxels_mask(pca_obj = self.pca_obj,
                                                                       pca_fit = self.pca_fit,
                                                                       pca_component = self.selected_component,
                                                                       number_of_voxels = self.num_of_voxels)
         self.analysis_has_run = True
-        self.calculate_tacs_from_mask()
+        if self.project_to_pca:
+            self.calculate_projected_tacs_from_mask()
+        else:
+            self.calculate_tacs_from_mask()
+
+    def calculate_projected_tacs_from_mask(self):
+        self.selected_voxels_tacs = self.pca_obj.inverse_transform(self.pca_fit[self.selected_voxels_mask])
+        self.idif_vals = np.mean(self.selected_voxels_tacs, axis=0)
+        self.idif_errs = np.std(self.selected_voxels_tacs, axis=0)
 
 
 class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
