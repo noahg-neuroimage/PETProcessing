@@ -44,8 +44,14 @@ class PCAGuidedIdifBase(object):
 
         self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
         self.mask_std = np.std(self.mask_voxel_tacs, axis=0)
+        self.mask_peak_arg = np.argmax(self.mask_avg)
+        self.mask_peak_val = self.mask_avg[self.mask_peak_arg]
 
         self.perform_temporal_pca()
+
+        self.fit_voxel_mask: np.ndarray | None = None
+        self.fit_mask_voxel_tacs: np.ndarray | float = None
+
 
     def perform_temporal_pca(self):
         if self.auto_rescale_tacs:
@@ -64,8 +70,12 @@ class PCAGuidedIdifBase(object):
         self.mask_voxel_tacs /= rescale_constant
         self.mask_avg /= rescale_constant
         self.mask_std /= rescale_constant
+        self.mask_peak_val /= rescale_constant
         self.idif_vals /= rescale_constant
         self.idif_errs /= rescale_constant
+
+        if self.fit_mask_voxel_tacs is not None:
+            self.fit_mask_voxel_tacs /= rescale_constant
 
         return None
 
@@ -93,10 +103,8 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
                                    num_pca_components=num_pca_components,
                                    verbose=verbose,
                                    auto_rescale_tacs=auto_rescale_tacs)
-        self.num_of_voxels: int | None= None
+        self.num_of_voxels: int | None = None
         self.selected_component: int | None = None
-
-
 
 
 class PCAGuidedIdifFitterData(PCAGuidedIdifBase):
@@ -114,10 +122,6 @@ class PCAGuidedIdifFitterData(PCAGuidedIdifBase):
                                    num_pca_components=num_pca_components,
                                    verbose=verbose,
                                    auto_rescale_tacs=auto_rescale_tacs)
-
-        self.mask_peak_arg = np.argmax(self.mask_avg)
-        self.mask_peak_val = self.mask_avg[self.mask_peak_arg] + 3.0 * self.mask_std[self.mask_peak_arg]
-
         self.alpha: float | None = None
         self.beta: float | None = None
 
@@ -128,11 +132,7 @@ class PCAGuidedIdifFitterData(PCAGuidedIdifBase):
         self.fitting_obj: Minimizer | None = None
         self.fit_result: MinimizerResult | None = None
         self.result_params: lmfit.Parameters | None = None
-
         self.fit_quantiles: np.ndarray | None = None
-        self.fit_voxel_mask: np.ndarray | None = None
-        self.fit_mask_voxel_tacs: np.ndarray | None = None
-
 
 
 class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
@@ -153,6 +153,7 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
                                    verbose=verbose,
                                    auto_rescale_tacs=auto_rescale_tacs
                                    )
+        self.mask_peak_val += self.mask_std[self.mask_peak_arg] * 3.
         self._pca_comp_filter_min_val = pca_comp_filter_min_value
         self._pca_comp_filter_threshold = pca_comp_threshold
         self.calculate_filter_flags_and_signs(comp_min_val=self.pca_comp_filter_min_val,
@@ -234,15 +235,6 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
                                                                     comp_min_val=comp_min_val,
                                                                     threshold=threshold)
         self.filter_signs = self.get_pca_filter_signs_from_flags(pca_component_filter_flags=self.pca_filter_flags)
-
-    def rescale_tacs(self, rescale_constant: float = 37000.0) -> None:
-        PCAGuidedIdifFitterBase.rescale_tacs(self, rescale_constant=rescale_constant)
-
-        self.mask_peak_val /= rescale_constant
-
-        if self.fit_mask_voxel_tacs is not None:
-            self.fit_mask_voxel_tacs /= rescale_constant
-        return None
 
     def residual(self,
                  params: lmfit.Parameters,
