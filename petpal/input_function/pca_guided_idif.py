@@ -13,7 +13,18 @@ from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_ov
 _KBQL_TO_NCiML_ = 37000.0
 
 class PCAGuidedIdifData(object):
-    def __init__(self):
+    def __init__(self,
+                 input_image_path: str,
+                 mask_image_path: str,
+                 output_tac_path: str,
+                 num_pca_components: int,
+                 verbose: bool,
+                 ):
+        self.image_path: str = input_image_path
+        self.mask_path: str = mask_image_path
+        self.output_tac_path: str = output_tac_path
+        self.num_components: int = num_pca_components
+        self.verbose: bool = verbose
 
         self.idif_vals: np.ndarray | None = None
         self.idif_errs: np.ndarray | None = None
@@ -22,9 +33,19 @@ class PCAGuidedIdifData(object):
         self.pca_fit: np.ndarray | None = None
 
 
-class PCAGuidedIdifFitterBase(PCAGuidedIdifData):
-    def __init__(self):
-        PCAGuidedIdifData.__init__(self)
+class PCAGuidedIdifFitterData(PCAGuidedIdifData):
+    def __init__(self,
+                 input_image_path: str,
+                 mask_image_path: str,
+                 output_tac_path: str,
+                 num_pca_components: int,
+                 verbose: bool,):
+        PCAGuidedIdifData.__init__(self,
+                                   input_image_path=input_image_path,
+                                   mask_image_path=mask_image_path,
+                                   output_tac_path=output_tac_path,
+                                   num_pca_components=num_pca_components,
+                                   verbose=verbose)
         self.alpha: float | None = None
         self.beta: float | None = None
 
@@ -41,17 +62,23 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifData):
         self.fit_mask_voxel_tacs: np.ndarray | None = None
 
 
-class PCAGuidedIdifBase(PCAGuidedIdifFitterBase):
+class PCAGuidedIdifFitterBase(PCAGuidedIdifFitterData):
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 pca_comp_filter_min_value: float = 0.0,
-                 pca_comp_threshold: float = 0.1,
-                 verbose: bool = False,
-                 auto_rescale_tacs: bool = False):
-        PCAGuidedIdifData.__init__(self)
+                 pca_comp_filter_min_value: float,
+                 pca_comp_threshold: float,
+                 verbose: bool,
+                 auto_rescale_tacs: bool):
+        PCAGuidedIdifData.__init__(self,
+                                   input_image_path=input_image_path,
+                                   mask_image_path=mask_image_path,
+                                   output_tac_path=output_tac_path,
+                                   num_pca_components=num_pca_components,
+                                   verbose=verbose
+                                   )
         self.image_path: str = input_image_path
         self.mask_path: str = mask_image_path
         self.output_tac_path: str = output_tac_path
@@ -239,7 +266,7 @@ class PCAGuidedIdifBase(PCAGuidedIdifFitterBase):
         self.save()
 
 
-class PCAGuidedIdifFitter(PCAGuidedIdifBase):
+class PCAGuidedIdifFitter(PCAGuidedIdifFitterBase):
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
@@ -249,14 +276,14 @@ class PCAGuidedIdifFitter(PCAGuidedIdifBase):
                  pca_comp_threshold: float = 0.1,
                  verbose: bool = False,
                  auto_rescale_tacs: bool = False):
-        PCAGuidedIdifBase.__init__(self, input_image_path=input_image_path,
-                                   mask_image_path=mask_image_path,
-                                   output_tac_path=output_tac_path,
-                                   num_pca_components=num_pca_components,
-                                   pca_comp_filter_min_value=pca_comp_filter_min_value,
-                                   pca_comp_threshold=pca_comp_threshold,
-                                   verbose=verbose,
-                                   auto_rescale_tacs=auto_rescale_tacs)
+        PCAGuidedIdifFitterBase.__init__(self, input_image_path=input_image_path,
+                                         mask_image_path=mask_image_path,
+                                         output_tac_path=output_tac_path,
+                                         num_pca_components=num_pca_components,
+                                         pca_comp_filter_min_value=pca_comp_filter_min_value,
+                                         pca_comp_threshold=pca_comp_threshold,
+                                         verbose=verbose,
+                                         auto_rescale_tacs=auto_rescale_tacs)
 
     @staticmethod
     def _voxel_term_func(voxel_nums: float) -> float:
