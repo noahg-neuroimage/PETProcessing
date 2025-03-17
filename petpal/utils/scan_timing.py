@@ -4,7 +4,7 @@ Module to handle timing information of PET scans.
 from dataclasses import dataclass
 import numpy as np
 
-from .image_io import load_metadata_for_nifti_with_same_filename, safe_load_meta
+from .image_io import load_metadata_for_nifti_with_same_filename
 
 @dataclass
 class ScanTimingInfo:
@@ -113,77 +113,88 @@ class ScanTimingInfo:
             return self.center
 
 
-def get_frame_timing_info_for_metadata(metadata_dict: dict) -> ScanTimingInfo:
-    r"""
-    Extracts frame timing information and decay factors from a json metadata.
-    Expects that the JSON metadata has ``FrameDuration`` and ``DecayFactor`` or
-    ``DecayCorrectionFactor`` keys.
-
-    .. important::
-        This function tries to infer `FrameTimesEnd` and `FrameTimesStart` from the frame durations
-        if those keys are not present in the metadata file. If the scan is broken, this might generate
-        incorrect results.
+    def set_frame_timing_info(self, duration, start, end, center, decay):
+        self.duration = duration
+        self.start = start
+        self.end = end
+        self.center = center
+        self.decay = decay
 
 
-    Args:
-        metadata_dict (dict): The metadata dictionary, loaded into memory.
+    def get_frame_timing_info_for_metadata(self, metadata_dict: dict):
+        r"""
+        Extracts frame timing information and decay factors from a json metadata.
+        Expects that the JSON metadata has ``FrameDuration`` and ``DecayFactor`` or
+        ``DecayCorrectionFactor`` keys.
 
-    Returns:
-        :class:`ScanTimingInfo`: Frame timing information with the following elements:
-            - duration (np.ndarray): Frame durations in seconds.
-            - start (np.ndarray): Frame start times in seconds.
-            - end (np.ndarray): Frame end times in seconds.
-            - center (np.ndarray): Frame center times in seconds.
-            - decay (np.ndarray): Decay factors for each frame.
-    """
-    frm_dur = np.asarray(metadata_dict['FrameDuration'], float)
-    try:
-        frm_ends = np.asarray(metadata_dict['FrameTimesEnd'], float)
-    except KeyError:
-        frm_ends = np.cumsum(frm_dur)
-    try:
-        frm_starts = np.asarray(metadata_dict['FrameTimesStart'], float)
-    except KeyError:
-        frm_starts = np.diff(frm_ends)
-    try:
-        decay = np.asarray(metadata_dict['DecayCorrectionFactor'], float)
-    except KeyError:
-        decay = np.asarray(metadata_dict['DecayFactor'], float)
-    try:
-        frm_centers = np.asarray(metadata_dict['FrameReferenceTime'], float)
-    except KeyError:
-        frm_centers = np.asarray(frm_starts + frm_dur / 2.0, float)
-
-    return ScanTimingInfo(duration=frm_dur, start=frm_starts, end=frm_ends, center=frm_centers, decay=decay)
+        .. important::
+            This function tries to infer `FrameTimesEnd` and `FrameTimesStart` from the frame durations
+            if those keys are not present in the metadata file. If the scan is broken, this might generate
+            incorrect results.
 
 
-def get_frame_timing_info_for_nifti(image_path: str) -> ScanTimingInfo:
-    r"""
-    Extracts frame timing information and decay factors from a NIfTI image metadata.
-    Expects that the JSON metadata file has ``FrameDuration`` and ``DecayFactor`` or
-    ``DecayCorrectionFactor`` keys.
+        Args:
+            metadata_dict (dict): The metadata dictionary, loaded into memory.
 
-    .. important::
-        This function tries to infer `FrameTimesEnd` and `FrameTimesStart` from the frame durations
-        if those keys are not present in the metadata file. If the scan is broken, this might generate
-        incorrect results.
+        Returns:
+            :class:`ScanTimingInfo`: Frame timing information with the following elements:
+                - duration (np.ndarray): Frame durations in seconds.
+                - start (np.ndarray): Frame start times in seconds.
+                - end (np.ndarray): Frame end times in seconds.
+                - center (np.ndarray): Frame center times in seconds.
+                - decay (np.ndarray): Decay factors for each frame.
+        """
+        frm_dur = np.asarray(metadata_dict['FrameDuration'], float)
+        try:
+            frm_ends = np.asarray(metadata_dict['FrameTimesEnd'], float)
+        except KeyError:
+            frm_ends = np.cumsum(frm_dur)
+        try:
+            frm_starts = np.asarray(metadata_dict['FrameTimesStart'], float)
+        except KeyError:
+            frm_starts = np.diff(frm_ends)
+        try:
+            decay = np.asarray(metadata_dict['DecayCorrectionFactor'], float)
+        except KeyError:
+            decay = np.asarray(metadata_dict['DecayFactor'], float)
+        try:
+            frm_centers = np.asarray(metadata_dict['FrameReferenceTime'], float)
+        except KeyError:
+            frm_centers = np.asarray(frm_starts + frm_dur / 2.0, float)
+
+        self.set_frame_timing_info(duration=frm_dur,
+                                   start=frm_starts,
+                                   end=frm_ends,
+                                   center=frm_centers,
+                                   decay=decay)
+        return self
+
+    @staticmethod
+    def get_frame_timing_info_for_nifti(image_path: str):
+        r"""
+        Extracts frame timing information and decay factors from a NIfTI image metadata.
+        Expects that the JSON metadata file has ``FrameDuration`` and ``DecayFactor`` or
+        ``DecayCorrectionFactor`` keys.
+
+        .. important::
+            This function tries to infer `FrameTimesEnd` and `FrameTimesStart` from the frame durations
+            if those keys are not present in the metadata file. If the scan is broken, this might generate
+            incorrect results.
 
 
-    Args:
-        image_path (str): Path to the NIfTI image file.
+        Args:
+            image_path (str): Path to the NIfTI image file.
 
-    Returns:
-        scan_timing (:class:`ScanTimingInfo`): Frame timing information with the following elements:
-            - duration (np.ndarray): Frame durations in seconds.
-            - start (np.ndarray): Frame start times in seconds.
-            - end (np.ndarray): Frame end times in seconds.
-            - center (np.ndarray): Frame center times in seconds.
-            - decay (np.ndarray): Decay factors for each frame.
-    """
-    _meta_data = load_metadata_for_nifti_with_same_filename(image_path=image_path)
-    scan_timing = get_frame_timing_info_for_metadata(_meta_data)
-
-    return scan_timing
+        Returns:
+            scan_timing (:class:`ScanTimingInfo`): Frame timing information with the following elements:
+                - duration (np.ndarray): Frame durations in seconds.
+                - start (np.ndarray): Frame start times in seconds.
+                - end (np.ndarray): Frame end times in seconds.
+                - center (np.ndarray): Frame center times in seconds.
+                - decay (np.ndarray): Decay factors for each frame.
+        """
+        _meta_data = load_metadata_for_nifti_with_same_filename(image_path=image_path)
+        get_frame_timing_info_for_metadata(_meta_data)
 
 
 def get_window_index_pairs_from_durations(frame_durations: np.ndarray, w_size: float):
@@ -239,5 +250,5 @@ def get_window_index_pairs_for_image(image_path: str, w_size: float):
     See Also:
         :func:`get_window_index_pairs_from_durations`
     """
-    image_frame_info = get_frame_timing_info_for_nifti(image_path=image_path)
+    image_frame_info = ScanTimingInfo.get_frame_timing_info_for_nifti(image_path=image_path)
     return get_window_index_pairs_from_durations(frame_durations=image_frame_info.duration, w_size=w_size)
