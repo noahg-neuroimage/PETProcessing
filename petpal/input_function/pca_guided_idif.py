@@ -49,8 +49,8 @@ class PCAGuidedIdifBase(object):
 
         self.perform_temporal_pca()
 
-        self.fit_voxel_mask: np.ndarray | None = None
-        self.fit_mask_voxel_tacs: np.ndarray | float = None
+        self.selected_voxels_mask: np.ndarray | None = None
+        self.selected_voxels_tacs: np.ndarray | float = None
 
 
     def perform_temporal_pca(self):
@@ -74,8 +74,8 @@ class PCAGuidedIdifBase(object):
         self.idif_vals /= rescale_constant
         self.idif_errs /= rescale_constant
 
-        if self.fit_mask_voxel_tacs is not None:
-            self.fit_mask_voxel_tacs /= rescale_constant
+        if self.selected_voxels_tacs is not None:
+            self.selected_voxels_tacs /= rescale_constant
 
         return None
 
