@@ -12,6 +12,7 @@ from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_ov
 
 _KBQL_TO_NCiML_ = 37000.0
 
+
 class PCAGuidedIdifBase(object):
     def __init__(self,
                  input_image_path: str,
@@ -55,13 +56,13 @@ class PCAGuidedIdifBase(object):
         self.analysis_has_run: bool = False
         self.project_to_pca: bool = False
 
-
     def perform_temporal_pca(self):
         if self.auto_rescale_input:
             warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
-            self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path)/_KBQL_TO_NCiML_,
-                                                                mask_image=ants.image_read(self.mask_path),
-                                                                num_components=self.num_components)
+            self.pca_obj, self.pca_fit = temporal_pca_over_mask(
+                input_image=ants.image_read(self.image_path) / _KBQL_TO_NCiML_,
+                mask_image=ants.image_read(self.mask_path),
+                num_components=self.num_components)
         else:
             self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
                                                                 mask_image=ants.image_read(self.mask_path),
@@ -134,9 +135,11 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
         self.num_of_voxels: int | None = None
         self.selected_component: int | None = None
 
-
     @staticmethod
-    def calculate_top_pc_voxels_mask(pca_obj: PCA, pca_fit: np.ndarray, pca_component: int, number_of_voxels: int) -> np.ndarray:
+    def calculate_top_pc_voxels_mask(pca_obj: PCA,
+                                     pca_fit: np.ndarray,
+                                     pca_component: int,
+                                     number_of_voxels: int) -> np.ndarray:
         assert pca_obj.n_components > pca_component >= 0, "PCA component index must be >= 0 and less than the number of total components."
         pc_comp_argsort = np.argsort(pca_fit[:, pca_component])[::-1]
         return pc_comp_argsort[:number_of_voxels]
@@ -146,10 +149,10 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
         self.selected_component = selected_component
         self.num_of_voxels = num_of_voxels
         self.project_to_pca = project_to_pca
-        self.selected_voxels_mask = self.calculate_top_pc_voxels_mask(pca_obj = self.pca_obj,
-                                                                      pca_fit = self.pca_fit,
-                                                                      pca_component = self.selected_component,
-                                                                      number_of_voxels = self.num_of_voxels)
+        self.selected_voxels_mask = self.calculate_top_pc_voxels_mask(pca_obj=self.pca_obj,
+                                                                      pca_fit=self.pca_fit,
+                                                                      pca_component=self.selected_component,
+                                                                      number_of_voxels=self.num_of_voxels)
         self.analysis_has_run = True
         if self.project_to_pca:
             self.calculate_projected_tacs_from_mask()
@@ -311,8 +314,8 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
         self.result_params = self.fit_result.params
         self.fit_quantiles = np.asarray(list(self.fit_result.params.valuesdict().values()))
         self.selected_voxels_mask = self.calculate_voxel_mask_from_quantiles(params=self.fit_result.params,
-                                                                       pca_values_per_voxel=self.pca_fit,
-                                                                       quantile_flags=self.pca_filter_flags,)
+                                                                             pca_values_per_voxel=self.pca_fit,
+                                                                             quantile_flags=self.pca_filter_flags, )
         self.analysis_has_run = True
         if self.project_to_pca:
             self.calculate_projected_tacs_from_mask()
@@ -334,7 +337,8 @@ class PCAGuidedIdifFitter(PCAGuidedIdifFitterBase):
                  pca_comp_threshold: float = 0.1,
                  verbose: bool = False,
                  auto_rescale_input: bool = False):
-        PCAGuidedIdifFitterBase.__init__(self, input_image_path=input_image_path,
+        PCAGuidedIdifFitterBase.__init__(self,
+                                         input_image_path=input_image_path,
                                          mask_image_path=mask_image_path,
                                          output_tac_path=output_tac_path,
                                          num_pca_components=num_pca_components,
