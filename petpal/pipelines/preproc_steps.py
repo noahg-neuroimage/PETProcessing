@@ -799,14 +799,15 @@ class ImagePairToArrayStep(FunctionBasedStep):
 
 class PcaGuidedIDIFStep(ObjectBasedStep):
     def __init__(self,
-                 input_image_path,
-                 mask_image_path,
-                 output_array_path,
-                 num_pca_components,
-                 verbose,
-                 alpha,
-                 beta,
-                 method,
+                 input_image_path: str,
+                 mask_image_path: str,
+                 output_array_path: str,
+                 num_pca_components: int,
+                 verbose: bool,
+                 project_to_pca: bool,
+                 alpha: float,
+                 beta: float,
+                 method: str,
                  **meth_kwargs):
         ObjectBasedStep.__init__(self,
                                  name='pca_guided_idif',
@@ -817,7 +818,7 @@ class PcaGuidedIDIFStep(ObjectBasedStep):
                                               'num_pca_components':num_pca_components,
                                               'verbose':verbose
                                               },
-                                 call_kwargs={'alpha':alpha, 'beta':beta, 'method':method, **meth_kwargs},)
+                                 call_kwargs={'project_to_pca': project_to_pca, 'alpha':alpha, 'beta':beta, 'method':method, **meth_kwargs},)
         self.input_image_path = input_image_path
         self.mask_image_path = mask_image_path
         self.output_array_path = output_array_path
