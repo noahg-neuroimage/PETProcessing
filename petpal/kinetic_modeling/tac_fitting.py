@@ -892,7 +892,7 @@ class TCMAnalysis(object):
         """
         p_tac = safe_load_tac(self.input_tac_path)
         t_tac = safe_load_tac(self.roi_tac_path)
-        self.fitting_obj = self.fitting_obj(pTAC=p_tac, tTAC=t_tac,
+        self.fitting_obj = self.fitting_obj(pTAC=p_tac[:2], tTAC=t_tac[:2],
                                             weights=self.weights,
                                             tcm_func=self._tcm_func,
                                             fit_bounds=self.bounds,
@@ -1041,8 +1041,8 @@ class MultiTACTCMAnalsyis(TCMAnalysis, MultiTACAnalysisMixin):
         fit_obj = None
         for a_tac in self.tacs_files_list:
             t_tac = safe_load_tac(a_tac)
-            fit_obj = self.fitting_obj(pTAC=p_tac,
-                                       tTAC=t_tac,
+            fit_obj = self.fitting_obj(pTAC=p_tac[:2],
+                                       tTAC=t_tac[:2],
                                        weights=self.weights,
                                        tcm_func=self._tcm_func,
                                        fit_bounds=self.bounds,
