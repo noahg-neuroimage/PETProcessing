@@ -113,24 +113,17 @@ class ScanTimingInfo:
             return self.center
 
 
-    def set_frame_timing_info(self, duration, start, end, center, decay):
-        self.duration = duration
-        self.start = start
-        self.end = end
-        self.center = center
-        self.decay = decay
-
-
-    def get_frame_timing_info_for_metadata(self, metadata_dict: dict):
+    @classmethod
+    def from_metadata(cls, metadata_dict: dict):
         r"""
         Extracts frame timing information and decay factors from a json metadata.
         Expects that the JSON metadata has ``FrameDuration`` and ``DecayFactor`` or
         ``DecayCorrectionFactor`` keys.
 
         .. important::
-            This function tries to infer `FrameTimesEnd` and `FrameTimesStart` from the frame durations
-            if those keys are not present in the metadata file. If the scan is broken, this might generate
-            incorrect results.
+            This function tries to infer `FrameTimesEnd` and `FrameTimesStart` from the frame
+            durations if those keys are not present in the metadata file. If the scan is broken,
+            this might generate incorrect results.
 
 
         Args:
@@ -162,31 +155,30 @@ class ScanTimingInfo:
         except KeyError:
             frm_centers = np.asarray(frm_starts + frm_dur / 2.0, float)
 
-        self.set_frame_timing_info(duration=frm_dur,
-                                   start=frm_starts,
-                                   end=frm_ends,
-                                   center=frm_centers,
-                                   decay=decay)
-        return self
+        return cls(duration=frm_dur,
+                   start=frm_starts,
+                   end=frm_ends,
+                   center=frm_centers,
+                   decay=decay)
 
-    @staticmethod
-    def get_frame_timing_info_for_nifti(image_path: str):
+    @classmethod
+    def from_nifti(cls, image_path: str):
         r"""
         Extracts frame timing information and decay factors from a NIfTI image metadata.
         Expects that the JSON metadata file has ``FrameDuration`` and ``DecayFactor`` or
         ``DecayCorrectionFactor`` keys.
 
         .. important::
-            This function tries to infer `FrameTimesEnd` and `FrameTimesStart` from the frame durations
-            if those keys are not present in the metadata file. If the scan is broken, this might generate
-            incorrect results.
+            This function tries to infer `FrameTimesEnd` and `FrameTimesStart` from the frame 
+            durations if those keys are not present in the metadata file. If the scan is broken,
+            this might generate incorrect results.
 
 
         Args:
             image_path (str): Path to the NIfTI image file.
 
         Returns:
-            scan_timing (:class:`ScanTimingInfo`): Frame timing information with the following elements:
+           :class:`ScanTimingInfo`: Frame timing information with the following elements:
                 - duration (np.ndarray): Frame durations in seconds.
                 - start (np.ndarray): Frame start times in seconds.
                 - end (np.ndarray): Frame end times in seconds.
@@ -194,7 +186,7 @@ class ScanTimingInfo:
                 - decay (np.ndarray): Decay factors for each frame.
         """
         _meta_data = load_metadata_for_nifti_with_same_filename(image_path=image_path)
-        get_frame_timing_info_for_metadata(_meta_data)
+        return cls.from_metadata(metadata_dict=_meta_data)
 
 
 def get_window_index_pairs_from_durations(frame_durations: np.ndarray, w_size: float):
@@ -250,5 +242,6 @@ def get_window_index_pairs_for_image(image_path: str, w_size: float):
     See Also:
         :func:`get_window_index_pairs_from_durations`
     """
-    image_frame_info = ScanTimingInfo.get_frame_timing_info_for_nifti(image_path=image_path)
-    return get_window_index_pairs_from_durations(frame_durations=image_frame_info.duration, w_size=w_size)
+    image_frame_info = ScanTimingInfo.from_nifti(image_path=image_path)
+    return get_window_index_pairs_from_durations(frame_durations=image_frame_info.duration,
+                                                 w_size=w_size)
