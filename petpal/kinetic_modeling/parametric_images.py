@@ -22,12 +22,11 @@ from petpal.kinetic_modeling.reference_tissue_models import (fit_mrtm2_2003_to_t
 from petpal.kinetic_modeling.fit_tac_with_rtms import (get_rtm_kwargs,
                                                        get_rtm_method,
                                                        get_rtm_output_size)
-from petpal.utils.time_activity_curve import TimeActivityCurveFromFile
 from petpal.utils.image_io import safe_load_4dpet_nifti
 from . import graphical_analysis
 from ..input_function.blood_input import read_plasma_glucose_concentration
 from ..utils.image_io import safe_load_tac, safe_copy_meta, validate_two_images_same_dimensions
-
+from ..utils.time_activity_curve import TimeActivityCurve
 
 @numba.njit()
 def apply_linearized_analysis_to_all_voxels(pTAC_times: np.ndarray,
@@ -308,7 +307,7 @@ class ReferenceTissueParametricImage:
             output_filename_prefix (str): Prefix for output files saved after analysis.
             method (str): RTM method to run. Default 'mrtm2'.
         """
-        self.reference_tac = TimeActivityCurveFromFile(tac_path=reference_tac_path)
+        self.reference_tac = TimeActivityCurve.from_tsv(tac_path=reference_tac_path)
         self.pet_image = safe_load_4dpet_nifti(pet_image_path)
         self.mask_image = safe_load_4dpet_nifti(mask_image_path)
 
@@ -690,7 +689,7 @@ class GraphicalAnalysisParametricImage:
         self.analysis_props['ThresholdTime'] = t_thresh_in_mins
         self.analysis_props['MethodName'] = method_name
 
-        p_tac_times, _ = safe_load_tac(filename=self.input_tac_path)
+        p_tac_times, _, _ = safe_load_tac(filename=self.input_tac_path)
         t_thresh_index = graphical_analysis.get_index_from_threshold(times_in_minutes=p_tac_times,
                                                                      t_thresh_in_minutes=t_thresh_in_mins)
         self.analysis_props['StartFrameTime'] = p_tac_times[t_thresh_index]
@@ -808,14 +807,14 @@ class GraphicalAnalysisParametricImage:
             * :func:`petpal.graphical_analysis.alternative_logan_analysis`
 
         """
-        p_tac_times, p_tac_vals = safe_load_tac(self.input_tac_path)
+        p_tac = TimeActivityCurve.from_tsv(tac_path=self.input_tac_path)
         nifty_pet4d_img = safe_load_4dpet_nifti(filename=self.pet4D_img_path)
         warnings.warn(
             f"PET image values are being scaled by {image_scale}.",
             UserWarning)
         self.slope_image, self.intercept_image = generate_parametric_images_with_graphical_method(
-            pTAC_times=p_tac_times,
-            pTAC_vals=p_tac_vals,
+            pTAC_times=p_tac.tac_times_in_minutes,
+            pTAC_vals=p_tac.tac_vals,
             tTAC_img=nifty_pet4d_img.get_fdata() * image_scale,
             t_thresh_in_mins=t_thresh_in_mins, method_name=method_name)
 
