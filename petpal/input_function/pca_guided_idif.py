@@ -316,8 +316,8 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
         else:
             self.calculate_tacs_from_mask()
 
-    def __call__(self, alpha: float, beta: float, method: str, **meth_kwargs) -> None:
-        self.run(alpha=alpha, beta=beta, method=method, **meth_kwargs)
+    def __call__(self, project_to_pca: bool, alpha: float, beta: float, method: str, **meth_kwargs) -> None:
+        self.run(project_to_pca=project_to_pca, alpha=alpha, beta=beta, method=method, **meth_kwargs)
         self.save()
 
 
