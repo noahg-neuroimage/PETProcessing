@@ -4,11 +4,11 @@ from ..kinetic_modeling import parametric_images
 from ..kinetic_modeling import tac_fitting
 from ..kinetic_modeling import rtm_analysis as pet_rtms
 from ..kinetic_modeling import graphical_analysis as pet_grph
-from .preproc_steps import (PcaGuidedIDIFStep,
-                            TACsFromSegmentationStep,
+from .preproc_steps import (TACsFromSegmentationStep,
                             ResampleBloodTACStep,
                             PreprocStepType,
                             ImageToImageStep)
+from .pca_guided_idif_steps import PcaGuidedIDIFStep
 from ..utils.bids_utils import parse_path_to_get_subject_and_session_id, gen_bids_like_dir_path
 
 class TACAnalysisStepMixin(StepsAPI):
