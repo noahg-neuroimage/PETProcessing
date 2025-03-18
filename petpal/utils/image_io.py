@@ -141,7 +141,6 @@ def validate_tac(tac_arr: np.ndarray):
         AssertionError: If there are a number of columns other than two or three.
     """
     num_cols = tac_arr.shape[0]
-    print(num_cols)
     assert num_cols in (2,3), f"Expected two or three columns, got {num_cols}"
     if num_cols==2:
         print("Warning: TAC has only two columns. Filling uncertainties with ones.")
