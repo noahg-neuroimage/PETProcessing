@@ -16,6 +16,7 @@ Submodules
    petpal.utils.decorators
    petpal.utils.data_driven_image_analyses
    petpal.utils.constants
+   petpal.utils.scan_timing
 
 Module contents
 ---------------
