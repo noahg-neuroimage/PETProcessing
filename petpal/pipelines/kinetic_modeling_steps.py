@@ -8,7 +8,7 @@ from .preproc_steps import (TACsFromSegmentationStep,
                             ResampleBloodTACStep,
                             PreprocStepType,
                             ImageToImageStep)
-from .pca_guided_idif_steps import PcaGuidedIDIFStep
+from .pca_guided_idif_steps import PCAGuidedIDIFMixin
 from ..utils.bids_utils import parse_path_to_get_subject_and_session_id, gen_bids_like_dir_path
 
 class TACAnalysisStepMixin(StepsAPI):
@@ -263,8 +263,8 @@ class TACAnalysisStepMixin(StepsAPI):
                 self.roi_tacs_dir = sending_step.out_tacs_dir
             elif isinstance(sending_step, ResampleBloodTACStep):
                 self.input_tac_path = sending_step.resampled_tac_path
-            elif isinstance(sending_step, PcaGuidedIDIFStep):
-                self.input_tac_path = sending_step.output_array_path
+            elif isinstance(sending_step, PCAGuidedIDIFMixin):
+                self.input_tac_path = sending_step.output_tac_path
             else:
                 super().set_input_as_output_from(sending_step)
 
@@ -666,8 +666,8 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
                 self.input_tac_path = sending_step.resampled_tac_path
             elif isinstance(sending_step, ImageToImageStep):
                 self.input_image_path = sending_step.output_image_path
-            elif isinstance(sending_step, PcaGuidedIDIFStep):
-                self.input_tac_path = sending_step.output_array_path
+            elif isinstance(sending_step, PCAGuidedIDIFMixin):
+                self.input_tac_path = sending_step.output_tac_path
             else:
                 raise NotImplementedError
     

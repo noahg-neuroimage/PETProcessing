@@ -1,39 +1,36 @@
 from ..input_function import pca_guided_idif
 from ..pipelines.preproc_steps import ImageToImageStep
-from ..pipelines.steps_base import ObjectBasedStep
+from ..pipelines.steps_base import StepsAPI, ObjectBasedStep
 from ..utils.bids_utils import gen_bids_like_filepath, parse_path_to_get_subject_and_session_id, snake_to_camel_case
 
 
-class PcaGuidedIDIFStep(ObjectBasedStep):
+class PCAGuidedIDIFMixin(StepsAPI):
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
-                 output_array_path: str,
+                 output_tac_path: str,
                  num_pca_components: int,
                  verbose: bool,
                  project_to_pca: bool,
-                 alpha: float,
-                 beta: float,
-                 method: str,
-                 **meth_kwargs):
-        ObjectBasedStep.__init__(self,
-                                 name='pca_guided_idif',
-                                 class_type=pca_guided_idif.PCAGuidedIdifFitter,
-                                 init_kwargs={'input_image_path':input_image_path,
-                                              'mask_image_path':mask_image_path,
-                                              'output_tac_path':output_array_path,
-                                              'num_pca_components':num_pca_components,
-                                              'verbose':verbose
-                                              },
-                                 call_kwargs={'project_to_pca': project_to_pca, 'alpha':alpha, 'beta':beta, 'method':method, **meth_kwargs},)
+                 auto_rescale_input: bool = False
+                 ):
+        StepsAPI.__init__(self)
+        self.init_kwargs = {'input_image_path': input_image_path,
+                            'mask_image_path': mask_image_path,
+                            'output_tac_path': output_tac_path,
+                            'num_pca_components': num_pca_components,
+                            'verbose': verbose,
+                            'auto_rescale_input': auto_rescale_input}
+        self.call_kwargs = {'project_to_pca': project_to_pca}
         self.input_image_path = input_image_path
         self.mask_image_path = mask_image_path
-        self.output_array_path = output_array_path
+        self.output_tac_path = output_tac_path
         self.num_pca_components = num_pca_components
         self.verbose = verbose
-        self.alpha = alpha
-        self.beta = beta
-        self.method = method
+        self.project_to_pca = project_to_pca
+        self.auto_rescale_input = auto_rescale_input
+        self.name = 'pca_guided_idif_base'
+
 
     @property
     def input_image_path(self):
@@ -52,12 +49,36 @@ class PcaGuidedIDIFStep(ObjectBasedStep):
         self.init_kwargs['mask_image_path'] = value
 
     @property
-    def output_array_path(self):
+    def output_tac_path(self) -> str:
         return self.init_kwargs['output_tac_path']
 
-    @output_array_path.setter
-    def output_array_path(self, value):
+    @output_tac_path.setter
+    def output_tac_path(self, value):
         self.init_kwargs['output_tac_path'] = value
+
+    @property
+    def num_pca_components(self):
+        return self.init_kwargs['num_pca_components']
+
+    @num_pca_components.setter
+    def num_pca_components(self, value):
+        self.init_kwargs['num_pca_components'] = value
+
+    @property
+    def verbose(self):
+        return self.init_kwargs['verbose']
+
+    @verbose.setter
+    def verbose(self, value):
+        self.init_kwargs['verbose'] = value
+
+    @property
+    def project_to_pca(self):
+        return self.call_kwargs['project_to_pca']
+
+    @project_to_pca.setter
+    def project_to_pca(self, value):
+        self.call_kwargs['project_to_pca'] = value
 
     def set_input_as_output_from(self, *sending_steps: ImageToImageStep) -> None:
         """
@@ -105,4 +126,115 @@ class PcaGuidedIDIFStep(ObjectBasedStep):
         step_name_in_camel_case = snake_to_camel_case(self.name)
         filepath = gen_bids_like_filepath(sub_id=sub_id, ses_id=ses_id, suffix=suffix, bids_dir=out_dir,
                                           modality=der_type, ext=ext, desc=step_name_in_camel_case, **extra_desc)
-        self.output_array_path = filepath
+        self.output_tac_path = filepath
+
+
+class PCAGuidedFitIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
+    def __init__(self,
+                 input_image_path: str,
+                 mask_image_path: str,
+                 output_array_path: str,
+                 num_pca_components: int,
+                 verbose: bool,
+                 project_to_pca: bool,
+                 auto_rescale_input: bool,
+                 alpha: float,
+                 beta: float,
+                 method: str,
+                 **meth_kwargs):
+        PCAGuidedIDIFMixin.__init__(self,
+                                    input_image_path=input_image_path,
+                                    mask_image_path=mask_image_path,
+                                    output_tac_path=output_array_path,
+                                    num_pca_components=num_pca_components,
+                                    verbose=verbose,
+                                    project_to_pca=project_to_pca,
+                                    auto_rescale_input=auto_rescale_input)
+        ObjectBasedStep.__init__(self,
+                                 name='pca_guided_fit_idif',
+                                 class_type=pca_guided_idif.PCAGuidedIdifFitter,
+                                 init_kwargs={**self.init_kwargs},
+                                 call_kwargs=(self.call_kwargs | {'alpha' : alpha,
+                                                                  'beta'  : beta,
+                                                                  'method': method,
+                                                                  **meth_kwargs}), )
+
+        self.alpha = alpha
+        self.beta = beta
+        self.method = method
+
+    @property
+    def alpha(self):
+        return self.call_kwargs['alpha']
+
+    @alpha.setter
+    def alpha(self, value):
+        self.call_kwargs['alpha'] = value
+
+    @property
+    def beta(self):
+        return self.call_kwargs['beta']
+
+    @beta.setter
+    def beta(self, value):
+        self.call_kwargs['beta'] = value
+
+    @property
+    def method(self):
+        return self.call_kwargs['method']
+
+    @method.setter
+    def method(self, value):
+        self.call_kwargs['method'] = value
+
+
+class PCAGuidedTopVoxelsIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
+    def __init__(self,
+                 input_image_path: str,
+                 mask_image_path: str,
+                 output_array_path: str,
+                 num_pca_components: int,
+                 verbose: bool,
+                 project_to_pca: bool,
+                 auto_rescale_input: bool,
+                 selected_component: int,
+                 num_of_voxels: int):
+        PCAGuidedIDIFMixin.__init__(self,
+                                    input_image_path=input_image_path,
+                                    mask_image_path=mask_image_path,
+                                    output_tac_path=output_array_path,
+                                    num_pca_components=num_pca_components,
+                                    verbose=verbose,
+                                    project_to_pca=project_to_pca,
+                                    auto_rescale_input=auto_rescale_input)
+        ObjectBasedStep.__init__(self,
+                                 name='pca_guided_top_voxels_idif',
+                                 class_type=pca_guided_idif.PCAGuidedTopVoxelsIDIF,
+                                 init_kwargs={'input_image_path'  : input_image_path,
+                                              'mask_image_path'   : mask_image_path,
+                                              'output_tac_path'   : output_array_path,
+                                              'num_pca_components': num_pca_components,
+                                              'verbose'           : verbose
+                                              },
+                                 call_kwargs=(self.call_kwargs | {'selected_component': selected_component,
+                                                                  'num_of_voxels'     : num_of_voxels})
+                                 )
+
+        self.selected_component = selected_component
+        self.num_of_voxels = num_of_voxels
+
+    @property
+    def selected_component(self):
+        return self.call_kwargs['selected_component']
+
+    @selected_component.setter
+    def selected_component(self, value):
+        self.call_kwargs['selected_component'] = value
+
+    @property
+    def num_of_voxels(self):
+        return self.call_kwargs['num_of_voxels']
+
+    @num_of_voxels.setter
+    def num_of_voxels(self, value):
+        self.call_kwargs['num_of_voxels'] = value
