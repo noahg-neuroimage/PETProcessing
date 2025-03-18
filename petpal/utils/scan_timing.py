@@ -86,24 +86,41 @@ class ScanTimingInfo:
 
     @property
     def duration_in_mins(self) -> np.ndarray[float]:
+        """
+        Returns the frame durations in minutes. Validates values by checking if the final frame
+        value is greater than 200: if so, then assumes values are in seconds and divides by 60.
+        """
         if self.end[-1] >= 200.0:
             return self.duration / 60.0
         return self.duration
 
     @property
     def end_in_mins(self) -> np.ndarray[float]:
+        """
+        Returns the frame time ends in minutes. Validates values by checking if the final frame
+        value is greater than 200: if so, then assumes values are in seconds and divides by 60.
+        """
         if self.end[-1] >= 200.0:
             return self.end / 60.0
         return self.end
 
     @property
     def start_in_mins(self) -> np.ndarray[float]:
+        """
+        Returns the frame time starts in minutes. Validates values by checking if the final frame
+        value is greater than 200: if so, then assumes values are in seconds and divides by 60.
+        """
         if self.end[-1] >= 200.0:
             return self.start / 60.0
         return self.start
 
     @property
     def center_in_mins(self) -> np.ndarray[float]:
+        """
+        Returns the frame reference times in minutes. Validates values by checking if the final
+        frame value is greater than 200: if so, then assumes values are in seconds and divides by
+        60.
+        """
         if self.end[-1] >= 200.0:
             return self.center / 60.0
         return self.center
