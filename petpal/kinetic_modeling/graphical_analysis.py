@@ -24,6 +24,7 @@ import numba
 import numpy as np
 from ..utils.time_activity_curve import MultiTACAnalysisMixin
 from ..utils.image_io import safe_load_tac
+from ..utils.time_activity_curve import TimeActivityCurve
 
 
 @numba.njit()
@@ -636,11 +637,11 @@ class GraphicalAnalysis:
             Updates 'Slope', 'Intercept', and 'RSquared' in self.analysis_props dictionary with calculated fit parameters.
 
         """
-        p_tac_times, p_tac_vals = safe_load_tac(self.input_tac_path)
-        _t_tac_times, t_tac_vals = safe_load_tac(self.roi_tac_path)
-        slope, intercept, rsquared = self.analysis_func(tac_times_in_minutes=p_tac_times,
-                                                        input_tac_values=p_tac_vals,
-                                                        region_tac_values=t_tac_vals,
+        p_tac = TimeActivityCurve.from_tsv(tac_path=self.input_tac_path)
+        t_tac = TimeActivityCurve.from_tsv(tac_path=self.roi_tac_path)
+        slope, intercept, rsquared = self.analysis_func(tac_times_in_minutes=p_tac.tac_times_in_minutes,
+                                                        input_tac_values=p_tac.tac_vals,
+                                                        region_tac_values=t_tac.tac_vals,
                                                         t_thresh_in_minutes=self.fit_thresh_in_mins)
         self.analysis_props['Slope'] = slope
         self.analysis_props['Intercept'] = intercept
@@ -771,13 +772,13 @@ class MultiTACGraphicalAnalysis(GraphicalAnalysis, MultiTACAnalysisMixin):
         Calculates the fit for each TAC, updating the analysis properties with slope, intercept, and R-squared values.
         Overrides :meth:`GraphicalAnalysis.calculate_fit`.
         """
-        p_tac_times, p_tac_vals = safe_load_tac(self.input_tac_path)
+        p_tac = TimeActivityCurve.from_tsv(tac_path=self.input_tac_path)
         for tac_id, a_tac in enumerate(self.tacs_files_list):
-            _, t_tac_vals = safe_load_tac(a_tac)
+            t_tac = TimeActivityCurve.from_tsv(tac_path=a_tac)
             try:
-                slope, intercept, rsquared = self.analysis_func(tac_times_in_minutes=p_tac_times,
-                                                                input_tac_values=p_tac_vals,
-                                                                region_tac_values=t_tac_vals,
+                slope, intercept, rsquared = self.analysis_func(tac_times_in_minutes=p_tac.tac_times_in_minutes,
+                                                                input_tac_values=p_tac.tac_vals,
+                                                                region_tac_values=t_tac.tac_vals,
                                                                 t_thresh_in_minutes=self.fit_thresh_in_mins)
             except np.linalg.LinAlgError:
                 slope, intercept, rsquared = np.nan, np.nan, np.nan
@@ -792,7 +793,7 @@ class MultiTACGraphicalAnalysis(GraphicalAnalysis, MultiTACAnalysisMixin):
         
         Overrides :meth:`GraphicalAnalysis.calculate_fit_properties`
         """
-        p_tac_times, _ = safe_load_tac(self.input_tac_path)
+        p_tac_times, _, _ = safe_load_tac(self.input_tac_path)
         t_thresh_index = get_index_from_threshold(times_in_minutes=p_tac_times,
                                                   t_thresh_in_minutes=self.fit_thresh_in_mins)
         points_fit = len(p_tac_times[t_thresh_index:])
