@@ -22,6 +22,14 @@ class TimeActivityCurve:
     tac_times_in_minutes: np.ndarray
     tac_vals: np.ndarray
 
+    @classmethod
+    def from_tsv(cls, tac_path: str):
+        """
+        Load a TAC from a tsv file nad return a TimeActivityCurve object conataining timing,
+        activity, and uncertainty.
+        """
+        tac_times, tac_vals, tac_unc = safe_load_tac(filename=tac_path)
+        return cls(tac_times_in_minutes=tac_times,tac_vals=tac_vals,tac_uncertainty=tac_unc)
 
 class TimeActivityCurveFromFile:
     """
