@@ -126,16 +126,44 @@ def flatten_metadata(metadata: dict) -> dict:
     return metadata_for_tsv
 
 
+def validate_tac(tac_arr: np.ndarray):
+    """
+    Validate a given TAC array to ensure it has three columns. If there are two, assumes
+    uncertainties are missing and fills empty values with ones. Otherwise, throws an exception.
+
+    Args:
+        tac_arr (np.ndarray): An array containing three columns: time, activity, and uncertainty.
+    
+    Returns:
+        validation (int): Returns 0 if there are three columns, or 1 if there are two.
+
+    Raises:
+        AssertionError: If there are a number of columns other than two or three.
+    """
+    num_cols = tac_arr.shape[0]
+    print(num_cols)
+    assert num_cols in (2,3), f"Expected two or three columns, got {num_cols}"
+    if num_cols==2:
+        print("Warning: TAC has only two columns. Filling uncertainties with ones.")
+        return 1
+    return 0
+
+
 def safe_load_tac(filename: str, **kwargs) -> np.ndarray:
     """
     Loads time-activity curves (TAC) from a file.
-    Tries to read a TAC from specified file and raises an exception if unable to do so. We assume that the file has two
-    columns, the first corresponding to time and second corresponding to activity.
+    Tries to read a TAC from specified file and raises an exception if unable to do so. We assume
+    that the file has two or three columns, the first corresponding to time, the second
+    corresponding to activity, and the third corresponding to uncertainty. If the third column is
+    not present, fill it with ones.
+
     Args:
         filename (str): The name of the file to be loaded.
+
     Returns:
         np.ndarray: A numpy array containing the loaded TAC. The first index corresponds to the times, and the second
         corresponds to the activity.
+
     Raises:
         Exception: An error occurred loading the TAC.
     """
@@ -146,6 +174,11 @@ def safe_load_tac(filename: str, **kwargs) -> np.ndarray:
     except Exception as e:
         print(f"Couldn't read file {filename}. Error: {e}")
         raise e
+
+    validation = validate_tac(tac_arr=tac_data)
+    if validation==1:
+        tac_unc = np.ones(len(tac_data[0]))
+        tac_data = np.vstack((tac_data,tac_unc))
 
     if np.max(tac_data[0]) >= 300:
         tac_data[0] /= 60.0
