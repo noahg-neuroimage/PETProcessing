@@ -14,13 +14,17 @@ import os, glob, pathlib
 
 @dataclass
 class TimeActivityCurve:
-    """Class to store time activity curve (TAC) data.
+    """
+    Class to store time activity curve (TAC) data.
     
     Attributes:
         tac_times_in_minutes (np.ndarray): Frame times for the TAC stored in an array.
-        tac_vals (np.ndarray): Activity values at each frame time stored in an array."""
+        tac_vals (np.ndarray): Activity values at each frame time stored in an array.
+        tac_uncertainty (np.ndarray): Uncertainty in measurement of TAC values.
+    """
     tac_times_in_minutes: np.ndarray
     tac_vals: np.ndarray
+    tac_uncertainty: np.ndarray
 
     @classmethod
     def from_tsv(cls, tac_path: str):
