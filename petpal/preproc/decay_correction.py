@@ -14,7 +14,8 @@ import math
 import ants
 import numpy as np
 
-from ..utils import image_io, scan_timing
+from ..utils import image_io
+from ..utils.scan_timing import ScanTimingInfo
 
 def undo_decay_correction(input_image_path: str,
                           output_image_path: str,
@@ -44,7 +45,7 @@ def undo_decay_correction(input_image_path: str,
     else:
         json_data = image_io.load_metadata_for_nifti_with_same_filename(image_path=input_image_path)
 
-    frame_info = scan_timing.get_frame_timing_info_for_nifti(image_path=input_image_path)
+    frame_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
     decay_factors = frame_info.decay
 
     uncorrected_image_numpy = decay_corrected_image.numpy()
@@ -100,7 +101,7 @@ def decay_correct(input_image_path: str,
     json_data = image_io.load_metadata_for_nifti_with_same_filename(image_path=input_image_path)
     uncorrected_image = ants.image_read(filename=input_image_path)
 
-    frame_info = scan_timing.get_frame_timing_info_for_nifti(image_path=input_image_path)
+    frame_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
     frame_reference_times = frame_info.center
 
     original_decay_factors = frame_info.decay

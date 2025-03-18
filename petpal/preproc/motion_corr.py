@@ -10,7 +10,7 @@ import numpy as np
 
 from .image_operations_4d import determine_motion_target
 from ..utils import image_io
-from ..utils.scan_timing import get_window_index_pairs_for_image, get_frame_timing_info_for_nifti
+from ..utils.scan_timing import ScanTimingInfo, get_window_index_pairs_for_image
 from ..utils.useful_functions import weighted_series_sum_over_window_indecies
 from ..utils.image_io import get_half_life_from_nifti
 
@@ -497,7 +497,7 @@ def windowed_motion_corr_to_target(input_image_path: str,
     input_image_list = ants.ndimage_to_list(input_image)
     window_idx_pairs = get_window_index_pairs_for_image(image_path=input_image_path, w_size=w_size)
     half_life = get_half_life_from_nifti(image_path=input_image_path)
-    frame_timing_info = get_frame_timing_info_for_nifti(image_path=input_image_path)
+    frame_timing_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
 
     target_image = determine_motion_target(motion_target_option=motion_target_option,
                                            input_image_4d_path=input_image_path,
