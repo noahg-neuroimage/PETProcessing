@@ -219,8 +219,8 @@ class RTMAnalysis:
         """
         self.validate_analysis_inputs(k2_prime=k2_prime, t_thresh_in_mins=t_thresh_in_mins)
 
-        ref_tac_times, ref_tac_vals = safe_load_tac(filename=self.ref_tac_path, **tac_load_kwargs)
-        _tgt_tac_times, tgt_tac_vals = safe_load_tac(filename=self.roi_tac_path, **tac_load_kwargs)
+        ref_tac_times, ref_tac_vals, _ = safe_load_tac(filename=self.ref_tac_path, **tac_load_kwargs)
+        _tgt_tac_times, tgt_tac_vals, _ = safe_load_tac(filename=self.roi_tac_path, **tac_load_kwargs)
         analysis_obj = FitTACWithRTMs(tac_times_in_minutes=ref_tac_times,
                                       target_tac_vals=tgt_tac_vals,
                                       reference_tac_vals=ref_tac_vals,
@@ -316,7 +316,7 @@ class RTMAnalysis:
         if write_simulated:
             props_dict["SimulatedFits"] = list(y_fit.round(7))
 
-        ref_tac_times, _ = safe_load_tac(filename=self.ref_tac_path)
+        ref_tac_times, _, _ = safe_load_tac(filename=self.ref_tac_path)
         t_thresh_index = get_index_from_threshold(times_in_minutes=ref_tac_times,
                                                   t_thresh_in_minutes=t_thresh_in_mins)
         props_dict['ThresholdTime'] = t_thresh_in_mins
@@ -468,10 +468,10 @@ class MultiTACRTMAnalysis(RTMAnalysis, MultiTACAnalysisMixin):
         Returns:
             list: A list of fit results for each TAC.
         """
-        ref_tac_times, ref_tac_vals = safe_load_tac(self.ref_tac_path)
+        ref_tac_times, ref_tac_vals, _ = safe_load_tac(self.ref_tac_path)
         fit_results = []
         for _, a_tac in enumerate(self.tacs_files_list):
-            _, tgt_tac_vals = safe_load_tac(a_tac)
+            _, tgt_tac_vals, _ = safe_load_tac(a_tac)
             analysis_obj = FitTACWithRTMs(tac_times_in_minutes=ref_tac_times,
                                           target_tac_vals=tgt_tac_vals,
                                           reference_tac_vals=ref_tac_vals,
