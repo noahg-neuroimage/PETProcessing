@@ -48,7 +48,7 @@ class ScanTimingInfo:
         .. code-block:: python
 
             import numpy as np
-            from petpal.utils.scan_timing import ScanTimingInfo, get_frame_timing_info_for_nifti
+            from petpal.utils.scan_timing import ScanTimingInfo
 
             # Explicitly setting the attributes
             ## Define scan timing information
@@ -74,8 +74,9 @@ class ScanTimingInfo:
             print(scan_timing_info.end_in_mins)  # [5. 6.66666667 8.33333333] (Converted to minutes)
             print(scan_timing_info.start_in_mins)  # [0. 1. 3.] (Converted to minutes)
 
-            # Getting the object directly from a nifty image file (assuming the metadata shares the name)
-            scan_timing_info = get_frame_timing_info_for_nifti("/path/to/image.nii.gz")
+            # Getting the object directly from a nifti image file
+            # assuming the metadata shares the name
+            scan_timing_info = ScanTimingInfo.from_nifti("/path/to/image.nii.gz")
 
     """
     duration: np.ndarray[float]
