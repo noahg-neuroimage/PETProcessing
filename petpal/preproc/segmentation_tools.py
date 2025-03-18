@@ -353,7 +353,7 @@ def gw_segmentation(freesurfer_path: str,
                              origin=freesurfer.origin,
                              spacing=freesurfer.spacing,
                              direction=freesurfer.direction)
-    gw_map_template = motion_corr._gen_nd_image_based_on_image_list([gm_img,wm_img])
+    gw_map_template = motion_corr.gen_nd_image_based_on_image_list([gm_img, wm_img])
     gw_map_4d = ants.list_to_ndimage(image=gw_map_template,image_list=[gm_img,wm_img])
     ants.image_write(gw_map_4d,output_path)
 

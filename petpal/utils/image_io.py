@@ -1,37 +1,20 @@
 """
 Image IO
 
-PET radionuclide half life source: code borrowed from DynamicPET
-(https://github.com/bilgelm/dynamicpet/blob/main/src/dynamicpet/petbids/petbidsjson.py), derived
-from TPC (turkupetcentre.net/petanalysis/decay.html). This source is from:
-Table of Isotopes, Sixth edition, edited by C.M. Lederer, J.M. Hollander, I. Perlman. WILEY, 1967.
 """
-import json
-import re
-import os
 import glob
+import json
+import os
 import pathlib
+import re
+
 import ants
 import nibabel
-from nibabel.filebasedimages import FileBasedHeader
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass
+from nibabel.filebasedimages import FileBasedHeader
 
-_HALFLIVES_ = {
-    "c11": 1224,
-    "n13": 599,
-    "o15": 123,
-    "f18": 6588,
-    "cu62": 582,
-    "cu64": 45721.1,
-    "ga68": 4080,
-    "ge68": 23760000,
-    "br76": 58700,
-    "rb82": 75,
-    "zr89": 282240,
-    "i124": 360806.4,
-}
+from .constants import HALF_LIVES
 
 
 def write_dict_to_json(meta_data_dict: dict, out_path: str):
@@ -46,7 +29,7 @@ def write_dict_to_json(meta_data_dict: dict, out_path: str):
         json.dump(meta_data_dict, copy_file, indent=4)
 
 
-def _gen_meta_data_filepath_for_nifti(nifty_path:str):
+def gen_meta_data_filepath_for_nifti(nifty_path:str):
     """
     Generates the corresponding metadata file path for a given nifti file path.
 
@@ -101,7 +84,7 @@ def load_metadata_for_nifti_with_same_filename(image_path) -> dict:
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image file {image_path} not found.")
 
-    meta_path = _gen_meta_data_filepath_for_nifti(image_path)
+    meta_path = gen_meta_data_filepath_for_nifti(image_path)
     metadata = safe_load_meta(input_metadata_file=meta_path)
 
     return metadata
@@ -182,7 +165,7 @@ def safe_copy_meta(input_image_path: str,
             generating a new image.
         out_image_path (str): Path to the output file written by the function.
     """
-    copy_meta_path = _gen_meta_data_filepath_for_nifti(out_image_path)
+    copy_meta_path = gen_meta_data_filepath_for_nifti(out_image_path)
     meta_data_dict = load_metadata_for_nifti_with_same_filename(input_image_path)
     write_dict_to_json(meta_data_dict=meta_data_dict, out_path=copy_meta_path)
 
@@ -210,7 +193,7 @@ def get_half_life_from_radionuclide(meta_data_file_path: str) -> float:
     except KeyError as exc:
         raise KeyError("Required BIDS metadata field 'TracerRadionuclide' not found.") from exc
 
-    return _HALFLIVES_[radionuclide]
+    return HALF_LIVES[radionuclide]
 
 def get_half_life_from_meta(meta_data_file_path: str):
     """
@@ -253,7 +236,7 @@ def get_half_life_from_nifti(image_path:str):
     """
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image file {image_path} not found")
-    meta_path = _gen_meta_data_filepath_for_nifti(image_path)
+    meta_path = gen_meta_data_filepath_for_nifti(image_path)
     try:
         half_life = get_half_life_from_radionuclide(meta_path)
     except KeyError:
@@ -261,155 +244,6 @@ def get_half_life_from_nifti(image_path:str):
     return half_life
 
 
-@dataclass
-class ScanTimingInfo:
-    """
-    A data structure to represent and streamline access to timing information for image scans.
-
-    This class encapsulates details about a scan's timing, including:
-    - Start and end times of each scan frame.
-    - Duration and center times of the frames.
-    - Decay values (if applicable).
-
-    Additionally, the class provides properties for easy conversion of timing values to minutes
-    if the times are given in seconds and exceed a threshold (assumed to be 200.0 seconds).
-
-    Attributes:
-        duration (np.ndarray[float]): Array of frame durations.
-        end (np.ndarray[float]): Array of frame end times.
-        start (np.ndarray[float]): Array of frame start times.
-        center (np.ndarray[float]): Array of frame center times (midpoints).
-        decay (np.ndarray[float]): Array of decay coefficients for the scan frames.
-
-    Properties:
-        duration_in_mins (np.ndarray[float]):
-            Returns the frame durations converted to minutes if `end` is >= 200.0 seconds.
-            Otherwise, returns the original durations.
-
-        end_in_mins (np.ndarray[float]):
-            Returns the frame end times converted to minutes if `end` is >= 200.0 seconds.
-            Otherwise, returns the original end times.
-
-        start_in_mins (np.ndarray[float]):
-            Returns the frame start times converted to minutes if `end` is >= 200.0 seconds.
-            Otherwise, returns the original start times.
-
-        center_in_mins (np.ndarray[float]):
-            Returns the frame center times converted to minutes if `end` is >= 200.0 seconds.
-            Otherwise, returns the original center times.
-
-    Examples:
-
-        .. code-block:: python
-
-            import numpy as np
-            from petpal.utils.image_io import ScanTimingInfo, get_frame_timing_info_for_nifti
-
-            # Explicitly setting the attributes
-            ## Define scan timing information
-            duration = np.array([60.0, 120.0, 180.0])  # seconds
-            start = np.array([0.0, 60.0, 180.0])
-            end = np.array([60.0, 180.0, 360.0])
-            center = (start + end) / 2.0  # Calculate the midpoints
-            decay = np.array([1.0, 0.9, 0.8])  # Example decay values
-
-            ## Create an instance of ScanTimingInfo
-            scan_timing_info = ScanTimingInfo(duration=duration, end=end, start=start, center=center, decay=decay)
-
-            ## Access original timing information
-            print(scan_timing_info.duration)  # [ 60. 120. 180.]
-            print(scan_timing_info.center)    # [30.  120. 270.]
-
-            ## Access timing as minutes (when times exceed 200.0 seconds)
-            print(scan_timing_info.duration_in_mins)  # [ 60. 120. 180.] (Unchanged)
-            print(scan_timing_info.center_in_mins)    # [30. 120. 270.] (Unchanged)
-
-            ## Example when `end` is greater than 200.0:
-            scan_timing_info.end = np.array([300.0, 400.0, 500.0])  # Update end times
-            print(scan_timing_info.end_in_mins)  # [5. 6.66666667 8.33333333] (Converted to minutes)
-            print(scan_timing_info.start_in_mins)  # [0. 1. 3.] (Converted to minutes)
-
-            # Getting the object directly from a nifty image file (assuming the metadata shares the name)
-            scan_timing_info = get_frame_timing_info_for_nifti("/path/to/image.nii.gz")
-
-    """
-    duration: np.ndarray[float]
-    end: np.ndarray[float]
-    start: np.ndarray[float]
-    center: np.ndarray[float]
-    decay: np.ndarray[float]
-
-    @property
-    def duration_in_mins(self) -> np.ndarray[float]:
-        if self.end[-1] >= 200.0:
-            return self.duration / 60.0
-        else:
-            return self.duration
-
-    @property
-    def end_in_mins(self) -> np.ndarray[float]:
-        if self.end[-1] >= 200.0:
-            return self.end / 60.0
-        else:
-            return self.end
-
-    @property
-    def start_in_mins(self) -> np.ndarray[float]:
-        if self.end[-1] >= 200.0:
-            return self.start / 60.0
-        else:
-            return self.start
-
-    @property
-    def center_in_mins(self) -> np.ndarray[float]:
-        if self.end[-1] >= 200.0:
-            return self.center / 60.0
-        else:
-            return self.center
-
-def get_frame_timing_info_for_nifti(image_path: str) -> ScanTimingInfo:
-    r"""
-    Extracts frame timing information and decay factors from a NIfTI image metadata.
-    Expects that the JSON metadata file has ``FrameDuration`` and ``DecayFactor`` or
-    ``DecayCorrectionFactor`` keys.
-
-    .. important::
-        This function tries to infer `FrameTimesEnd` and `FrameTimesStart` from the frame durations
-        if those keys are not present in the metadata file. If the scan is broken, this might generate
-        incorrect results.
-
-
-    Args:
-        image_path (str): Path to the NIfTI image file.
-
-    Returns:
-        :class:`ScanTimingInfo`: Frame timing information with the following elements:
-            - duration (np.ndarray): Frame durations in seconds.
-            - start (np.ndarray): Frame start times in seconds.
-            - end (np.ndarray): Frame end times in seconds.
-            - center (np.ndarray): Frame center times in seconds.
-            - decay (np.ndarray): Decay factors for each frame.
-    """
-    _meta_data = load_metadata_for_nifti_with_same_filename(image_path=image_path)
-    frm_dur = np.asarray(_meta_data['FrameDuration'], float)
-    try:
-        frm_ends = np.asarray(_meta_data['FrameTimesEnd'], float)
-    except KeyError:
-        frm_ends = np.cumsum(frm_dur)
-    try:
-        frm_starts = np.asarray(_meta_data['FrameTimesStart'], float)
-    except KeyError:
-        frm_starts = np.diff(frm_ends)
-    try:
-        decay = np.asarray(_meta_data['DecayCorrectionFactor'], float)
-    except KeyError:
-        decay = np.asarray(_meta_data['DecayFactor'], float)
-    try:
-        frm_centers = np.asarray(_meta_data['FrameReferenceTime'], float)
-    except KeyError:
-        frm_centers = np.asarray(frm_starts + frm_dur / 2.0, float)
-
-    return ScanTimingInfo(duration=frm_dur, start=frm_starts, end=frm_ends, center=frm_centers, decay=decay)
 
 class ImageIO:
     """
@@ -616,63 +450,6 @@ def validate_two_images_same_dimensions(image_1: nibabel.nifti1.Nifti1Image,
 
     if not same_shape:
         raise ValueError(f'Got incompatible image sizes: {shape_1}, {shape_2}.')
-
-def get_window_index_pairs_from_durations(frame_durations: np.ndarray, w_size: float):
-    r"""
-    Computes start and end index pairs for windows of a given size based on frame durations.
-
-    Args:
-        frame_durations (np.ndarray): Array of frame durations in seconds.
-        w_size (float): Window size in seconds.
-
-    Returns:
-        np.ndarray: Array of shape (2, N), where the first row contains start indices,
-            and the second row contains end indices for each window.
-
-    Raises:
-        ValueError: If `w_size` is less than or equal to 0.
-        ValueError: If `w_size` is greater than the total duration of all frames.
-    """
-    if w_size <= 0:
-        raise ValueError("Window size has to be > 0")
-    if w_size > np.sum(frame_durations):
-        raise ValueError("Window size is larger than the whole scan.")
-    _tmp_w_ids = [0]
-    _w_dur_sum = 0
-    for frm_id, frm_dur in enumerate(frame_durations):
-        _w_dur_sum += frm_dur
-        if _w_dur_sum >= w_size:
-            _tmp_w_ids.append(frm_id + 1)
-            _w_dur_sum = 0
-    w_start_ids = np.asarray(_tmp_w_ids[:-1])
-    w_end_ids = np.asarray(_tmp_w_ids[1:])
-    id_pairs = np.vstack((w_start_ids, w_end_ids))
-    return id_pairs
-
-
-def get_window_index_pairs_for_image(image_path: str, w_size: float):
-    """
-    Computes start and end index pairs for windows of a given size
-    based on the frame durations of a NIfTI image.
-
-    Args:
-        image_path (str): Path to the NIfTI image file.
-        w_size (float): Window size in seconds.
-
-    Returns:
-        np.ndarray: Array of shape (2, N), where the first row contains start indices,
-            and the second row contains end indices for each window.
-
-    Raises:
-        ValueError: If `w_size` is less than or equal to 0.
-        ValueError: If `w_size` is greater than the total duration of all frames.
-
-    See Also:
-        :func:`get_window_index_pairs_from_durations`
-    """
-    image_frame_info = get_frame_timing_info_for_nifti(image_path=image_path)
-    return get_window_index_pairs_from_durations(frame_durations=image_frame_info.duration, w_size=w_size)
-
 
 def infer_sub_ses_from_tac_path(tac_path: str):
     """

@@ -7,12 +7,12 @@ registration.
 import ants
 import numpy as np
 
+
 from .image_operations_4d import determine_motion_target
 from ..utils import image_io
+from ..utils.scan_timing import ScanTimingInfo, get_window_index_pairs_for_image
 from ..utils.useful_functions import weighted_series_sum_over_window_indecies
-from ..utils.image_io import (get_frame_timing_info_for_nifti,
-                              get_window_index_pairs_for_image,
-                              get_half_life_from_nifti)
+from ..utils.image_io import get_half_life_from_nifti
 
 
 def motion_corr(input_image_4d_path: str,
@@ -174,7 +174,7 @@ def motion_corr_frame_list(input_image_4d_path: str,
 
     if verbose:
         print("... done!\n")
-    tmp_image = _gen_nd_image_based_on_image_list(out_image)
+    tmp_image = gen_nd_image_based_on_image_list(out_image)
     out_image = ants.list_to_ndimage(tmp_image, out_image)
     ants.image_write(image=out_image,filename=out_image_path)
 
@@ -289,7 +289,7 @@ def motion_corr_frame_list_to_t1(input_image_4d_path: str,
 
     if verbose:
         print("... done!\n")
-    tmp_image = _gen_nd_image_based_on_image_list(out_image)
+    tmp_image = gen_nd_image_based_on_image_list(out_image)
     out_image = ants.list_to_ndimage(tmp_image, out_image)
     ants.image_write(image=out_image,filename=out_image_path)
 
@@ -497,7 +497,7 @@ def windowed_motion_corr_to_target(input_image_path: str,
     input_image_list = ants.ndimage_to_list(input_image)
     window_idx_pairs = get_window_index_pairs_for_image(image_path=input_image_path, w_size=w_size)
     half_life = get_half_life_from_nifti(image_path=input_image_path)
-    frame_timing_info = get_frame_timing_info_for_nifti(image_path=input_image_path)
+    frame_timing_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
 
     target_image = determine_motion_target(motion_target_option=motion_target_option,
                                            input_image_4d_path=input_image_path,
@@ -547,11 +547,11 @@ def gen_timeseries_from_image_list(image_list: list[ants.core.ANTsImage]) -> ant
     Returns:
         ants.core.ANTsImage: 4D ndimage.
     """
-    tmp_image = _gen_nd_image_based_on_image_list(image_list)
+    tmp_image = gen_nd_image_based_on_image_list(image_list)
     return ants.list_to_ndimage(tmp_image, image_list)
 
 
-def _gen_nd_image_based_on_image_list(image_list: list[ants.core.ants_image.ANTsImage]):
+def gen_nd_image_based_on_image_list(image_list: list[ants.core.ants_image.ANTsImage]):
     r"""
     Generate a 4D ANTsImage based on a list of 3D ANTsImages.
 
