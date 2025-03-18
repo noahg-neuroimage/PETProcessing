@@ -88,29 +88,25 @@ class ScanTimingInfo:
     def duration_in_mins(self) -> np.ndarray[float]:
         if self.end[-1] >= 200.0:
             return self.duration / 60.0
-        else:
-            return self.duration
+        return self.duration
 
     @property
     def end_in_mins(self) -> np.ndarray[float]:
         if self.end[-1] >= 200.0:
             return self.end / 60.0
-        else:
-            return self.end
+        return self.end
 
     @property
     def start_in_mins(self) -> np.ndarray[float]:
         if self.end[-1] >= 200.0:
             return self.start / 60.0
-        else:
-            return self.start
+        return self.start
 
     @property
     def center_in_mins(self) -> np.ndarray[float]:
         if self.end[-1] >= 200.0:
             return self.center / 60.0
-        else:
-            return self.center
+        return self.center
 
 
     @classmethod
