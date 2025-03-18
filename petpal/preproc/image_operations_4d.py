@@ -68,9 +68,9 @@ def stitch_broken_scans(input_image_path: str,
     try:
         noninitial_time_zeroes = [meta['TimeZero'] for meta in noninitial_image_metadata_dicts]
         actual_time_zero = initial_image_metadata['TimeZero']
-    except KeyError:
-        raise KeyError(f'.json sidecar for one of your input images does not contain required BIDS key "TimeZero". '
-                       f'Aborting...')
+    except KeyError as exc:
+        raise KeyError('.json sidecar for one of your input images does not contain required BIDS '
+                       'key "TimeZero". Aborting...') from exc
 
     initial_scan_time = datetime.time.fromisoformat(actual_time_zero)
     placeholder_date = datetime.date.today()
@@ -357,8 +357,9 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.
         print(f'Running TAC for region index {region}')
     masked_voxels = (seg_image > region - 0.1) & (seg_image < region + 0.1)
     masked_image = pet_image_4d[masked_voxels].reshape((-1, num_frames))
-    tac_out = np.mean(masked_image, axis=0)
-    return tac_out
+    tac_val = np.mean(masked_image, axis=0)
+    tac_unc = np.std(masked_image, axis=0)
+    return tac_val, tac_unc
 
 
 def threshold(input_image_numpy: np.ndarray,
@@ -439,15 +440,16 @@ def suvr(input_image_path: str,
         raise ValueError("SUVR input image is not 3D. If your image is dynamic, try running 'weighted_series_sum'"
                          " first.")
 
-    ref_region_avg = extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy=pet_arr,
-                                                                        segmentation_image_numpy=segmentation_arr,
-                                                                        region=ref_region,
-                                                                        verbose=verbose)
+    tac_method = extract_mean_roi_tac_from_nifti_using_segmentation
+    ref_region_avg, _ref_region_unc = tac_method(input_image_4d_numpy=pet_arr,
+                                                 segmentation_image_numpy=segmentation_arr,
+                                                 region=ref_region,
+                                                 verbose=verbose)
     
     suvr_arr = pet_arr / ref_region_avg[0]
 
     out_img = ants.from_numpy_like(data=suvr_arr,
-                                     image=pet_img)
+                                   image=pet_img)
 
     if out_image_path is not None:
         ants.image_write(image=out_img,
@@ -520,16 +522,16 @@ def roi_tac(input_image_4d_path: str,
                          "'FrameReferenceTime' or 'FrameTimesStart'")
 
     pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_4d_path)
-    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
+    tac_method = extract_mean_roi_tac_from_nifti_using_segmentation
     pet_numpy = nibabel.load(input_image_4d_path).get_fdata()
     seg_numpy = nibabel.load(roi_image_path).get_fdata()
 
 
-    extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
-                                        segmentation_image_numpy=seg_numpy,
-                                        region=region,
-                                        verbose=verbose)
-    region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
+    tac_val, tac_unc = tac_method(input_image_4d_numpy=pet_numpy,
+                                  segmentation_image_numpy=seg_numpy,
+                                  region=region,
+                                  verbose=verbose)
+    region_tac_file = np.array([pet_meta[time_frame_keyword],tac_val,tac_unc]).T
     header_text = 'mean_activity'
     np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
 
@@ -557,16 +559,16 @@ def write_tacs(input_image_path: str,
     regions_abrev = label_map['abbreviation']
     regions_map = label_map['mapping']
 
-    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
+    tac_method = extract_mean_roi_tac_from_nifti_using_segmentation
     pet_numpy = nibabel.load(input_image_path).get_fdata()
     seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
 
     for i, _maps in enumerate(label_map['mapping']):
-        extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
-                                            segmentation_image_numpy=seg_numpy,
-                                            region=int(regions_map[i]),
-                                            verbose=verbose)
-        region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
+        tac_val, tac_unc = tac_method(input_image_4d_numpy=pet_numpy,
+                                      segmentation_image_numpy=seg_numpy,
+                                      region=int(regions_map[i]),
+                                      verbose=verbose)
+        region_tac_file = np.array([pet_meta[time_frame_keyword],tac_val,tac_unc]).T
         header_text = f'{time_frame_keyword}\t{regions_abrev[i]}_mean_activity'
         if out_tac_prefix:
             out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
