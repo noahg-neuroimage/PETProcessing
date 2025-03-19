@@ -39,12 +39,15 @@ class TimeActivityCurve:
         return np.ascontiguousarray([self.times, self.activity, self.uncertainty])
 
 
-def safe_load_tac(filename: str, **kwargs) -> np.ndarray:
+def safe_load_tac(filename: str,
+                  with_uncertainty: bool = False,
+                  **kwargs) -> np.ndarray:
     """
     Loads time-activity curves (TAC) from a file.
     Tries to read a TAC from specified file and raises an exception if unable to do so. We assume that the file has two
     columns, the first corresponding to time and second corresponding to activity.
     Args:
+        with_uncertainty (bool): 
         filename (str): The name of the file to be loaded.
     Returns:
         np.ndarray: A numpy array containing the loaded TAC. The first index corresponds to the times, and the second
@@ -63,7 +66,10 @@ def safe_load_tac(filename: str, **kwargs) -> np.ndarray:
     if np.max(tac_data[0]) >= 300:
         tac_data[0] /= 60.0
 
-    return tac_data
+    if with_uncertainty:
+        return tac_data[:3]
+    else:
+        return tac_data[:2]
 
 
 class TimeActivityCurveFromFile:
