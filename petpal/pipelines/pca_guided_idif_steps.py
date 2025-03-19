@@ -183,7 +183,6 @@ class PCAGuidedTopVoxelsIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
                  output_array_path: str,
                  num_pca_components: int,
                  verbose: bool,
-                 project_to_pca: bool,
                  auto_rescale_input: bool,
                  selected_component: int,
                  num_of_voxels: int):
