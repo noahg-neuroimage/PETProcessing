@@ -23,7 +23,7 @@ import json
 import numba
 import numpy as np
 from ..utils.time_activity_curve import MultiTACAnalysisMixin
-from ..utils.image_io import safe_load_tac
+from utils.time_activity_curve import safe_load_tac
 
 
 @numba.njit()

@@ -28,7 +28,7 @@ import numpy as np
 from scipy.optimize import curve_fit as sp_cv_fit
 from . import tcms_as_convolutions as pet_tcms
 from ..input_function import blood_input as pet_bld
-from ..utils.image_io import safe_load_tac
+from utils.time_activity_curve import safe_load_tac
 from ..utils.time_activity_curve import TimeActivityCurveFromFile, MultiTACAnalysisMixin
 import glob
 

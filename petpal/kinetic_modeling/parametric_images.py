@@ -26,7 +26,8 @@ from petpal.utils.time_activity_curve import TimeActivityCurveFromFile
 from petpal.utils.image_io import safe_load_4dpet_nifti
 from . import graphical_analysis
 from ..input_function.blood_input import read_plasma_glucose_concentration
-from ..utils.image_io import safe_load_tac, safe_copy_meta, validate_two_images_same_dimensions
+from ..utils.image_io import safe_copy_meta, validate_two_images_same_dimensions
+from utils.time_activity_curve import safe_load_tac
 
 
 @numba.njit()

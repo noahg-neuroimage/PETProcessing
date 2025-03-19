@@ -25,7 +25,7 @@ from typing import Dict, Union, Type
 from matplotlib import pyplot as plt
 import numpy as np
 from ..kinetic_modeling import graphical_analysis as pet_grph
-from ..utils.image_io import safe_load_tac
+from utils.time_activity_curve import safe_load_tac
 
 
 class GraphicalAnalysisPlot(ABC):
