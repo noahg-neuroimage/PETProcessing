@@ -7,7 +7,7 @@ TODO:
     * Refactor safe_load_tac to this module as a public method
 
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import numpy as np
 import os, glob, pathlib
 
@@ -16,10 +16,27 @@ class TimeActivityCurve:
     """Class to store time activity curve (TAC) data.
     
     Attributes:
-        tac_times_in_minutes (np.ndarray): Frame times for the TAC stored in an array.
-        tac_vals (np.ndarray): Activity values at each frame time stored in an array."""
-    tac_times_in_minutes: np.ndarray
-    tac_vals: np.ndarray
+        times (np.ndarray): Frame times for the TAC stored in an array.
+        activity (np.ndarray): Activity values at each frame time stored in an array.
+    """
+    times: np.ndarray
+    activity: np.ndarray
+    uncertainty: np.ndarray = field(default_factory=lambda: np.array([]))
+
+    def __post_init__(self):
+        if self.uncertainty.size == 0:
+            self.uncertainty = np.zeros_like(self.times)
+        assert np.shape(self.uncertainty) == np.shape(self.times) == np.shape(self.activity), (
+            f"TAC fields must have the same shapes.\ntimes:{self.times.shape}"
+            "activity:{self.activity.shape} uncertainty:{self.uncertainty.shape}")
+
+    @property
+    def tac(self) -> np.ndarray:
+        return np.ascontiguousarray([self.times, self.activity])
+
+    @property
+    def tac_werr(self) -> np.ndarray:
+        return np.ascontiguousarray([self.times, self.activity, self.uncertainty])
 
 
 class TimeActivityCurveFromFile:
