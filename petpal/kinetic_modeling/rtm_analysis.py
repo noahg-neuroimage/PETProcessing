@@ -12,7 +12,7 @@ from petpal.kinetic_modeling.reference_tissue_models import (calc_k2prime_from_m
                                                              calc_bp_from_mrtm2_2003_fit,
                                                              calc_bp_from_mrtm_original_fit,
                                                              calc_bp_from_mrtm_2003_fit)
-from utils.time_activity_curve import safe_load_tac
+from ..utils.time_activity_curve import safe_load_tac
 from ..utils.time_activity_curve import MultiTACAnalysisMixin
 
 
