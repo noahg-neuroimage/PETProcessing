@@ -30,6 +30,10 @@ class TimeActivityCurve:
             f"TAC fields must have the same shapes.\ntimes:{self.times.shape}"
             "activity:{self.activity.shape} uncertainty:{self.uncertainty.shape}")
 
+    @classmethod
+    def from_tsv(cls, filename: str):
+        return cls(*safe_load_tac(filename=filename, with_uncertainty=True))
+
     @property
     def tac(self) -> np.ndarray:
         return np.ascontiguousarray([self.times, self.activity])
@@ -47,11 +51,12 @@ def safe_load_tac(filename: str,
     Tries to read a TAC from specified file and raises an exception if unable to do so. We assume that the file has two
     columns, the first corresponding to time and second corresponding to activity.
     Args:
-        with_uncertainty (bool): 
+        with_uncertainty (bool):
         filename (str): The name of the file to be loaded.
+        **kwargs (dict): keyword arguments to pass to :func:`np.loadtxt`.
     Returns:
         np.ndarray: A numpy array containing the loaded TAC. The first index corresponds to the times, and the second
-        corresponds to the activity.
+            corresponds to the activity. If with_uncertainty is True, the third index corresponds to the uncertainty.
     Raises:
         Exception: An error occurred loading the TAC.
     """
