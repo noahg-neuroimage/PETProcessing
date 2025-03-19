@@ -106,6 +106,7 @@ class PCAGuidedIdifBase(object):
         self.idif_errs = np.std(self.selected_voxels_tacs, axis=0)
         self.selected_voxels_tacs = self.pca_obj.inverse_transform(self.pca_fit[self.selected_voxels_mask])
         self.prj_idif_vals = np.mean(self.selected_voxels_tacs, axis=0)
+        self.prj_idif_vals[self.prj_idif_vals < 0] = 0.
         self.prj_idif_errs = np.std(self.selected_voxels_tacs, axis=0)
 
     def run(self, *args, **kwargs):
