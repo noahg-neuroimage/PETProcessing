@@ -95,6 +95,24 @@ def safe_write_tac(filename: str,
     Raises:
         ValueError: If the number of columns in tac_data is not two or three, or the number of
             columns in tac_data does not match the number of columns in col_names.
+
+
+
+    Example:
+
+        .. code-block:: python
+
+            import numpy as np
+            from petpal.utils.time_activity_curve import safe_load_tac, safe_write_tac
+
+            my_tac = safe_load_tac(filename='/path/to/tac.tsv')
+            my_tac_modified = np.zeros_like(my_tac)
+            my_tac_modified[0] = my_tac[0] / 60 # convert time units to seconds
+            my_tac_modified[1] = my_tac[1] / 37000 # convert activity units to mCi
+            my_tac_modified[2] = my_tac[2] / 37000 # convert uncertainties like activity
+            safe_write_tac(filename='/path/to/new_tac.tsv',
+                           tac_data=my_tac_modified)
+
     """
     num_cols = len(tac_data)
     if num_cols not in (2, 3):
