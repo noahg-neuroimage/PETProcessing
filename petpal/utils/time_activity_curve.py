@@ -77,6 +77,44 @@ def safe_load_tac(filename: str,
         return tac_data[:2]
 
 
+def safe_write_tac(filename: str,
+                   tac_data: np.ndarray,
+                   col_names: list[str]=None):
+    """
+    Writes the data in a time-activity curve (TAC) to a file. Assumes the TAC data consists of a
+    contiguous numpy array with two or three columns: time, activity, and (optionally) uncertainty.
+
+    Args:
+        filename (str): Path to the file the data will be saved as.
+        tac_data (np.ndarray): Numpy array containing the data for the TAC. Assumes the TAC data
+            consists of a contiguous numpy array with two or three columns: time, activity, and 
+            (optionally) uncertainty.
+        col_names (list[str]): List of column names assigned to the time, activity, and uncertainty
+            columns in the TAC data, respectively. Must match number of columns in `tac_data`.
+    
+    Raises:
+        ValueError: If the number of columns in tac_data is not two or three, or the number of
+            columns in tac_data does not match the number of columns in col_names.
+    """
+    num_cols = len(tac_data)
+    if num_cols not in (2, 3):
+        raise ValueError(f"Expected two or three columns in tac_data. Got {num_cols}.")
+
+    if col_names is None:
+        if num_cols==2:
+            col_names = ['FrameReferenceTime', 'MeanActivityConcentration']
+        elif num_cols==3:
+            col_names = ['FrameReferenceTime', 'MeanActivityConcentration','Uncertainty']
+    
+    if num_cols!=len(col_names):
+        raise ValueError("Expected the same number of columns in tac_data and col_names. Got "
+                         f"{num_cols} in tac_data and {len(col_names)} in col_names.")
+
+    col_names_with_sep = [col+'\t' for col in col_names]
+    file_header = ''.join(col_names_with_sep)
+    np.savetxt(fname=filename, X=tac_data, header=file_header)
+
+
 class MultiTACAnalysisMixin:
     """
     A mixin class providing utilities for handling multiple analysis of Time Activity Curves (TACs)
