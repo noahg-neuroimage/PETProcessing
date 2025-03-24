@@ -22,7 +22,7 @@ from petpal.kinetic_modeling.reference_tissue_models import (fit_mrtm2_2003_to_t
 from petpal.kinetic_modeling.fit_tac_with_rtms import (get_rtm_kwargs,
                                                        get_rtm_method,
                                                        get_rtm_output_size)
-from petpal.utils.time_activity_curve import TimeActivityCurveFromFile
+from petpal.utils.time_activity_curve import TimeActivityCurve
 from petpal.utils.image_io import safe_load_4dpet_nifti
 from . import graphical_analysis
 from ..input_function.blood_input import read_plasma_glucose_concentration
@@ -309,7 +309,7 @@ class ReferenceTissueParametricImage:
             output_filename_prefix (str): Prefix for output files saved after analysis.
             method (str): RTM method to run. Default 'mrtm2'.
         """
-        self.reference_tac = TimeActivityCurveFromFile(tac_path=reference_tac_path)
+        self.reference_tac = TimeActivityCurve.from_tsv(filename=reference_tac_path)
         self.pet_image = safe_load_4dpet_nifti(pet_image_path)
         self.mask_image = safe_load_4dpet_nifti(mask_image_path)
 
