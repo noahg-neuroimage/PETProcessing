@@ -18,6 +18,21 @@ class TimeActivityCurve:
     Attributes:
         times (np.ndarray): Frame times for the TAC stored in an array.
         activity (np.ndarray): Activity values at each frame time stored in an array.
+
+
+    Example:
+
+        .. code-block:: python
+
+            from petpal.utils.time_activity_curve import TimeActivityCurve
+
+            my_tac = TimeActivityCurve.from_tsv('/path/to/tac.tsv')
+            print(f"Frame times: {my_tac.times}")
+            print(f"Activity: {my_tac.activity}")
+            print(f"Uncertainty: {my_tac.uncertainty}")
+
+            my_tac.times = my_tac.times / 60  # convert time units to hours
+            my_tac.to_tsv(filename='/path/to/new_tac.tsv')  # save as new file
     """
     times: np.ndarray
     activity: np.ndarray
@@ -66,6 +81,22 @@ def safe_load_tac(filename: str,
             corresponds to the activity. If with_uncertainty is True, the third index corresponds to the uncertainty.
     Raises:
         Exception: An error occurred loading the TAC.
+
+        
+    Example:
+
+        .. code-block:: python
+
+            import numpy as np
+            from petpal.utils.time_activity_curve import safe_load_tac, safe_write_tac
+
+            my_tac = safe_load_tac(filename='/path/to/tac.tsv')
+            my_tac_modified = np.zeros_like(my_tac)
+            my_tac_modified[0] = my_tac[0] / 60 # convert time units to hours
+            my_tac_modified[1] = my_tac[1] / 37000 # convert activity units to mCi
+            my_tac_modified[2] = my_tac[2] / 37000 # convert uncertainties like activity
+            safe_write_tac(filename='/path/to/new_tac.tsv',
+                           tac_data=my_tac_modified)
     """
     try:
         tac_data = np.asarray(np.loadtxt(filename, **kwargs).T, dtype=float, order='C')
