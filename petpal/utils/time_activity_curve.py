@@ -240,18 +240,18 @@ class MultiTACAnalysisMixin:
             tacs_files_list (list[str]): List of TAC file paths.
 
         Returns:
-            list[TimeActivityCurveFromFile]: List of TAC objects.
+            list[TimeActivityCurve]: List of TAC objects.
         """
-        tacs_list = [TimeActivityCurveFromFile(tac_path=tac_file) for tac_file in tacs_files_list]
+        tacs_list = [TimeActivityCurve.from_tsv(filename=tac_file) for tac_file in tacs_files_list]
         return tacs_list
     
     @staticmethod
-    def get_tacs_vals_from_objs_list(tacs_objects_list: list[TimeActivityCurveFromFile]):
+    def get_tacs_vals_from_objs_list(tacs_objects_list: list[TimeActivityCurve]):
         """
         Extracts TAC values from a list of TAC objects.
 
         Args:
-            tacs_objects_list (list[TimeActivityCurveFromFile]): List of TAC objects.
+            tacs_objects_list (list[TimeActivityCurve]): List of TAC objects.
 
         Returns:
             list: List of TAC values.
