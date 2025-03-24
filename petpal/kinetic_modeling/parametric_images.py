@@ -402,8 +402,8 @@ class ReferenceTissueParametricImage:
         """
         pet_np = self.pet_image.get_fdata()
         mask_np = self.mask_image.get_fdata()
-        tac_times_in_minutes = self.reference_tac.tac_times_in_minutes
-        ref_tac_vals = self.reference_tac.tac_vals
+        tac_times_in_minutes = self.reference_tac.times
+        ref_tac_vals = self.reference_tac.activity
         method = self.method
         rtm_method = get_rtm_method(method)
         analysis_kwargs = get_rtm_kwargs(method=rtm_method,
