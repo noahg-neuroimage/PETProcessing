@@ -58,7 +58,7 @@ class TimeActivityCurve:
         return np.ascontiguousarray([self.times, self.activity, self.uncertainty])
 
     def to_tsv(self, filename: str, col_names: list[str]=None):
-        if self.uncertainty:
+        if self.uncertainty is not None:
             safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
         else:
             safe_write_tac(filename=filename,tac_data=self.tac,col_names=col_names)
