@@ -309,9 +309,9 @@ class RTMAnalysis:
         else:
             bp_val = calc_bp_from_mrtm2_2003_fit(fit_ans)
             k2_val = None
-        props_dict["k2Prime"] = k2_val.round(5)
-        props_dict["BP"] = bp_val.round(5)
-        props_dict["RawFits"] = list(fit_ans.round(5))
+        props_dict["k2Prime"] = k2_val
+        props_dict["BP"] = bp_val
+        props_dict["RawFits"] = list(fit_ans)
 
         if write_simulated:
             props_dict["SimulatedFits"] = list(y_fit.round(7))
