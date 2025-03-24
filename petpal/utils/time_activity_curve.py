@@ -107,7 +107,7 @@ def safe_write_tac(filename: str,
 
             my_tac = safe_load_tac(filename='/path/to/tac.tsv')
             my_tac_modified = np.zeros_like(my_tac)
-            my_tac_modified[0] = my_tac[0] / 60 # convert time units to seconds
+            my_tac_modified[0] = my_tac[0] / 60 # convert time units to hours
             my_tac_modified[1] = my_tac[1] / 37000 # convert activity units to mCi
             my_tac_modified[2] = my_tac[2] / 37000 # convert uncertainties like activity
             safe_write_tac(filename='/path/to/new_tac.tsv',
