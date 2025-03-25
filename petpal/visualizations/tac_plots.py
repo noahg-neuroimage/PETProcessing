@@ -5,6 +5,8 @@ import glob
 import os
 import pandas as pd
 import seaborn as sns
+from ..utils.time_activity_curve import TimeActivityCurve
+
 
 def tacs_to_df(tacs_dir: str,
                participant: str):
@@ -60,3 +62,18 @@ def tac_plots(tacs_data: pd.DataFrame,
     tacs_plot = sns.lineplot(data=tacs_to_plot,x='FrameReferenceTime',y='MeanActivity',hue='Region',marker='o')
     tacs_plot.set_ylim(0,None)
     return tacs_plot
+
+
+class TacPlot:
+    """
+    Handle plotting TACs generated with PETPAL.
+    """
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def plot_tac(tac: TimeActivityCurve):
+        """
+        Plot a single TAC from the TimeActivityCurve object.
+        """
+        sns.lineplot(x=tac.times,y=tac.activity,errorbar=tac.uncertainty)
