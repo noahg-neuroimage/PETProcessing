@@ -1,63 +1,31 @@
 """
 CLI module to plot TACs from a TACs folder created by petpal function write-tacs.
 """
-import glob
 import argparse
-import os
-import pandas as pd
-import seaborn as sns
+from ..visualizations.tac_plots import tacs_to_df, tac_plots
 
-def tacs_to_df(tacs_dir: str,
-               participant: str):
+
+def main():
     """
-    Convert the TACs located in a folder into a pandas DataFrame.
-
-    Args:
-        tacs_dir (str): Path to directory containing TAC tsv files. Assumes TACs written by PETPAL
-            functions, with one column for timing information, one column for mean regional
-            activity.
-        participant (str): Name of study participant the TAC belongs to.
-
-    Returns:
-        tacs (pd.DataFrame): pandas DataFrame containing timing info and mean activity for each 
-            TAC in the TACs directory.
+    CLI for tac plotting
     """
-    tacs_list = glob.glob(f'{tacs_dir}*')
-    region_names = [os.path.basename(tac_file)[len('seg-'):-8] for tac_file in tacs_list]
-    tacs = pd.DataFrame()
-    reference_times = pd.read_csv(tacs_list[0],sep='\t')['FrameReferenceTime']
-    for region in region_names:
-        tac_file = pd.read_csv(f'{tacs_dir}/seg-{region}_tac.tsv',sep='\t')
-        tac_file = tac_file.rename(columns={f'{region}_mean_activity': 'MeanActivity'})
-        tac_file['Participant'] = participant
-        tac_file['Region'] = region
-        tac_file = tac_file.set_index('FrameReferenceTime')
-        tac_file = tac_file.reindex(labels=reference_times,method='nearest')
-        tac_file = tac_file.reset_index()
-        tac_file['FrameReferenceTime'] = tac_file['FrameReferenceTime']/60
-        tacs = pd.concat([tacs,tac_file])
-    tacs = tacs.reset_index()
-    return tacs
+
+    parser = argparse.ArgumentParser(prog='petpal-plot-tacs',
+                                    description='Command line interface for plotting TACs.',
+                                    formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--tacs-folder',required=True)
+    parser.add_argument('--participant',required=True)
+    parser.add_argument('--regions',required=True,nargs='+')
+    parser.add_argument('--tsv-save',required=True)
+    parser.add_argument('--png-save',required=True)
+    args = parser.parse_args()
+
+    tacs_df = tacs_to_df(tacs_dir=args.tacs_folder,
+                        participant=args.participant)
+    tacs_df.to_csv(args.tsv_save)
+    p = tac_plots(tacs_data=tacs_df,regions_to_plot=args.regions)
+    p.get_figure().savefig(args.png_save)
 
 
-def tac_plots(tacs_data: pd.DataFrame,
-              regions_to_plot: list):
-    """
-    Plot the TACs stored in a DataFrame, plotting only listed regions.
-    Returns a seaborn plot object.
-
-    Args:
-        tacs_data (pd.DataFrame): DataFrame containing TAC data with three columns:
-            FrameReferenceTime, MeanActivity, and Region.
-        regions_to_plot (list): List of regions to be plotted in the TAC plot.
-    
-    Returns:
-        tacs_plot (sns.Figure): Seaborn figure with lineplot of TACs for each included region.
-    """
-    tacs_to_plot = pd.DataFrame()
-    for region in regions_to_plot:
-        region_tac = tacs_data[tacs_data['Region'] == region]
-        tacs_to_plot = pd.concat([tacs_to_plot,region_tac])
-    tacs_plot = sns.lineplot(data=tacs_to_plot,x='FrameReferenceTime',y='MeanActivity',hue='Region',marker='o')
-    tacs_plot.set_ylim(0,None)
-    return tacs_plot
+if __name__ == "__main__":
+    main()
