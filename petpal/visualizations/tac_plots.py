@@ -2,7 +2,6 @@
 Simple module to plot TACs from a TACs folder created by petpal function write-tacs.
 """
 import glob
-import argparse
 import os
 import pandas as pd
 import seaborn as sns
