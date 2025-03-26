@@ -69,11 +69,21 @@ class TacPlot:
     Handle plotting TACs generated with PETPAL.
     """
     def __init__(self):
-        pass
+        self.figure = sns.lineplot()
 
-    @staticmethod
-    def plot_tac(tac: TimeActivityCurve):
+
+    def plot_tac(self,tac: TimeActivityCurve):
         """
         Plot a single TAC from the TimeActivityCurve object.
         """
-        sns.lineplot(x=tac.times,y=tac.activity,errorbar=tac.uncertainty)
+        self.figure = sns.lineplot(x=tac.times,y=tac.activity,ax=self.figure)
+        return self.figure
+
+
+    def plot_tac_errorbar(self,tac: TimeActivityCurve):
+        """
+        Plot a single TAC from the TimeActivityCurve object with errorbars.
+        """
+        self.plot_tac(tac=tac)
+        self.figure.errorbar(x=tac.times,y=tac.activity,yerr=tac.uncertainty)
+        return self.figure
