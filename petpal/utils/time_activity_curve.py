@@ -7,9 +7,12 @@ TODO:
     * Refactor safe_load_tac to this module as a public method
 
 """
+import os
+import glob
+import pathlib
 from dataclasses import dataclass, field
 import numpy as np
-import os, glob, pathlib
+
 
 @dataclass
 class TimeActivityCurve:
