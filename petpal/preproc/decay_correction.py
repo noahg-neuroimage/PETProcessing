@@ -127,6 +127,7 @@ def decay_correct(input_image_path: str,
         json_data['DecayFactor'] = new_decay_factors
         json_data['ImageDecayCorrected'] = "true"
         json_data['ImageDecayCorrectionTime'] = 0
+        json_data.pop('FrameReferenceTime', None)
         image_io.write_dict_to_json(meta_data_dict=json_data,
                                     out_path=output_json_path)
 
