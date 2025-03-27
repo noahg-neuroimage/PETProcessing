@@ -209,7 +209,7 @@ def safe_write_tac(filename: str,
             col_names = ['FrameReferenceTime', 'MeanActivityConcentration']
         elif num_cols==3:
             col_names = ['FrameReferenceTime', 'MeanActivityConcentration','Uncertainty']
-    
+
     if num_cols!=len(col_names):
         raise ValueError("Expected the same number of columns in tac_data and col_names. Got "
                          f"{num_cols} in tac_data and {len(col_names)} in col_names.")
