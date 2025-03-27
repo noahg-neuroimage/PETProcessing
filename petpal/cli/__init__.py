@@ -1,4 +1,3 @@
-from . import cli_bids
 from . import cli_graphical_plots
 from . import cli_graphical_analysis
 from . import cli_parametric_images

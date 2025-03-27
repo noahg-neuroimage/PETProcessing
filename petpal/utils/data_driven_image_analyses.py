@@ -4,7 +4,7 @@ from sklearn.decomposition import PCA
 
 from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask
 from .useful_functions import check_physical_space_for_ants_image_pair
-from .image_io import get_frame_timing_info_for_nifti
+from .scan_timing import ScanTimingInfo
 
 
 def temporal_pca_analysis_of_image_over_mask(input_image: ants.core.ANTsImage,
@@ -483,7 +483,7 @@ def generate_temporal_pca_quantile_threshold_tacs_of_image_over_mask(input_image
                                         )
 
     if output_arrays_path is not None:
-        image_timing_info = get_frame_timing_info_for_nifti(image_path=input_image_path)
+        image_timing_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
         tac_ref_times = image_timing_info.center_in_mins
         out_array = _gen_reshaped_quantiled_tacs(times=tac_ref_times,
                                                  tacs_mean=tacs_mean,
