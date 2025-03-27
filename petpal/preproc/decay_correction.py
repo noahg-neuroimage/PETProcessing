@@ -102,7 +102,7 @@ def decay_correct(input_image_path: str,
     uncorrected_image = ants.image_read(filename=input_image_path)
 
     frame_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
-    frame_reference_times = frame_info.center
+    frame_reference_times = np.asarray(frame_info.start + frame_info.duration / 2.0, float)
 
     original_decay_factors = frame_info.decay
     if np.any(original_decay_factors != 1):
