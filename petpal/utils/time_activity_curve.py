@@ -166,8 +166,7 @@ def safe_write_tac(filename: str,
         raise ValueError("Expected the same number of columns in tac_data and col_names. Got "
                          f"{num_cols} in tac_data and {len(col_names)} in col_names.")
 
-    col_names_with_sep = [col+'\t' for col in col_names]
-    file_header = ''.join(col_names_with_sep)
+    file_header = "\t".join(col_names)
     np.savetxt(fname=filename, X=tac_data.T, header=file_header)
 
 
