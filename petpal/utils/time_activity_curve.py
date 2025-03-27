@@ -63,10 +63,24 @@ class TimeActivityCurve:
 
     @property
     def tac(self) -> np.ndarray:
+        """
+        Get the TAC array, not including uncertainties.
+
+        Returns:
+            (np.ndarray): The TAC as a contiguous array, with the first index being time and the
+                second index being activity.
+        """
         return np.ascontiguousarray([self.times, self.activity])
 
     @property
     def tac_werr(self) -> np.ndarray:
+        """
+        Get the TAC array, including uncertainties.
+
+        Returns:
+            (np.ndarray): The TAC as a contiguous array, with the first index being time and the
+                second index being activity, and the third index being uncertainty.
+        """
         return np.ascontiguousarray([self.times, self.activity, self.uncertainty])
 
     @property
