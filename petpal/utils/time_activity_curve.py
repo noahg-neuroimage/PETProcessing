@@ -57,6 +57,18 @@ class TimeActivityCurve:
     def tac_werr(self) -> np.ndarray:
         return np.ascontiguousarray([self.times, self.activity, self.uncertainty])
 
+    @property
+    def times_in_mins(self) -> np.ndarray[float]:
+        """
+        Returns the TAC measured times in minutes. Validates values by checking if the final
+        frame value is greater than 200: if so, then assumes values are in seconds and divides by
+        60.
+        """
+        if self.times[-1] >= 200.0:
+            return self.times / 60.0
+        return self.times
+
+
     def to_tsv(self, filename: str, col_names: list[str]=None):
         if self.uncertainty is not None:
             safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
