@@ -42,7 +42,8 @@ class TimeActivityCurve:
 
     def __post_init__(self):
         if self.uncertainty.size == 0:
-            self.uncertainty = np.zeros_like(self.times)
+            self.uncertainty = np.empty_like(self.times)
+            self.uncertainty[:] = np.nan
         assert np.shape(self.uncertainty) == np.shape(self.times) == np.shape(self.activity), (
             f"TAC fields must have the same shapes.\ntimes:{self.times.shape}"
             "activity:{self.activity.shape} uncertainty:{self.uncertainty.shape}")
@@ -73,18 +74,14 @@ class TimeActivityCurve:
 
     def to_tsv(self, filename: str, col_names: list[str]=None):
         """
-        Writes the TAC object to file. If uncertainty includes any zero values, writes only time
-        and activity, otherwise writes time, activity, and uncertainty.
+        Writes the TAC object to file, including measurement times, activity, and uncertainty.
 
         Args:
             filename (str): Path to the file that will be written to.
             col_names (list[str]): Custom names for time, activity, and uncertainty columns
                 respectively. See :meth:`safe_write_tac`. Default None.
         """
-        if np.any(self.uncertainty==0):
-            safe_write_tac(filename=filename,tac_data=self.tac,col_names=col_names)
-        else:
-            safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
+        safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
 
 
 def safe_load_tac(filename: str,
