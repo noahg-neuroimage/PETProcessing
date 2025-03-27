@@ -18,6 +18,8 @@ class TimeActivityCurve:
     Attributes:
         times (np.ndarray): Frame times for the TAC stored in an array.
         activity (np.ndarray): Activity values at each frame time stored in an array.
+        uncertainty (np.ndarray): Uncertainty in the measurement of activity values stored in an
+            array.
 
 
     Example:
@@ -307,7 +309,7 @@ class MultiTACAnalysisMixin:
         Returns:
             list: List of TAC values.
         """
-        tacs_vals = [tac.tac_vals for tac in tacs_objects_list]
+        tacs_vals = [tac.activity for tac in tacs_objects_list]
         return tacs_vals
     
     def get_tacs_vals_from_dir(self, tacs_dir: str):
