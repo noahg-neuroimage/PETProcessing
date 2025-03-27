@@ -72,6 +72,15 @@ class TimeActivityCurve:
 
 
     def to_tsv(self, filename: str, col_names: list[str]=None):
+        """
+        Writes the TAC object to file. If uncertainty includes any zero values, writes only time
+        and activity, otherwise writes time, activity, and uncertainty.
+
+        Args:
+            filename (str): Path to the file that will be written to.
+            col_names (list[str]): Custom names for time, activity, and uncertainty columns
+                respectively. See :meth:`safe_write_tac`. Default None.
+        """
         if np.any(self.uncertainty==0):
             safe_write_tac(filename=filename,tac_data=self.tac,col_names=col_names)
         else:
