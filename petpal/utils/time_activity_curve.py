@@ -50,6 +50,15 @@ class TimeActivityCurve:
 
     @classmethod
     def from_tsv(cls, filename: str):
+        """
+        Load an instance of TimeActivityCurve object from a TSV TAC file.
+
+        Args:
+            filename (str): Path to the TSV TAC file.
+        
+        Returns:
+            (TimeActivityCurve): A TimeActivityCurve object loaded from a TSV TAC file.
+        """
         return cls(*safe_load_tac(filename=filename, with_uncertainty=True))
 
     @property
