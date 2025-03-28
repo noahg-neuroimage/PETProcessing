@@ -38,9 +38,7 @@ import os
 import argparse
 import numpy as np
 from ..kinetic_modeling import tac_interpolation as tac_intp
-from ..utils.image_io import safe_load_tac
-
-
+from ..utils.time_activity_curve import safe_load_tac
 
 
 def _safe_write_tac(tac_times: np.ndarray, tac_values: np.ndarray, filename: str) -> None:
