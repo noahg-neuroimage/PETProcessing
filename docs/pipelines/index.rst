@@ -12,3 +12,11 @@ Submodules
    kinetic_modeling_steps
    steps_containers
    pipelines
+
+Module contents
+---------------
+
+.. automodule:: petpal.pipelines
+   :members:
+   :undoc-members:
+   :show-inheritance:

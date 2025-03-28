@@ -11,7 +11,7 @@ Subpackages
    petpal.kinetic_modeling
    petpal.input_function
    petpal.visualizations
-   petpal.utils
+   utils/index
    pipelines/index
 
 Module contents
