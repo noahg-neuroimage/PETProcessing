@@ -1,14 +1,8 @@
-"""Decay Correction Module.
-
+"""
 Provides functions for undo-ing decay correction and recalculating it.
 
-Todo:
-    * Refactor arguments (and half-life retrieval) once decorators are implemented to translate paths to ANTsImages.
-    * Handle BIDS keys more formally (i.e. this currently reads/writes decay factors from the key 'DecayFactor' instead
-        of the BIDS-required 'DecayCorrectionFactor).'
 """
 
-import warnings
 import math
 
 import ants
@@ -16,6 +10,7 @@ import numpy as np
 
 from ..utils import image_io
 from ..utils.scan_timing import ScanTimingInfo
+
 
 def undo_decay_correction(input_image_path: str,
                           output_image_path: str,
@@ -102,7 +97,7 @@ def decay_correct(input_image_path: str,
     uncorrected_image = ants.image_read(filename=input_image_path)
 
     frame_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
-    frame_reference_times = np.asarray(frame_info.start + frame_info.duration / 2.0, float)
+    frame_reference_times = np.asarray(frame_info.start + frame_info.duration / 2.0, float).tolist()
 
     original_decay_factors = frame_info.decay
     if np.any(original_decay_factors != 1):
@@ -127,7 +122,7 @@ def decay_correct(input_image_path: str,
         json_data['DecayFactor'] = new_decay_factors
         json_data['ImageDecayCorrected'] = "true"
         json_data['ImageDecayCorrectionTime'] = 0
-        json_data.pop('FrameReferenceTime', None)
+        json_data['FrameReferenceTime'] = frame_reference_times
         image_io.write_dict_to_json(meta_data_dict=json_data,
                                     out_path=output_json_path)
 
