@@ -7,74 +7,215 @@ TODO:
     * Refactor safe_load_tac to this module as a public method
 
 """
-from dataclasses import dataclass
+import os
+import glob
+import pathlib
+from dataclasses import dataclass, field
 import numpy as np
-from .image_io import safe_load_tac
-import os, glob, pathlib
+
 
 @dataclass
 class TimeActivityCurve:
     """Class to store time activity curve (TAC) data.
     
     Attributes:
-        tac_times_in_minutes (np.ndarray): Frame times for the TAC stored in an array.
-        tac_vals (np.ndarray): Activity values at each frame time stored in an array."""
-    tac_times_in_minutes: np.ndarray
-    tac_vals: np.ndarray
+        times (np.ndarray): Frame times for the TAC stored in an array.
+        activity (np.ndarray): Activity values at each frame time stored in an array.
+        uncertainty (np.ndarray): Uncertainty in the measurement of activity values stored in an
+            array.
 
 
-class TimeActivityCurveFromFile:
+    Example:
+
+        .. code-block:: python
+
+            from petpal.utils.time_activity_curve import TimeActivityCurve
+
+            my_tac = TimeActivityCurve.from_tsv('/path/to/tac.tsv')
+            print(f"Frame times: {my_tac.times}")
+            print(f"Activity: {my_tac.activity}")
+            print(f"Uncertainty: {my_tac.uncertainty}")
+
+            my_tac.times = my_tac.times / 60  # convert time units to hours
+            my_tac.to_tsv(filename='/path/to/new_tac.tsv')  # save as new file
     """
-    Class to handle data related to time activity curves (TACs).
+    times: np.ndarray
+    activity: np.ndarray
+    uncertainty: np.ndarray = field(default_factory=lambda: np.array([]))
 
-    Attributes:
-        tac_path (str): Path to the original time activity curve file.
-        tac_times_in_minutes (np.ndarray): Frame times for the TAC stored in an array.
-        tac_vals (np.ndarray): Activity values at each frame time stored in an array.
-    """
-    def __init__(self,
-                 tac_path: str):
+    def __post_init__(self):
+        if self.uncertainty.size == 0:
+            self.uncertainty = np.empty_like(self.times)
+            self.uncertainty[:] = np.nan
+        assert np.shape(self.uncertainty) == np.shape(self.times) == np.shape(self.activity), (
+            f"TAC fields must have the same shapes.\ntimes:{self.times.shape}"
+            "activity:{self.activity.shape} uncertainty:{self.uncertainty.shape}")
+
+    @classmethod
+    def from_tsv(cls, filename: str):
         """
-        Initialize TimeActivityCurve class
+        Load an instance of TimeActivityCurve object from a TSV TAC file.
 
         Args:
-            tac_path (str): Path to the TAC that will be analyzed.
+            filename (str): Path to the TSV TAC file.
+        
+        Returns:
+            (TimeActivityCurve): A TimeActivityCurve object loaded from a TSV TAC file.
         """
-        self.tac_path = tac_path
-        self.tac_times_in_minutes, self.tac_vals = self.get_tac_data()
+        return cls(*safe_load_tac(filename=filename, with_uncertainty=True))
 
-    def get_tac_data(self):
+    @property
+    def tac(self) -> np.ndarray:
         """
-        Retrieves data from the TAC file. Uses :meth:`petpal.utils.image_io.safe_load_tac`.
-
-        See also:
-            * :meth:`petpal.utils.image_io.safe_load_tac`
-
-        """
-        return safe_load_tac(self.tac_path)
-
-    def get_frame_durations(self) -> np.ndarray:
-        """
-        Get array containing the duration of each frame in minutes.
-
-        For a set of N frames, the first N-1 frame durations are estimated as the difference
-        between each frame time and the next frame time. Frame N is then inferred as being the same
-        duration as frame N-1.
-
-        The frame durations in the originating metadata is preferable to computing it here. 
-        However, if the frame durations are not present in the metadata this function is useful
-        to recover them.
+        Get the TAC array, not including uncertainties.
 
         Returns:
-            tac_durations_in_minutes (np.ndarray): The estimated duration of each frame in minutes.
+            (np.ndarray): The TAC as a contiguous array, with the first index being time and the
+                second index being activity.
         """
-        tac_times_in_minutes = self.tac_times_in_minutes
-        tac_durations_in_minutes = np.zeros((len(tac_times_in_minutes)))
+        return np.ascontiguousarray([self.times, self.activity])
 
-        tac_durations_in_minutes[:-1] = tac_times_in_minutes[1:]-tac_times_in_minutes[:-1]
-        tac_durations_in_minutes[-1] = tac_durations_in_minutes[-2]
+    @property
+    def tac_werr(self) -> np.ndarray:
+        """
+        Get the TAC array, including uncertainties.
 
-        return tac_durations_in_minutes
+        Returns:
+            (np.ndarray): The TAC as a contiguous array, with the first index being time and the
+                second index being activity, and the third index being uncertainty.
+        """
+        return np.ascontiguousarray([self.times, self.activity, self.uncertainty])
+
+    @property
+    def times_in_mins(self) -> np.ndarray[float]:
+        """
+        Returns the TAC measured times in minutes. Validates values by checking if the final
+        frame value is greater than 200: if so, then assumes values are in seconds and divides by
+        60.
+        """
+        if self.times[-1] >= 200.0:
+            return self.times / 60.0
+        return self.times
+
+
+    def to_tsv(self, filename: str, col_names: list[str]=None):
+        """
+        Writes the TAC object to file, including measurement times, activity, and uncertainty.
+
+        Args:
+            filename (str): Path to the file that will be written to.
+            col_names (list[str]): Custom names for time, activity, and uncertainty columns
+                respectively. See :meth:`safe_write_tac`. Default None.
+        """
+        safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
+
+
+def safe_load_tac(filename: str,
+                  with_uncertainty: bool = False,
+                  **kwargs) -> np.ndarray:
+    """
+    Loads time-activity curves (TAC) from a file.
+    Tries to read a TAC from specified file and raises an exception if unable to do so. We assume
+    that the file has two columns, the first corresponding to time and second corresponding to
+    activity.
+    Args:
+        filename (str): The name of the file to be loaded.
+        with_uncertainty (bool): Load uncertainty of measured activity along with timing and 
+            activity.
+        **kwargs (dict): keyword arguments to pass to :func:`np.loadtxt`.
+    Returns:
+        np.ndarray: A numpy array containing the loaded TAC. The first index corresponds to the
+            times, and the second corresponds to the activity. If with_uncertainty is True, the
+            third index corresponds to the uncertainty.
+    Raises:
+        Exception: An error occurred loading the TAC.
+
+        
+    Example:
+
+        .. code-block:: python
+
+            import numpy as np
+            from petpal.utils.time_activity_curve import safe_load_tac, safe_write_tac
+
+            my_tac = safe_load_tac(filename='/path/to/tac.tsv')
+            my_tac_modified = np.zeros_like(my_tac)
+            my_tac_modified[0] = my_tac[0] / 60 # convert time units to hours
+            my_tac_modified[1] = my_tac[1] / 37000 # convert activity units to mCi
+            my_tac_modified[2] = my_tac[2] / 37000 # convert uncertainties like activity
+            safe_write_tac(filename='/path/to/new_tac.tsv',
+                           tac_data=my_tac_modified)
+    """
+    try:
+        tac_data = np.asarray(np.loadtxt(filename, **kwargs).T, dtype=float, order='C')
+    except ValueError:
+        tac_data = np.asarray(np.loadtxt(filename, skiprows=1, **kwargs).T, dtype=float, order='C')
+    except Exception as e:
+        print(f"Couldn't read file {filename}. Error: {e}")
+        raise e
+
+    if np.max(tac_data[0]) >= 300:
+        tac_data[0] /= 60.0
+
+    if with_uncertainty:
+        return tac_data[:3]
+    else:
+        return tac_data[:2]
+
+
+def safe_write_tac(filename: str,
+                   tac_data: np.ndarray,
+                   col_names: list[str]=None):
+    """
+    Writes the data in a time-activity curve (TAC) to a file. Assumes the TAC data consists of a
+    contiguous numpy array with two or three columns: time, activity, and (optionally) uncertainty.
+
+    Args:
+        filename (str): Path to the file the data will be saved as.
+        tac_data (np.ndarray): Numpy array containing the data for the TAC. Assumes the TAC data
+            consists of a contiguous numpy array with two or three columns: time, activity, and 
+            (optionally) uncertainty.
+        col_names (list[str]): List of column names assigned to the time, activity, and uncertainty
+            columns in the TAC data, respectively. Must match number of columns in `tac_data`.
+    
+    Raises:
+        ValueError: If the number of columns in tac_data is not two or three, or the number of
+            columns in tac_data does not match the number of columns in col_names.
+
+
+
+    Example:
+
+        .. code-block:: python
+
+            import numpy as np
+            from petpal.utils.time_activity_curve import safe_load_tac, safe_write_tac
+
+            my_tac = safe_load_tac(filename='/path/to/tac.tsv')
+            my_tac_modified = np.zeros_like(my_tac)
+            my_tac_modified[0] = my_tac[0] / 60 # convert time units to hours
+            my_tac_modified[1] = my_tac[1] / 37000 # convert activity units to mCi
+            my_tac_modified[2] = my_tac[2] / 37000 # convert uncertainties like activity
+            safe_write_tac(filename='/path/to/new_tac.tsv',
+                           tac_data=my_tac_modified)
+
+    """
+    num_cols = len(tac_data)
+    if num_cols not in (2, 3):
+        raise ValueError(f"Expected two or three columns in tac_data. Got {num_cols}.")
+
+    if col_names is None:
+        if num_cols==2:
+            col_names = ['FrameReferenceTime', 'MeanActivityConcentration']
+        elif num_cols==3:
+            col_names = ['FrameReferenceTime', 'MeanActivityConcentration','Uncertainty']
+
+    if num_cols!=len(col_names):
+        raise ValueError("Expected the same number of columns in tac_data and col_names. Got "
+                         f"{num_cols} in tac_data and {len(col_names)} in col_names.")
+
+    file_header = "\t".join(col_names)
+    np.savetxt(fname=filename, X=tac_data.T, header=file_header, comments='')
 
 
 class MultiTACAnalysisMixin:
@@ -186,23 +327,23 @@ class MultiTACAnalysisMixin:
             tacs_files_list (list[str]): List of TAC file paths.
 
         Returns:
-            list[TimeActivityCurveFromFile]: List of TAC objects.
+            list[TimeActivityCurve]: List of TAC objects.
         """
-        tacs_list = [TimeActivityCurveFromFile(tac_path=tac_file) for tac_file in tacs_files_list]
+        tacs_list = [TimeActivityCurve.from_tsv(filename=tac_file) for tac_file in tacs_files_list]
         return tacs_list
     
     @staticmethod
-    def get_tacs_vals_from_objs_list(tacs_objects_list: list[TimeActivityCurveFromFile]):
+    def get_tacs_vals_from_objs_list(tacs_objects_list: list[TimeActivityCurve]):
         """
         Extracts TAC values from a list of TAC objects.
 
         Args:
-            tacs_objects_list (list[TimeActivityCurveFromFile]): List of TAC objects.
+            tacs_objects_list (list[TimeActivityCurve]): List of TAC objects.
 
         Returns:
             list: List of TAC values.
         """
-        tacs_vals = [tac.tac_vals for tac in tacs_objects_list]
+        tacs_vals = [tac.activity for tac in tacs_objects_list]
         return tacs_vals
     
     def get_tacs_vals_from_dir(self, tacs_dir: str):
@@ -270,3 +411,6 @@ class MultiTACAnalysisMixin:
             seg_labels.append(tmp_seg)
             
         return seg_labels
+
+
+

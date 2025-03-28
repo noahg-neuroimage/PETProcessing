@@ -111,6 +111,7 @@ def stitch_broken_scans(input_image_path: str,
         corrected_arrays.append(corrected_image.numpy())
         updated_metadata = image_io.load_metadata_for_nifti_with_same_filename(image_path=corrected_image_path)
         new_metadata['FrameTimesStart'].extend(updated_metadata['FrameTimesStart'])
+        new_metadata['FrameReferenceTime'].extend(updated_metadata['FrameReferenceTime'])
         new_metadata['FrameDuration'].extend(updated_metadata['FrameDuration'])
         new_metadata['DecayFactor'].extend(updated_metadata['DecayFactor'])
         new_metadata['ImageDecayCorrected'] = updated_metadata['ImageDecayCorrected']
