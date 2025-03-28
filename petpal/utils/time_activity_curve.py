@@ -215,7 +215,7 @@ def safe_write_tac(filename: str,
                          f"{num_cols} in tac_data and {len(col_names)} in col_names.")
 
     file_header = "\t".join(col_names)
-    np.savetxt(fname=filename, X=tac_data.T, header=file_header)
+    np.savetxt(fname=filename, X=tac_data.T, header=file_header, comments='')
 
 
 class MultiTACAnalysisMixin:
