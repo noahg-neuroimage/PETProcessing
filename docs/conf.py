@@ -1,58 +1,56 @@
-# Configuration file for the Sphinx documentation builder.
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../petpal'))
-
+# # Configuration file for the Sphinx documentation builder.
+#
 project = 'PETPAL (Positron Emission Tomography Analysis Library)'
-copyright = '2024, Furqan Dar, Bradley Judge, Noah Goldman'
+copyright = '2025, Furqan Dar, Bradley Judge, Noah Goldman, Kenan Oestreich'
 author = 'Furqan Dar, Bradley Judge, Noah Goldman, Kenan Oestreich'
-release = '0.0.2'
-
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
-
-extensions = [ "sphinx.ext.autodoc",
-               "sphinx.ext.autosummary",
-               "sphinx.ext.intersphinx",
-               "sphinx.ext.napoleon",
-               "sphinx.ext.todo",
-               "matplotlib.sphinxext.plot_directive",
-               "sphinx.ext.mathjax"]
-
-
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+release = '0.1.0'
 
 language = 'English (US)'
 
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
-# html_theme = 'python_docs_theme'
-# html_theme = 'sphinx_rtd_theme'
-# html_theme = 'alabaster'
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
-
-add_function_parentheses = False
-add_module_names = False
-autoclass_content = 'both'
-todo_include_todos = True
-
-autodoc_member_order = 'bysource'
-autosummary_generate = True
-autodoc_docstring_signature = True
-
-napoleon_include_init_with_doc = False
-napoleon_include_private_with_doc = True
-napoleon_use_ivar=True
-
-autodoc_default_options = {'members': True,
-                           'inherited-members': False,
-                           'show-inheritance': True}
-
 html_title = 'PETPAL'
 
+extensions = [
+    'autoapi.extension',
+    'sphinx.ext.todo',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
+    'matplotlib.sphinxext.plot_directive',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.intersphinx',
+]
+
+exclude_patterns = ['_build']
+templates_path = ["_templates"]
+
+source_suffix = '.rst'
+master_doc = 'index'
+
+# autoapi configuration
+autoapi_type = 'python'
+autoapi_dirs = ['../petpal']
+autoapi_ignore = ['*cli*']
+
+# Options: https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html#customisation-options
+autoapi_options = [
+    'members',
+    'undoc-members',
+    # 'inherited-members',
+    # 'private-members',
+    # 'special-members',
+    'show-inheritance',
+    'show-module-summary'
+]
+
+autoapi_python_class_content = 'both'
+
+autoapi_keep_files = True
+autoapi_generate_api_docs = True
+
+napoleon_use_ivar = True
+napoleon_use_rtype = False
+napoleon_use_param = False
 
 intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),

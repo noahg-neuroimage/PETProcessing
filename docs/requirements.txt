@@ -169,6 +169,7 @@ sphinx==8.2.3
     # via
     #   petpal (pyproject.toml)
     #   pydata-sphinx-theme
+    #   sphinx-autoapi
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
@@ -181,6 +182,8 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
+sphinx-autoapi
+
 statsmodels==0.14.4
     # via antspyx
 threadpoolctl==3.6.0

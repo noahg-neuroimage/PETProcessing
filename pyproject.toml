@@ -25,6 +25,7 @@ dependencies = [
     "SimpleITK",
     "matplotlib",
     "sphinx",
+    'sphinx-autoapi',
     "pydata-sphinx-theme",
     "bids_validator",
     "seaborn",

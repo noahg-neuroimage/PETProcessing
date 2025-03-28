@@ -3,16 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-###################################
-PET Processing Module Documentation
-###################################
+####################
+PETPAL Documentation
+####################
 
 .. toctree::
-   :maxdepth: 1
-   :caption: API Reference:
+   :maxdepth: 2
+   :caption: Contents:
 
-   petpal
-   petpal.cli
+   autoapi/index
 
 
 
