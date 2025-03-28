@@ -7,9 +7,12 @@ TODO:
     * Refactor safe_load_tac to this module as a public method
 
 """
+import os
+import glob
+import pathlib
 from dataclasses import dataclass, field
 import numpy as np
-import os, glob, pathlib
+
 
 @dataclass
 class TimeActivityCurve:
@@ -18,6 +21,8 @@ class TimeActivityCurve:
     Attributes:
         times (np.ndarray): Frame times for the TAC stored in an array.
         activity (np.ndarray): Activity values at each frame time stored in an array.
+        uncertainty (np.ndarray): Uncertainty in the measurement of activity values stored in an
+            array.
 
 
     Example:
@@ -40,29 +45,69 @@ class TimeActivityCurve:
 
     def __post_init__(self):
         if self.uncertainty.size == 0:
-            self.uncertainty = np.zeros_like(self.times)
+            self.uncertainty = np.empty_like(self.times)
+            self.uncertainty[:] = np.nan
         assert np.shape(self.uncertainty) == np.shape(self.times) == np.shape(self.activity), (
             f"TAC fields must have the same shapes.\ntimes:{self.times.shape}"
             "activity:{self.activity.shape} uncertainty:{self.uncertainty.shape}")
 
     @classmethod
     def from_tsv(cls, filename: str):
+        """
+        Load an instance of TimeActivityCurve object from a TSV TAC file.
+
+        Args:
+            filename (str): Path to the TSV TAC file.
+        
+        Returns:
+            (TimeActivityCurve): A TimeActivityCurve object loaded from a TSV TAC file.
+        """
         return cls(*safe_load_tac(filename=filename, with_uncertainty=True))
 
     @property
     def tac(self) -> np.ndarray:
+        """
+        Get the TAC array, not including uncertainties.
+
+        Returns:
+            (np.ndarray): The TAC as a contiguous array, with the first index being time and the
+                second index being activity.
+        """
         return np.ascontiguousarray([self.times, self.activity])
 
     @property
     def tac_werr(self) -> np.ndarray:
+        """
+        Get the TAC array, including uncertainties.
+
+        Returns:
+            (np.ndarray): The TAC as a contiguous array, with the first index being time and the
+                second index being activity, and the third index being uncertainty.
+        """
         return np.ascontiguousarray([self.times, self.activity, self.uncertainty])
 
-    def to_tsv(self, filename: str, col_names: list[str]=None):
-        if self.uncertainty is not None:
-            safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
-        else:
-            safe_write_tac(filename=filename,tac_data=self.tac,col_names=col_names)
+    @property
+    def times_in_mins(self) -> np.ndarray[float]:
+        """
+        Returns the TAC measured times in minutes. Validates values by checking if the final
+        frame value is greater than 200: if so, then assumes values are in seconds and divides by
+        60.
+        """
+        if self.times[-1] >= 200.0:
+            return self.times / 60.0
+        return self.times
 
+
+    def to_tsv(self, filename: str, col_names: list[str]=None):
+        """
+        Writes the TAC object to file, including measurement times, activity, and uncertainty.
+
+        Args:
+            filename (str): Path to the file that will be written to.
+            col_names (list[str]): Custom names for time, activity, and uncertainty columns
+                respectively. See :meth:`safe_write_tac`. Default None.
+        """
+        safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
 
 
 def safe_load_tac(filename: str,
@@ -70,15 +115,18 @@ def safe_load_tac(filename: str,
                   **kwargs) -> np.ndarray:
     """
     Loads time-activity curves (TAC) from a file.
-    Tries to read a TAC from specified file and raises an exception if unable to do so. We assume that the file has two
-    columns, the first corresponding to time and second corresponding to activity.
+    Tries to read a TAC from specified file and raises an exception if unable to do so. We assume
+    that the file has two columns, the first corresponding to time and second corresponding to
+    activity.
     Args:
-        with_uncertainty (bool):
         filename (str): The name of the file to be loaded.
+        with_uncertainty (bool): Load uncertainty of measured activity along with timing and 
+            activity.
         **kwargs (dict): keyword arguments to pass to :func:`np.loadtxt`.
     Returns:
-        np.ndarray: A numpy array containing the loaded TAC. The first index corresponds to the times, and the second
-            corresponds to the activity. If with_uncertainty is True, the third index corresponds to the uncertainty.
+        np.ndarray: A numpy array containing the loaded TAC. The first index corresponds to the
+            times, and the second corresponds to the activity. If with_uncertainty is True, the
+            third index corresponds to the uncertainty.
     Raises:
         Exception: An error occurred loading the TAC.
 
@@ -161,14 +209,13 @@ def safe_write_tac(filename: str,
             col_names = ['FrameReferenceTime', 'MeanActivityConcentration']
         elif num_cols==3:
             col_names = ['FrameReferenceTime', 'MeanActivityConcentration','Uncertainty']
-    
+
     if num_cols!=len(col_names):
         raise ValueError("Expected the same number of columns in tac_data and col_names. Got "
                          f"{num_cols} in tac_data and {len(col_names)} in col_names.")
 
-    col_names_with_sep = [col+'\t' for col in col_names]
-    file_header = ''.join(col_names_with_sep)
-    np.savetxt(fname=filename, X=tac_data.T, header=file_header)
+    file_header = "\t".join(col_names)
+    np.savetxt(fname=filename, X=tac_data.T, header=file_header, comments='')
 
 
 class MultiTACAnalysisMixin:
@@ -296,7 +343,7 @@ class MultiTACAnalysisMixin:
         Returns:
             list: List of TAC values.
         """
-        tacs_vals = [tac.tac_vals for tac in tacs_objects_list]
+        tacs_vals = [tac.activity for tac in tacs_objects_list]
         return tacs_vals
     
     def get_tacs_vals_from_dir(self, tacs_dir: str):
