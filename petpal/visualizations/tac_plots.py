@@ -157,7 +157,11 @@ class TACPlots:
             xlabel (str): The label for the x-axis. Defaults to '$t$ [minutes]'.
             ylabel (str): The label for the y-axis. Defaults to 'TAC [$\mathrm{kBq/ml}$]'.
         """
-        self.fig, self.axes = plt.subplots(1, 2, sharey=True, constrained_layout=True, figsize=figsize)
+        self.fig, self.axes = plt.subplots(1,
+                                           2,
+                                           sharey=True,
+                                           constrained_layout=True,
+                                           figsize=figsize)
         self.fax = self.axes.flatten()
         _xlabel_set = [ax.set(xlabel=xlabel) for ax in self.fax]
         self.fax[0].set(ylabel=ylabel, title='Linear')
