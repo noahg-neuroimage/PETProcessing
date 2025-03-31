@@ -5,8 +5,7 @@ import glob
 import os
 import pandas as pd
 import seaborn as sns
-from ..utils.time_activity_curve import TimeActivityCurve
-
+from ..utils.time_activity_curve import TimeActivityCurve, MultiTACAnalysisMixin
 
 def tacs_to_df(tacs_dir: str,
                participant: str):
@@ -64,12 +63,22 @@ def tac_plots(tacs_data: pd.DataFrame,
     return tacs_plot
 
 
-class TacPlot:
+class TacPlot(MultiTACAnalysisMixin):
     """
     Handle plotting TACs generated with PETPAL.
     """
-    def __init__(self):
+    def __init__(self,tacs_dir: str=None):
+        if tacs_dir is not None:
+            MultiTACAnalysisMixin.__init__(self,input_tac_path='',tacs_dir=tacs_dir)
         self.figure = sns.lineplot()
+
+    @property
+    def tacs_objects_list(self):
+        return self.get_tacs_objects_list_from_files_list(self.tacs_files_list)
+
+
+    def get_figure(self):
+        return self.figure.get_figure()
 
 
     def plot_tac(self,tac: TimeActivityCurve):
@@ -87,3 +96,25 @@ class TacPlot:
         self.plot_tac(tac=tac)
         self.figure.errorbar(x=tac.times,y=tac.activity,yerr=tac.uncertainty)
         return self.figure
+
+
+    def plot_regional_tacs(self):
+        """
+        Placeholder
+        """
+        tacs_obj_list = self.tacs_objects_list()
+        for tac in tacs_obj_list:
+            self.plot_tac_errorbar(tac=tac)
+        return self.get_figure()
+
+
+    def plot_tacs_in_regions_list(self,regions: list[str | int]):
+        """
+        Placeholder
+        """
+        tacs_obj_list = self.tacs_objects_list()
+        for region in regions:
+            tac = tacs_obj_list[region]  # NOTE: THIS DOESNT DO ANYTHING
+            self.plot_tac_errorbar(tac=tac)
+        return self.get_figure()
+
