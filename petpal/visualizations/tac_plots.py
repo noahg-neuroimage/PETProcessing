@@ -157,15 +157,22 @@ class TACPlots:
             xlabel (str): The label for the x-axis. Defaults to '$t$ [minutes]'.
             ylabel (str): The label for the y-axis. Defaults to 'TAC [$\mathrm{kBq/ml}$]'.
         """
-        self.fig, self.axes = plt.subplots(1,
-                                           2,
-                                           sharey=True,
-                                           constrained_layout=True,
-                                           figsize=figsize)
+        self.fig, self.axes = self.setup_linear_and_log_subplot(figsize=figsize)
         self.fax = self.axes.flatten()
         _xlabel_set = [ax.set(xlabel=xlabel) for ax in self.fax]
         self.fax[0].set(ylabel=ylabel, title='Linear')
         self.fax[1].set(xscale='log', title='SemiLog-X')
+
+
+    def setup_linear_and_log_subplot(self, figsize: tuple):
+        """
+        Get the figure and axes objects for a 1x2 MatPlotLib subplot.
+
+        Args:
+            figsize (tuple): Size of the figure.
+        """
+        return plt.subplots(1, 2, sharey=True, constrained_layout=True, figsize=figsize)
+
 
     def add_tac(self, tac_times: np.ndarray, tac_vals: np.ndarray, **kwargs):
         r"""
@@ -177,6 +184,7 @@ class TACPlots:
             kwargs (dict): Additional keyword arguments for the plot() function.
         """
         return [ax.plot(tac_times, tac_vals, **kwargs) for ax in self.fax]
+
 
     def gen_legend(self):
         r"""
