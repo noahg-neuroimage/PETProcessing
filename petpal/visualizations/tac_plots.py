@@ -121,7 +121,7 @@ class TacPlot(MultiTACAnalysisMixin):
         return self.get_figure()
 
 
-class TACPlots(object):
+class TACPlots:
     r"""
     A class for plotting Time Activity Curves (TACs) on linear and semi-logarithmic scales.
 
@@ -149,7 +149,8 @@ class TACPlots(object):
                  xlabel: str = r'$t$ [minutes]',
                  ylabel: str = r'TAC [$\mathrm{kBq/ml}$]'):
         r"""
-        Initialize the TACPlots with two subplots, one with a linear scale and the other with a semi-logarithmic scale.
+        Initialize the TACPlots with two subplots, one with a linear scale and the other with a
+        semi-logarithmic scale.
 
         Args:
             figsize (tuple): The total size of the figure. Defaults to an 8x4 inches figure.
@@ -178,11 +179,10 @@ class TACPlots(object):
         Generate a legend using the labels provided in the add_tac() method.
 
         Note:
-            It is recommended to add all TACs before generating the legend. Any TACs added after the legend is
-        generated will not be included in the legend.
+            It is recommended to add all TACs before generating the legend. Any TACs added after
+        the legend is generated will not be included in the legend.
 
         """
         handles, labels = self.fax[0].get_legend_handles_labels()
         if handles:
             self.fig.legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
-
