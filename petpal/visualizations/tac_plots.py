@@ -159,7 +159,7 @@ class TACPlots:
         """
         self.fig, self.axes = plt.subplots(1, 2, sharey=True, constrained_layout=True, figsize=figsize)
         self.fax = self.axes.flatten()
-        [ax.set(xlabel=xlabel) for ax in self.fax]
+        _xlabel_set = [ax.set(xlabel=xlabel) for ax in self.fax]
         self.fax[0].set(ylabel=ylabel, title='Linear')
         self.fax[1].set(xscale='log', title='SemiLog-X')
 
@@ -172,7 +172,7 @@ class TACPlots:
             tac_vals (np.ndarray): The corresponding values for the TAC.
             kwargs (dict): Additional keyword arguments for the plot() function.
         """
-        [ax.plot(tac_times, tac_vals, **kwargs) for ax in self.fax]
+        return [ax.plot(tac_times, tac_vals, **kwargs) for ax in self.fax]
 
     def gen_legend(self):
         r"""
