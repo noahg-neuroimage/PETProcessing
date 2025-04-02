@@ -65,62 +65,6 @@ def tac_plots(tacs_data: pd.DataFrame,
     return tacs_plot
 
 
-class TacPlot(MultiTACAnalysisMixin):
-    """
-    Handle plotting TACs generated with PETPAL.
-    """
-    def __init__(self,tacs_dir: str=None):
-        if tacs_dir is not None:
-            MultiTACAnalysisMixin.__init__(self,input_tac_path='',tacs_dir=tacs_dir)
-        self.figure = sns.lineplot()
-
-    @property
-    def tacs_objects_list(self):
-        return self.get_tacs_objects_list_from_files_list(self.tacs_files_list)
-
-
-    def get_figure(self):
-        return self.figure.get_figure()
-
-
-    def plot_tac(self,tac: TimeActivityCurve):
-        """
-        Plot a single TAC from the TimeActivityCurve object.
-        """
-        self.figure = sns.lineplot(x=tac.times,y=tac.activity,ax=self.figure)
-        return self.figure
-
-
-    def plot_tac_errorbar(self,tac: TimeActivityCurve):
-        """
-        Plot a single TAC from the TimeActivityCurve object with errorbars.
-        """
-        self.plot_tac(tac=tac)
-        self.figure.errorbar(x=tac.times,y=tac.activity,yerr=tac.uncertainty)
-        return self.figure
-
-
-    def plot_regional_tacs(self):
-        """
-        Placeholder
-        """
-        tacs_obj_list = self.tacs_objects_list()
-        for tac in tacs_obj_list:
-            self.plot_tac_errorbar(tac=tac)
-        return self.get_figure()
-
-
-    def plot_tacs_in_regions_list(self,regions: list[str | int]):
-        """
-        Placeholder
-        """
-        tacs_obj_list = self.tacs_objects_list()
-        for region in regions:
-            tac = tacs_obj_list[region]  # NOTE: THIS DOESNT DO ANYTHING
-            self.plot_tac_errorbar(tac=tac)
-        return self.get_figure()
-
-
 class TACPlots:
     r"""
     A class for plotting Time Activity Curves (TACs) on linear and semi-logarithmic scales.
@@ -186,6 +130,19 @@ class TACPlots:
         return [ax.plot(tac_times, tac_vals, **kwargs) for ax in self.fax]
 
 
+    def add_errorbar(self,
+                     tac_times: np.ndarray,
+                     tac_vals: np.ndarray,
+                     uncertainty: np.ndarray,
+                     **kwargs):
+        """
+        Add errorbars to a TAC plot.
+
+        Args:
+
+        """
+        return [ax.errorbar(tac_times, tac_vals, yerr=uncertainty, **kwargs) for ax in self.fax]
+
     def gen_legend(self):
         r"""
         Generate a legend using the labels provided in the add_tac() method.
@@ -198,3 +155,58 @@ class TACPlots:
         handles, labels = self.fax[0].get_legend_handles_labels()
         if handles:
             self.fig.legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
+
+
+class RegionalTacPlot(MultiTACAnalysisMixin):
+    """
+    Handle plotting regional TACs generated with PETPAL.
+    """
+    def __init__(self,tacs_dir: str):
+        MultiTACAnalysisMixin.__init__(self,input_tac_path='',tacs_dir=tacs_dir)
+        self.figure = sns.lineplot()
+
+    @property
+    def tacs_objects_list(self):
+        return self.get_tacs_objects_list_from_files_list(self.tacs_files_list)
+
+
+    def get_figure(self):
+        return self.figure.get_figure()
+
+
+    def plot_tac(self,tac: TimeActivityCurve):
+        """
+        Plot a single TAC from the TimeActivityCurve object.
+        """
+        self.figure = sns.lineplot(x=tac.times,y=tac.activity,ax=self.figure)
+        return self.figure
+
+
+    def plot_tac_errorbar(self,tac: TimeActivityCurve):
+        """
+        Plot a single TAC from the TimeActivityCurve object with errorbars.
+        """
+        self.plot_tac(tac=tac)
+        self.figure.errorbar(x=tac.times,y=tac.activity,yerr=tac.uncertainty)
+        return self.figure
+
+
+    def plot_regional_tacs(self):
+        """
+        Placeholder
+        """
+        tacs_obj_list = self.tacs_objects_list()
+        for tac in tacs_obj_list:
+            self.plot_tac_errorbar(tac=tac)
+        return self.get_figure()
+
+
+    def plot_tacs_in_regions_list(self,regions: list[str | int]):
+        """
+        Placeholder
+        """
+        tacs_obj_list = self.tacs_objects_list()
+        for region in regions:
+            tac = tacs_obj_list[region]  # NOTE: THIS DOESNT DO ANYTHING
+            self.plot_tac_errorbar(tac=tac)
+        return self.get_figure()
