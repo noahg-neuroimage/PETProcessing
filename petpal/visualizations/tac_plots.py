@@ -168,7 +168,6 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                  ylabel: str = r'TAC [$\mathrm{kBq/ml}$]'):
         MultiTACAnalysisMixin.__init__(self,input_tac_path='',tacs_dir=tacs_dir)
         TacFigure.__init__(self,figsize=figsize,xlabel=xlabel,ylabel=ylabel)
-        self.figure = sns.lineplot()
 
     @property
     def tacs_objects_list(self):
@@ -176,24 +175,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
 
 
     def get_figure(self):
-        return self.figure.get_figure()
-
-
-    def plot_tac(self,tac: TimeActivityCurve):
-        """
-        Plot a single TAC from the TimeActivityCurve object.
-        """
-        self.figure = sns.lineplot(x=tac.times,y=tac.activity,ax=self.figure)
-        return self.figure
-
-
-    def plot_tac_errorbar(self,tac: TimeActivityCurve):
-        """
-        Plot a single TAC from the TimeActivityCurve object with errorbars.
-        """
-        self.plot_tac(tac=tac)
-        self.figure.errorbar(x=tac.times,y=tac.activity,yerr=tac.uncertainty)
-        return self.figure
+        return self.fig
 
 
     def plot_regional_tacs(self):
@@ -202,7 +184,10 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         """
         tacs_obj_list = self.tacs_objects_list()
         for tac in tacs_obj_list:
-            self.plot_tac_errorbar(tac=tac)
+            self.add_tac(tac_times=tac.times, tac_vals=tac.activity)
+            self.add_errorbar(tac_times=tac.times, 
+                              tac_vals=tac.activity,
+                              uncertainty=tac.uncertainty)
         return self.get_figure()
 
 
@@ -213,5 +198,5 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         tacs_obj_list = self.tacs_objects_list()
         for region in regions:
             tac = tacs_obj_list[region]  # NOTE: THIS DOESNT DO ANYTHING
-            self.plot_tac_errorbar(tac=tac)
+            self.add_errorbar(tac=tac)
         return self.get_figure()
