@@ -157,12 +157,17 @@ class TacFigure:
             self.fig.legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
 
 
-class RegionalTacPlot(TacFigure,MultiTACAnalysisMixin):
+class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
     """
     Handle plotting regional TACs generated with PETPAL.
     """
-    def __init__(self,tacs_dir: str):
+    def __init__(self,
+                 tacs_dir: str, 
+                 figsize: tuple = (8, 4),
+                 xlabel: str = r'$t$ [minutes]',
+                 ylabel: str = r'TAC [$\mathrm{kBq/ml}$]'):
         MultiTACAnalysisMixin.__init__(self,input_tac_path='',tacs_dir=tacs_dir)
+        TacFigure.__init__(self,figsize=figsize,xlabel=xlabel,ylabel=ylabel)
         self.figure = sns.lineplot()
 
     @property
