@@ -65,7 +65,7 @@ def tac_plots(tacs_data: pd.DataFrame,
     return tacs_plot
 
 
-class TACPlots:
+class TacFigure:
     r"""
     A class for plotting Time Activity Curves (TACs) on linear and semi-logarithmic scales.
 
@@ -81,7 +81,7 @@ class TACPlots:
 
     .. code-block:: python
 
-        tac_plots = TACPlots()
+        tac_plots = TacFigure()
         tac_plots.add_tac(tac_times_in_minutes, tac_vals, label='TAC 1', color='blue')
         tac_plots.add_tac(tac_times_2, tac_vals_2, label='TAC 2', color='red')
         tac_plots.gen_legend()
@@ -93,7 +93,7 @@ class TACPlots:
                  xlabel: str = r'$t$ [minutes]',
                  ylabel: str = r'TAC [$\mathrm{kBq/ml}$]'):
         r"""
-        Initialize the TACPlots with two subplots, one with a linear scale and the other with a
+        Initialize the TacFigure with two subplots, one with a linear scale and the other with a
         semi-logarithmic scale.
 
         Args:
@@ -157,7 +157,7 @@ class TACPlots:
             self.fig.legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
 
 
-class RegionalTacPlot(MultiTACAnalysisMixin):
+class RegionalTacPlot(TacFigure,MultiTACAnalysisMixin):
     """
     Handle plotting regional TACs generated with PETPAL.
     """

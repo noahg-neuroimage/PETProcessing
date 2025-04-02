@@ -146,7 +146,7 @@ class TACFitter(object):
             fit_params = fitter.fit_results[0]
             fit_tac = pet_tcm.generate_tac_1tcm_c1_from_tac(*pTAC, *fit_params)
             
-            plotter = tac_plots.TACPlots()
+            plotter = tac_plots.TacFigure()
             plotter.add_tac(*pTAC, label='Input TAC', color='black', ls='--')
             plotter.add_tac(*tTAC, label='Tissue TAC', color='blue', ls='', marker='o', mec='k')
             plotter.add_tac(*fit_tac, label='Fit TAC', color='red', ls='-', marker='', lw=2.5)
