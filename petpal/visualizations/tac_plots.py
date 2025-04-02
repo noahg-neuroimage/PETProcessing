@@ -185,7 +185,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         tacs_obj_list = self.tacs_objects_list()
         for tac in tacs_obj_list:
             self.add_tac(tac_times=tac.times, tac_vals=tac.activity)
-            self.add_errorbar(tac_times=tac.times, 
+            self.add_errorbar(tac_times=tac.times,
                               tac_vals=tac.activity,
                               uncertainty=tac.uncertainty)
         return self.get_figure()
@@ -198,5 +198,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         tacs_obj_list = self.tacs_objects_list()
         for region in regions:
             tac = tacs_obj_list[region]  # NOTE: THIS DOESNT DO ANYTHING
-            self.add_errorbar(tac=tac)
+            self.add_errorbar(tac_times=tac.times,
+                              tac_vals=tac.activity,
+                              uncertainty=tac.uncertainty)
         return self.get_figure()
