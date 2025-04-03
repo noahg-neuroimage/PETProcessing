@@ -171,7 +171,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
     @property
     def tacs_objects_dict(self):
         """
-        Placeholder
+        A dictionary containing region name/TAC object pairs for all TAC files found in tacs_dir.
         """
         return self.get_tacs_objects_dict_from_dir(self.tacs_dir)
 
