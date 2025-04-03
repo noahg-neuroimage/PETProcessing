@@ -217,13 +217,6 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         return self.get_tacs_objects_dict_from_dir(self.tacs_dir)
 
 
-    def get_figure(self):
-        """
-        Placeholder
-        """
-        return self.fig
-
-
     def plot_regional_tacs(self,show_legend: bool=False):
         """
         Placeholder
@@ -239,7 +232,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                               label=regions[i])
         if show_legend:
             self.gen_legend()
-        return self.get_figure()
+        return self.fig
 
 
     def plot_tacs_in_regions_list(self,regions: list[str | int], show_legend: bool=False):
@@ -257,4 +250,4 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                               color=colors[i%len(colors)])
         if show_legend:
             self.gen_legend()
-        return self.get_figure()
+        return self.fig
