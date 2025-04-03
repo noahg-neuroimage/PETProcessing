@@ -208,7 +208,14 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
 
     def plot_all_regional_tacs(self,show_legend: bool=True, colormap='Dark2'):
         """
-        Placeholder
+        Plot TACs for all TACs found in a folder. Region names correspond to abbreviated segment
+        names in the dseg file used to generate the regions.
+
+        Args:
+            show_legend (bool): Show the legend with region names in the resulting figure. Default
+                True.
+            colormap (str): A matplotlib color map used to select colors of different TAC plots.
+                Default 'Dark2'.
         """
         tacs_obj_dict = self.tacs_objects_dict
         regions = list(tacs_obj_dict.keys())
