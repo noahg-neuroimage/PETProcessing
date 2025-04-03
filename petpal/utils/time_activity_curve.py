@@ -336,6 +336,20 @@ class MultiTACAnalysisMixin:
         return tacs_dict
 
 
+    def get_tacs_objects_dict_from_dir(self, tacs_dir: str) -> dict:
+        """
+        Creates a dict of TAC objects from a directory of TAC files.
+
+        Args:
+            tacs_dir (str): A directory of TAC files.
+
+        Returns:
+            dict: Dictionary of region name-TAC object pairs.
+        """
+        tacs_files_list = self.get_tacs_list_from_dir(tacs_dir=tacs_dir)
+        tacs_dict = self.get_tacs_objects_dict_from_files_list(tacs_files_list=tacs_files_list)
+        return tacs_dict
+
     @staticmethod
     def get_tacs_objects_list_from_files_list(tacs_files_list: list[str]):
         """
