@@ -423,8 +423,7 @@ class MultiTACAnalysisMixin:
             return f'UNK{tac_id:03}'
         else:
             segparts = segname.split("-")
-            segparts_capped = [a_part.capitalize() for a_part in segparts]
-            segname = ''.join(segparts_capped)
+            segname = ''.join(segparts)
             return segname
         
     def infer_segmentation_labels_for_tacs(self):
