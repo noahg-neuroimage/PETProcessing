@@ -27,7 +27,7 @@ PETPAL Documentation
          :color: secondary
          :click-parent:
 
-         To the installation guide
+         To the installation guide (stub)
 
    .. grid-item-card:: Tutorials
       :text-align: center
@@ -39,7 +39,7 @@ PETPAL Documentation
          :color: secondary
          :click-parent:
 
-         To PETPAL tutorials
+         To PETPAL tutorials (stub)
 
 
    .. grid-item-card:: API Reference

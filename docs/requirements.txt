@@ -175,7 +175,10 @@ sphinx==8.2.3
     #   petpal (pyproject.toml)
     #   pydata-sphinx-theme
     #   sphinx-autoapi
+    #   sphinx-design
 sphinx-autoapi==3.6.0
+    # via petpal (pyproject.toml)
+sphinx-design==0.6.1
     # via petpal (pyproject.toml)
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
