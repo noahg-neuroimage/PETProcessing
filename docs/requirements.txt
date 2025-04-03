@@ -10,6 +10,8 @@ alabaster==1.0.0
     # via sphinx
 antspyx==0.5.4
     # via petpal (pyproject.toml)
+astroid==3.3.9
+    # via sphinx-autoapi
 attrs==25.3.0
     # via
     #   jsonschema
@@ -53,7 +55,9 @@ idna==3.10
 imagesize==1.4.1
     # via sphinx
 jinja2==3.1.6
-    # via sphinx
+    # via
+    #   sphinx
+    #   sphinx-autoapi
 joblib==1.4.2
     # via scikit-learn
 jsonschema==4.23.0
@@ -132,6 +136,7 @@ pyyaml==6.0.2
     # via
     #   antspyx
     #   bidsschematools
+    #   sphinx-autoapi
 referencing==0.36.2
     # via
     #   jsonschema
@@ -170,6 +175,8 @@ sphinx==8.2.3
     #   petpal (pyproject.toml)
     #   pydata-sphinx-theme
     #   sphinx-autoapi
+sphinx-autoapi==3.6.0
+    # via petpal (pyproject.toml)
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
@@ -182,8 +189,6 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sphinx-autoapi
-
 statsmodels==0.14.4
     # via antspyx
 threadpoolctl==3.6.0
