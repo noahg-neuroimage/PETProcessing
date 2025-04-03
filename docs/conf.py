@@ -9,26 +9,23 @@ author = 'Furqan Dar, Bradley Judge, Noah Goldman, Kenan Oestreich'
 release = '0.1.0'
 
 extensions = [
-    'sphinx.ext.napoleon',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.todo',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.ifconfig',
-    'sphinx_design',
     'autoapi.extension',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
+    'sphinx.ext.ifconfig',
     'matplotlib.sphinxext.plot_directive',
     'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
+    'sphinx_design',
 ]
-
 
 language = 'en'
 
-html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
 html_title = 'PETPAL'
 html_split_index = False
+html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
     "pygments_light_style": "default",
     "pygments_dark_style": "monokai",
@@ -52,8 +49,6 @@ templates_path = ["_templates"]
 source_suffix = '.rst'
 master_doc = 'index'
 
-autosummary_generate = True
-autodoc_member_order = "groupwise"
 toc_object_entries_show_parents = "hide"
 todo_include_todos = True
 
