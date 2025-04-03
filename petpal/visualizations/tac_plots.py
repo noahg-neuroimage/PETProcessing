@@ -175,30 +175,14 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         return self.get_tacs_objects_dict_from_dir(self.tacs_dir)
 
 
-    def plot_regional_tacs(self,show_legend: bool=False):
+    def plot_tacs_in_regions_list(self,
+                                  regions: list[str | int],
+                                  show_legend: bool=False,
+                                  colormap='Dark2'):
         """
         Placeholder
         """
-        colors = colormaps['Dark2'].colors
-        tacs_obj_dict = self.tacs_objects_dict
-        regions = list(tacs_obj_dict.keys())
-        for i, tac in enumerate(tacs_obj_dict.values()):
-            self.add_errorbar(tac_times=tac.times,
-                              tac_vals=tac.activity,
-                              uncertainty=tac.uncertainty,
-                              color=colors[i%len(colors)],
-                              label=regions[i])
-        if show_legend:
-            self.gen_legend()
-        self.normalize_yaxis()
-        return self.fig
-
-
-    def plot_tacs_in_regions_list(self,regions: list[str | int], show_legend: bool=False):
-        """
-        Placeholder
-        """
-        colors = colormaps['Dark2'].colors
+        colors = colormaps[colormap].colors
         tacs_obj_dict = self.tacs_objects_dict
         for i, region in enumerate(regions):
             tac = tacs_obj_dict[region]
@@ -210,4 +194,14 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         if show_legend:
             self.gen_legend()
         self.normalize_yaxis()
+        return self.fig
+
+
+    def plot_all_regional_tacs(self,show_legend: bool=False, colormap='Dark2'):
+        """
+        Placeholder
+        """
+        tacs_obj_dict = self.tacs_objects_dict
+        regions = list(tacs_obj_dict.keys())
+        self.plot_tacs_in_regions_list(regions=regions, show_legend=show_legend, colormap=colormap)
         return self.fig
