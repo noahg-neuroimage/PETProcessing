@@ -167,6 +167,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         MultiTACAnalysisMixin.__init__(self,input_tac_path='',tacs_dir=tacs_dir)
         TacFigure.__init__(self,figsize=figsize,xlabel=xlabel,ylabel=ylabel,plot_type=plot_type)
 
+
     @property
     def tacs_objects_dict(self):
         """
@@ -176,11 +177,19 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
 
 
     def plot_tacs_in_regions_list(self,
-                                  regions: list[str | int],
-                                  show_legend: bool=False,
-                                  colormap='Dark2'):
+                                  regions: list[str],
+                                  show_legend: bool=True,
+                                  colormap: str='Dark2'):
         """
-        Placeholder
+        Plot TACs for a list of provided regions. Region names correspond to abbreviated segment
+        names in the dseg file used to generate the regions.
+
+        Args:
+            regions (list[str]): A list of region names whose TACs are plotted.
+            show_legend (bool): Show the legend with region names in the resulting figure. Default
+                True.
+            colormap (str): A matplotlib color map used to select colors of different TAC plots.
+                Default 'Dark2'.
         """
         colors = colormaps[colormap].colors
         tacs_obj_dict = self.tacs_objects_dict
@@ -197,7 +206,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         return self.fig
 
 
-    def plot_all_regional_tacs(self,show_legend: bool=False, colormap='Dark2'):
+    def plot_all_regional_tacs(self,show_legend: bool=True, colormap='Dark2'):
         """
         Placeholder
         """
