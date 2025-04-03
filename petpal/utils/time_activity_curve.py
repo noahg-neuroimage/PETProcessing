@@ -300,7 +300,7 @@ class MultiTACAnalysisMixin:
             return True
         else:
             return False
-    
+
     @staticmethod
     def get_tacs_list_from_dir(tacs_dir: str) -> list[str]:
         """
@@ -315,9 +315,27 @@ class MultiTACAnalysisMixin:
         assert os.path.isdir(tacs_dir), f"`tacs_dir` must be a valid directory: {os.path.abspath(tacs_dir)}"
         glob_path = os.path.join(tacs_dir, "*_tac.tsv")
         tacs_files_list = sorted(glob.glob(glob_path))
-        
+
         return tacs_files_list
-    
+
+
+    def get_tacs_objects_dict_from_files_list(self, tacs_files_list: list[str]):
+        """
+        Creates a dict of TAC objects from a list of file paths.
+
+        Args:
+            tacs_files_list (list[str]): List of TAC file paths.
+
+        Returns:
+            dict: Dictionary of region name-TAC object pairs.
+        """
+        tacs_dict = {}
+        for tac_file in tacs_files_list:
+            region = self.infer_segmentation_label_from_tac_path(tac_path=tac_file)
+            tacs_dict[region] = TimeActivityCurve.from_tsv(filename=tac_file)
+        return tacs_dict
+
+
     @staticmethod
     def get_tacs_objects_list_from_files_list(tacs_files_list: list[str]):
         """
@@ -362,7 +380,7 @@ class MultiTACAnalysisMixin:
         return tacs_vals
     
     @staticmethod
-    def infer_segmentation_label_from_tac_path(tac_path: str, tac_id:int):
+    def infer_segmentation_label_from_tac_path(tac_path: str, tac_id: int=0):
         """
         Infers a segmentation label from a TAC file path by analyzing the filename.
 
