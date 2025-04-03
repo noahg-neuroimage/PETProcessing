@@ -182,6 +182,17 @@ class TacFigure:
         """
         return [ax.errorbar(tac_times, tac_vals, yerr=uncertainty, **kwargs) for ax in self.fax]
 
+
+    def normalize_yaxis(self, **kwargs):
+        r"""
+        Set the y-axis lower limit to zero.
+
+        Args:
+            kwargs (dict): Additional keyword arguments for the set_ylim() function.
+        """
+        return [ax.set_ylim(0, None, **kwargs) for ax in self.fax]
+
+
     def gen_legend(self):
         r"""
         Generate a legend using the labels provided in the add_tac() method.
@@ -232,6 +243,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                               label=regions[i])
         if show_legend:
             self.gen_legend()
+        self.normalize_yaxis()
         return self.fig
 
 
@@ -250,4 +262,5 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                               color=colors[i%len(colors)])
         if show_legend:
             self.gen_legend()
+        self.normalize_yaxis()
         return self.fig
