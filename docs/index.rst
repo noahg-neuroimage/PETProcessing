@@ -8,10 +8,51 @@ PETPAL Documentation
 ####################
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :includehidden:
+   :hidden:
+   :maxdepth: 1
 
    autoapi/index
+
+.. grid:: 1 1 2 2
+   :gutter: 2 3 4 4
+
+   .. grid-item-card:: Installation
+      :text-align: center
+
+      +++
+
+      .. button-ref:: index
+         :expand:
+         :color: secondary
+         :click-parent:
+
+         To the installation guide
+
+   .. grid-item-card:: Tutorials
+      :text-align: center
+
+      +++
+
+      .. button-ref:: index
+         :expand:
+         :color: secondary
+         :click-parent:
+
+         To PETPAL tutorials
+
+
+   .. grid-item-card:: API Reference
+      :text-align: center
+
+      +++
+
+      .. button-ref:: autoapi/index
+         :expand:
+         :color: secondary
+         :click-parent:
+
+         To the API reference guide
 
 
 

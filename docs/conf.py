@@ -1,57 +1,86 @@
 # # Configuration file for the Sphinx documentation builder.
 #
+from datetime import datetime
+
 project = 'PETPAL (Positron Emission Tomography Analysis Library)'
-copyright = '2025, Furqan Dar, Bradley Judge, Noah Goldman, Kenan Oestreich'
+year = datetime.today().year
+copyright = f'2024-{year}, Furqan Dar, Bradley Judge, Noah Goldman, Kenan Oestreich'
 author = 'Furqan Dar, Bradley Judge, Noah Goldman, Kenan Oestreich'
 release = '0.1.0'
 
-language = 'English (US)'
+extensions = [
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.todo',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.ifconfig',
+    'sphinx_design',
+    'autoapi.extension',
+    'matplotlib.sphinxext.plot_directive',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+]
+
+
+language = 'en'
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
 html_title = 'PETPAL'
-pygments_style = 'sphinx'
-
-extensions = [
-    'autoapi.extension',
-    'sphinx.ext.todo',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'matplotlib.sphinxext.plot_directive',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.intersphinx',
-]
+html_split_index = False
+html_theme_options = {
+    "pygments_light_style": "default",
+    "pygments_dark_style": "monokai",
+    "secondary_sidebar_items": {
+        "**/*": ["page-toc", "edit-this-page", "sourcelink"]
+    },
+    "show_toc_level" : 3,
+    "icon_links": [
+            {
+            "name": "GitHub",
+            "url" : "https://github.com/FurqanDar/PETPAL",
+            "icon": "fa-brands fa-github",
+            },
+                 ],
+    "navbar_align": "left",
+    "navbar_center": ["navbar-nav"],
+}
 
 exclude_patterns = ['_build']
 templates_path = ["_templates"]
-
 source_suffix = '.rst'
 master_doc = 'index'
+
+autosummary_generate = True
+autodoc_member_order = "groupwise"
+toc_object_entries_show_parents = "hide"
+todo_include_todos = True
 
 # autoapi configuration
 autoapi_type = 'python'
 autoapi_dirs = ['../petpal']
-autoapi_ignore = ['*cli*']
-autoapi_own_page_level = 'function'
 
 # Options: https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html#customisation-options
 autoapi_options = [
     'members',
     'undoc-members',
-    # 'inherited-members',
+    'inherited-members',
     'private-members',
     'special-members',
     'show-inheritance',
     'show-module-summary'
 ]
 
+autoapi_ignore = ['*cli*']
+autoapi_own_page_level = 'function'
+autoapi_template_dir = '_templates'
 autoapi_python_class_content = 'both'
-
+autoapi_member_order = 'groupwise'
 autoapi_keep_files = True
 autoapi_generate_api_docs = True
-
-toc_object_entries_show_parents = "hide"
+autoapi_toctree_entries = True
+autoapi_use_implicit_namespaces= False
 
 napoleon_use_ivar = True
 napoleon_use_rtype = False
@@ -63,3 +92,11 @@ intersphinx_mapping = {
     'numba': ('https://numba.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
 }
+
+def skip_main_funcs(app, what, name, obj, skip, options):
+    if "main" in name and what == "function":
+       skip = True
+    return skip
+
+def setup(sphinx):
+   sphinx.connect("autoapi-skip-member", skip_main_funcs)
