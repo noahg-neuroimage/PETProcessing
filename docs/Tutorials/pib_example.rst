@@ -1,5 +1,5 @@
-Tutorial: Creating an Example PiB Pipeline
-===========================================
+Creating an Example PiB Pipeline
+================================
 
 --------
 Overview

@@ -1,5 +1,5 @@
-Pipeline Tutorials
-==================
+Tutorials
+=========
 
 .. toctree::
    :maxdepth: 1
