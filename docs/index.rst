@@ -13,6 +13,7 @@ PETPAL Documentation
    :maxdepth: 1
 
    autoapi/index
+   tutorials/index
 
 .. grid:: 1 1 2 2
    :gutter: 2 3 4 4
@@ -34,12 +35,12 @@ PETPAL Documentation
 
       +++
 
-      .. button-ref:: index
+      .. button-ref:: tutorials/index
          :expand:
          :color: secondary
          :click-parent:
 
-         To PETPAL tutorials (stub)
+         To PETPAL tutorials
 
 
    .. grid-item-card:: API Reference
@@ -53,12 +54,6 @@ PETPAL Documentation
          :click-parent:
 
          To the API reference guide
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorials:
-
-   pipelines/examples/index
 
 
 

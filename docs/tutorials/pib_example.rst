@@ -66,7 +66,7 @@ Step 2. Construct Containers
 See the code block below for examples of the two main ways to add steps to containers. The first way is to use
 classmethods called 'default[name-of-function-here]', which provide a convenient starting point for most use cases. The
 second way to add a step to a container is to manually create a step from the classes provided in
-:doc:`../kinetic_modeling_steps` and :doc:`../preproc_steps`. Use this option when there isn't a 'default' function
+:mod:`~petpal.pipelines.kinetic_modeling_steps` and :mod:`~petpal.pipelines.preproc_steps`. Use this option when there isn't a 'default' function
 available or when you want to use different defaults than those provided in the given 'default' function. An example of
 this is shown below, where the weighted series sum should only be computed from 30-60 minutes (1800-3600 seconds), rather
 than the default of the whole scan time.
