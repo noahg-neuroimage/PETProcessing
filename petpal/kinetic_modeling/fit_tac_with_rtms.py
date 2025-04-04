@@ -4,17 +4,17 @@ reference Time Activity Curve.
 """
 from typing import Union, Callable
 import numpy as np
-from petpal.kinetic_modeling.reference_tissue_models import (fit_frtm2_to_tac,
-                                                             fit_frtm2_to_tac_with_bounds,
-                                                             fit_frtm_to_tac,
-                                                             fit_frtm_to_tac_with_bounds,
-                                                             fit_mrtm2_2003_to_tac,
-                                                             fit_mrtm_2003_to_tac,
-                                                             fit_mrtm_original_to_tac,
-                                                             fit_srtm2_to_tac,
-                                                             fit_srtm2_to_tac_with_bounds,
-                                                             fit_srtm_to_tac,
-                                                             fit_srtm_to_tac_with_bounds)
+from .reference_tissue_models import (fit_frtm2_to_tac,
+                                     fit_frtm2_to_tac_with_bounds,
+                                     fit_frtm_to_tac,
+                                     fit_frtm_to_tac_with_bounds,
+                                     fit_mrtm2_2003_to_tac,
+                                     fit_mrtm_2003_to_tac,
+                                     fit_mrtm_original_to_tac,
+                                     fit_srtm2_to_tac,
+                                     fit_srtm2_to_tac_with_bounds,
+                                     fit_srtm_to_tac,
+                                     fit_srtm_to_tac_with_bounds)
 
 
 def get_rtm_method(method: str, bounds=None):
@@ -102,7 +102,7 @@ def get_rtm_kwargs(method: Callable,
 
     Args:
         method (Callable): A method to fit a TAC with an RTM. Expected one of the methods from
-            :doc:`petpal.kinetic_modeling.reference_tissue_models`, such as
+            :mod:`petpal.kinetic_modeling.reference_tissue_models`, such as
             :meth:`fit_srtm_to_tac`.
         bounds: The bounds on parameters fit during RTM analysis, if applicable. Expected order is
             as they appear in the original method, e.g. see :meth:`fit_frtm_to_tac_with_bounds`.
