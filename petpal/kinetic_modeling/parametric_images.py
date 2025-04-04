@@ -1,4 +1,7 @@
 """
+Parametric Images
+-----------------
+
 This module provides functions and a key class, :class:`GraphicalAnalysisParametricImage`, for 
 graphical analysis and creation of parametric images of 4D-PET scan data. It heavily utilizes 
 :mod:`numpy` for data manipulation and assumes the input as 4D PET images along with other required
@@ -895,3 +898,7 @@ class GraphicalAnalysisParametricImage:
                                            f"{self.analysis_props['MethodName']}_props.json")
         with open(analysis_props_file, 'w', encoding='utf-8') as f:
             json.dump(obj=self.analysis_props, fp=f, indent=4)
+
+    def __call__(self, method_name: str, t_thresh_in_mins: float, image_scale=1.0):
+        self.run_analysis(method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, image_scale=image_scale)
+        self.save_parametric_images()
