@@ -80,13 +80,13 @@ than the default of the whole scan time.
     preproc_container = petpal.pipelines.steps_containers.StepsContainer(name='preproc')
 
     # Configure steps for preproc container
-    thresh_crop_step = preproc_steps.ImageToImageStep.default_threshold_cropping(input_image_path=PiB_Pipeline.pet_path)
-    registration_step = preproc_steps.ImageToImageStep.default_register_pet_to_t1(reference_image_path=PiB_Pipeline.anat_path,
+    thresh_crop_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_threshold_cropping(input_image_path=PiB_Pipeline.pet_path)
+    registration_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_register_pet_to_t1(reference_image_path=PiB_Pipeline.anat_path,
                                                                                               half_life=petpal.utils.constants.HALF_LIVES['c11'])
-    moco_step = preproc_steps.ImageToImageStep.default_windowed_moco()
-    write_tacs_step = preproc_steps.TACsFromSegmentationStep.default_write_tacs_from_segmentation_rois(segmentation_image_path=PiB_Pipeline.seg_img,
+    moco_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_windowed_moco()
+    write_tacs_step = petpal.pipelines.preproc_steps.TACsFromSegmentationStep.default_write_tacs_from_segmentation_rois(segmentation_image_path=PiB_Pipeline.seg_img,
                                                                                                        segmentation_label_map_path=PiB_Pipeline.seg_table)
-    wss_step = preproc_steps.ImageToImageStep(name='weighted_series_sum',
+    wss_step = petpal.pipelines.preproc_steps.ImageToImageStep(name='weighted_series_sum',
                                               function=petpal.utils.useful_functions.weighted_series_sum,
                                               input_image_path='',
                                               output_image_path='',
@@ -104,13 +104,13 @@ than the default of the whole scan time.
     kinetic_modeling_container = petpal.pipelines.steps_containers.StepsContainer(name='km')
 
     # Configure steps for kinetic modeling container
-    suvr_step = preproc_steps.ImageToImageStep(name='suvr',
-                                               function=petpal.preproc.image_operations_4d.suvr,
-                                               input_image_path='',
-                                               output_image_path='',
-                                               ref_region=8,
-                                               segmentation_image_path=seg_path,
-                                               verbose=False)
+    suvr_step = petpal.pipelines.preproc_steps.ImageToImageStep(name='suvr',
+                                                                function=petpal.preproc.image_operations_4d.suvr,
+                                                                input_image_path='',
+                                                                output_image_path='',
+                                                                ref_region=8,
+                                                                segmentation_image_path=seg_path,
+                                                                verbose=False)
 
     # Add steps to kinetic modeling container
     kinetic_modeling_container.add_step(step=suvr_step)
@@ -146,8 +146,59 @@ At this point, the order of the steps is clear and the pipeline should be ready 
 like the one shown below and :meth:`~petpal.pipelines.steps_containers.StepsPipeline.can_steps_potentially_run()` to
 determine if all arguments are prepared as the pipeline expects.
 
-.. image:: /_static/pipeline_graph_example.png
-  :alt: Pipeline Graph Plot
+.. plot::
+    :caption: The dependency graph of the PiB pipeline described.
+
+    import petpal
+
+    PiB_Pipeline = petpal.pipelines.steps_containers.StepsPipeline(name='PiB_Pipeline', step_containers=[])
+
+    preproc_container = petpal.pipelines.steps_containers.StepsContainer(name='preproc')
+
+    thresh_crop_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_threshold_cropping()
+    registration_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_register_pet_to_t1()
+    moco_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_windowed_moco()
+    write_tacs_step = petpal.pipelines.preproc_steps.TACsFromSegmentationStep.default_write_tacs_from_segmentation_rois()
+    wss_step = petpal.pipelines.preproc_steps.ImageToImageStep(name='weighted_series_sum',
+                                              function=petpal.utils.useful_functions.weighted_series_sum,
+                                              input_image_path='',
+                                              output_image_path='',
+                                              half_life=petpal.utils.constants.HALF_LIVES['c11'],
+                                              start_time=1800,
+                                              end_time=3600)
+
+    # Add steps to preproc container
+    preproc_container.add_step(step=thresh_crop_step)
+    preproc_container.add_step(step=registration_step)
+    preproc_container.add_step(step=moco_step)
+    preproc_container.add_step(step=write_tacs_step)
+    preproc_container.add_step(step=wss_step)
+
+    kinetic_modeling_container = petpal.pipelines.steps_containers.StepsContainer(name='km')
+
+    # Configure steps for kinetic modeling container
+    suvr_step = petpal.pipelines.preproc_steps.ImageToImageStep(name='suvr',
+                                                                function=petpal.preproc.image_operations_4d.suvr,
+                                                                input_image_path='',
+                                                                output_image_path='',
+                                                                ref_region=8,
+                                                                segmentation_image_path='',
+                                                                verbose=False)
+
+    # Add steps to kinetic modeling container
+    kinetic_modeling_container.add_step(step=suvr_step)
+
+    PiB_Pipeline.add_container(step_container=preproc_container)
+    PiB_Pipeline.add_container(step_container=kinetic_modeling_container)
+
+    PiB_Pipeline.add_dependency(sending='thresh_crop', receiving='windowed_moco')
+    PiB_Pipeline.add_dependency(sending='windowed_moco', receiving='register_pet_to_t1')
+    PiB_Pipeline.add_dependency(sending='register_pet_to_t1', receiving='write_roi_tacs')
+    PiB_Pipeline.add_dependency(sending='register_pet_to_t1', receiving='weighted_series_sum')
+    PiB_Pipeline.add_dependency(sending='weighted_series_sum', receiving='suvr')
+
+    PiB_Pipeline.plot_dependency_graph()
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Step 5. Run the Pipeline
