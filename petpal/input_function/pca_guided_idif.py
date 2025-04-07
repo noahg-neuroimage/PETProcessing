@@ -7,7 +7,7 @@ from lmfit import Minimizer
 from lmfit.minimizer import MinimizerResult
 
 from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask as extract_masked_voxels
-from ..utils.image_io import get_frame_timing_info_for_nifti
+from ..utils.scan_timing import ScanTimingInfo
 from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_over_mask as temporal_pca_over_mask
 
 _KBQL_TO_NCiML_ = 37000.0
@@ -27,7 +27,7 @@ class PCAGuidedIdifBase(object):
         self.num_components: int = num_pca_components
         self.verbose: bool = verbose
 
-        self.tac_times_in_mins: np.ndarray = get_frame_timing_info_for_nifti(image_path=self.image_path).center_in_mins
+        self.tac_times_in_mins: np.ndarray = ScanTimingInfo.from_nifti(image_path=self.image_path).center_in_mins
         self.idif_vals: np.ndarray = np.zeros_like(self.tac_times_in_mins)
         self.idif_errs: np.ndarray = np.zeros_like(self.tac_times_in_mins)
         self.prj_idif_vals: np.ndarray = np.zeros_like(self.tac_times_in_mins)
@@ -241,11 +241,6 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
     @staticmethod
     def get_pca_filter_signs_from_flags(pca_component_filter_flags: np.ndarray[bool]) -> list[str]:
         return ['>' if sgn else '<' for sgn in ~pca_component_filter_flags]
-
-    @staticmethod
-    def get_frame_reference_times(image_path: str) -> np.ndarray[float]:
-        image_timing_info_dict = get_frame_timing_info_for_nifti(image_path=image_path)
-        return image_timing_info_dict.center_in_mins
 
     @staticmethod
     def _voxel_term_func(voxel_nums: float) -> float:
