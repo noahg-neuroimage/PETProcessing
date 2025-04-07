@@ -22,11 +22,12 @@ from petpal.kinetic_modeling.reference_tissue_models import (fit_mrtm2_2003_to_t
 from petpal.kinetic_modeling.fit_tac_with_rtms import (get_rtm_kwargs,
                                                        get_rtm_method,
                                                        get_rtm_output_size)
-from petpal.utils.time_activity_curve import TimeActivityCurveFromFile
+from petpal.utils.time_activity_curve import TimeActivityCurve
 from petpal.utils.image_io import safe_load_4dpet_nifti
 from . import graphical_analysis
 from ..input_function.blood_input import read_plasma_glucose_concentration
-from ..utils.image_io import safe_load_tac, safe_copy_meta, validate_two_images_same_dimensions
+from ..utils.image_io import safe_copy_meta, validate_two_images_same_dimensions
+from ..utils.time_activity_curve import safe_load_tac
 
 
 @numba.njit()
@@ -308,7 +309,7 @@ class ReferenceTissueParametricImage:
             output_filename_prefix (str): Prefix for output files saved after analysis.
             method (str): RTM method to run. Default 'mrtm2'.
         """
-        self.reference_tac = TimeActivityCurveFromFile(tac_path=reference_tac_path)
+        self.reference_tac = TimeActivityCurve.from_tsv(filename=reference_tac_path)
         self.pet_image = safe_load_4dpet_nifti(pet_image_path)
         self.mask_image = safe_load_4dpet_nifti(mask_image_path)
 
@@ -401,8 +402,8 @@ class ReferenceTissueParametricImage:
         """
         pet_np = self.pet_image.get_fdata()
         mask_np = self.mask_image.get_fdata()
-        tac_times_in_minutes = self.reference_tac.tac_times_in_minutes
-        ref_tac_vals = self.reference_tac.tac_vals
+        tac_times_in_minutes = self.reference_tac.times
+        ref_tac_vals = self.reference_tac.activity
         method = self.method
         rtm_method = get_rtm_method(method)
         analysis_kwargs = get_rtm_kwargs(method=rtm_method,
@@ -898,7 +899,3 @@ class GraphicalAnalysisParametricImage:
                                            f"{self.analysis_props['MethodName']}_props.json")
         with open(analysis_props_file, 'w', encoding='utf-8') as f:
             json.dump(obj=self.analysis_props, fp=f, indent=4)
-
-    def __call__(self, method_name: str, t_thresh_in_mins: float, image_scale: float=1./37000):
-        self.run_analysis(method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, image_scale=image_scale)
-        self.save_parametric_images()

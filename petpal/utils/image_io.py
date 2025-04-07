@@ -126,33 +126,6 @@ def flatten_metadata(metadata: dict) -> dict:
     return metadata_for_tsv
 
 
-def safe_load_tac(filename: str, **kwargs) -> np.ndarray:
-    """
-    Loads time-activity curves (TAC) from a file.
-    Tries to read a TAC from specified file and raises an exception if unable to do so. We assume that the file has two
-    columns, the first corresponding to time and second corresponding to activity.
-    Args:
-        filename (str): The name of the file to be loaded.
-    Returns:
-        np.ndarray: A numpy array containing the loaded TAC. The first index corresponds to the times, and the second
-        corresponds to the activity.
-    Raises:
-        Exception: An error occurred loading the TAC.
-    """
-    try:
-        tac_data = np.asarray(np.loadtxt(filename, **kwargs).T, dtype=float, order='C')
-    except ValueError:
-        tac_data = np.asarray(np.loadtxt(filename, skiprows=1, **kwargs).T, dtype=float, order='C')
-    except Exception as e:
-        print(f"Couldn't read file {filename}. Error: {e}")
-        raise e
-
-    if np.max(tac_data[0]) >= 300:
-        tac_data[0] /= 60.0
-
-    return tac_data
-
-
 def safe_copy_meta(input_image_path: str,
                    out_image_path: str):
     """
