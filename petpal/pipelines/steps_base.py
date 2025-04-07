@@ -131,7 +131,7 @@ class FunctionBasedStep(StepsAPI):
         arg_names = list(func_params)
         for arg_name in arg_names[len(self.args):]:
             if arg_name not in self.kwargs:
-                if func_params[arg_name].kind != inspect.Parameter.VAR_KEYWORD:
+                if (func_params[arg_name].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD):
                     unset_args_dict[arg_name] = func_params[arg_name].default
         return unset_args_dict
     
@@ -334,7 +334,7 @@ class ObjectBasedStep(StepsAPI):
         unset_args_dict = ArgsDict()
         for arg_name, arg_val in sig.parameters.items():
             if arg_name not in kwargs and arg_name != 'self':
-                if arg_val.kind != inspect.Parameter.VAR_KEYWORD:
+                if arg_val.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
                     unset_args_dict[arg_name] = arg_val.default
         return unset_args_dict
     
