@@ -525,7 +525,8 @@ class ImageToImageStep(FunctionBasedStep):
         sup_str_list.insert(args_ind, f"Input & Output Paths:\n{io_dict}")
         def_args_ind = sup_str_list.index("Default Arguments:")
         sup_str_list.pop(def_args_ind + 1)
-        sup_str_list.pop(def_args_ind + 1)
+        if not hasattr(self.function, '__wrapped__'):
+            sup_str_list.pop(def_args_ind + 1)
         
         return "\n".join(sup_str_list)
     
