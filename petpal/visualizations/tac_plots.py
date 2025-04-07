@@ -160,7 +160,7 @@ class TacFigure:
         """
         handles, labels = self.fax[0].get_legend_handles_labels()
         if handles:
-            self.fig.legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
+            self.fax[-1].legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
 
 
     def write_fig(self, out_fig_path: str, **kwargs):
