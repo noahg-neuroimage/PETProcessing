@@ -12,8 +12,8 @@ def main():
     """
 
     parser = argparse.ArgumentParser(prog='petpal-plot-tacs',
-                                    description='Command line interface for plotting TACs.',
-                                    formatter_class=argparse.RawTextHelpFormatter)
+                                     description='Command line interface for plotting TACs.',
+                                     formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--tac-files',required=False,nargs='+')
     parser.add_argument('--tac-dir',required=False)
     parser.add_argument('--participant',required=False)
