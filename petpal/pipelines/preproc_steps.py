@@ -1,14 +1,16 @@
 import warnings
 import copy
 from typing import Union
+
 from .steps_base import *
-from ..preproc.image_operations_4d import SimpleAutoImageCropper, write_tacs
+from ..preproc.image_operations_4d import SimpleAutoImageCropper, write_tacs, rescale_image
 from ..preproc.register import register_pet
 from ..preproc.motion_corr import (motion_corr_frames_above_mean_value,
                                    windowed_motion_corr_to_target)
 from ..input_function import blood_input
 from ..utils.bids_utils import parse_path_to_get_subject_and_session_id, snake_to_camel_case, gen_bids_like_dir_path, gen_bids_like_filepath
 from ..utils.image_io import safe_copy_meta
+from ..utils.decorators import ANTsImageToANTsImage
 
 class TACsFromSegmentationStep(FunctionBasedStep):
     """
@@ -665,6 +667,35 @@ class ImageToImageStep(FunctionBasedStep):
                         reference_image_path=reference_image_path, motion_target_option='weighted_series_sum',
                         verbose=verbose, half_life=half_life)
         override_dict = defaults | overrides
+        try:
+            return cls(**override_dict)
+        except RuntimeError as err:
+            warnings.warn(f"Invalid override: {err}. Using default instance instead.", stacklevel=2)
+            return cls(**defaults)
+
+    @classmethod
+    def default_rescale_image(cls, **overrides):
+        r"""Creates a default step-instance for rescaling an image using :class:`rescale_image<petpal.preproc.image_operations_4d.rescale_image>`.
+
+        The defaults for this step will divide the input image by 37000.0 which is usually done to go
+        from kBq/ml to nCi/ml.
+
+        Notes:
+             The function :class:`rescale_image<petpal.preproc.image_operations_4d.rescale_image>` is wrapped using
+             :func:`ANTsImageToANTsImage<petpal.utils.decorators.ANTsImageToANTsImage>` since steps require input and output
+             paths.
+
+        Args:
+            **overrides:
+
+        Returns:
+            ImageToImageStep: A new step instance for rescaling the input image.
+        """
+        defaults = dict(name='rescale_image', function=ANTsImageToANTsImage(rescale_image),
+                        input_image_path='', output_image_path='',
+                        rescale_constant=37000.0, op='/')
+        override_dict = defaults | overrides
+
         try:
             return cls(**override_dict)
         except RuntimeError as err:
