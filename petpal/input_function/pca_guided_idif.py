@@ -19,8 +19,7 @@ class PCAGuidedIdifBase(object):
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 verbose: bool,
-                 auto_rescale_input: bool = False):
+                 verbose: bool):
         self.image_path: str = input_image_path
         self.mask_path: str = mask_image_path
         self.output_tac_path: str = output_tac_path
@@ -35,15 +34,10 @@ class PCAGuidedIdifBase(object):
 
         self.pca_obj: PCA | None = None
         self.pca_fit: np.ndarray | None = None
-        self.auto_rescale_input: bool = auto_rescale_input
 
         self.mask_voxel_tacs = extract_masked_voxels(input_image=ants.image_read(self.image_path),
                                                      mask_image=ants.image_read(self.mask_path),
                                                      verbose=self.verbose)
-        self.auto_rescale_input = auto_rescale_input
-        if self.auto_rescale_input:
-            warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
-            self.mask_voxel_tacs /= _KBQL_TO_NCiML_
 
         self.mask_avg = np.mean(self.mask_voxel_tacs, axis=0)
         self.mask_std = np.std(self.mask_voxel_tacs, axis=0)
@@ -59,16 +53,9 @@ class PCAGuidedIdifBase(object):
         self.analysis_has_run: bool = False
 
     def perform_temporal_pca(self):
-        if self.auto_rescale_input:
-            warn(f"The TACs from the input image are being divided by {_KBQL_TO_NCiML_}.", UserWarning)
-            self.pca_obj, self.pca_fit = temporal_pca_over_mask(
-                input_image=ants.image_read(self.image_path) / _KBQL_TO_NCiML_,
-                mask_image=ants.image_read(self.mask_path),
-                num_components=self.num_components)
-        else:
-            self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
-                                                                mask_image=ants.image_read(self.mask_path),
-                                                                num_components=self.num_components)
+        self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
+                                                            mask_image=ants.image_read(self.mask_path),
+                                                            num_components=self.num_components)
 
     def rescale_tacs(self, rescale_constant: float = 37000.0) -> None:
         assert rescale_constant > 0.0, "rescale_constant must be > 0.0"
@@ -138,15 +125,13 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 verbose: bool,
-                 auto_rescale_input: bool = False):
+                 verbose: bool):
         PCAGuidedIdifBase.__init__(self,
                                    input_image_path=input_image_path,
                                    mask_image_path=mask_image_path,
                                    output_tac_path=output_tac_path,
                                    num_pca_components=num_pca_components,
-                                   verbose=verbose,
-                                   auto_rescale_input=auto_rescale_input)
+                                   verbose=verbose)
         self.num_of_voxels: int | None = None
         self.selected_component: int | None = None
 
@@ -183,16 +168,13 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
                  num_pca_components: int,
                  pca_comp_filter_min_value: float,
                  pca_comp_threshold: float,
-                 verbose: bool,
-                 auto_rescale_input: bool):
+                 verbose: bool):
         PCAGuidedIdifBase.__init__(self,
                                    input_image_path=input_image_path,
                                    mask_image_path=mask_image_path,
                                    output_tac_path=output_tac_path,
                                    num_pca_components=num_pca_components,
-                                   verbose=verbose,
-                                   auto_rescale_input=auto_rescale_input
-                                   )
+                                   verbose=verbose)
         self.mask_peak_val += self.mask_std[self.mask_peak_arg] * 3.
         self.alpha: float | None = None
         self.beta: float | None = None
@@ -336,8 +318,7 @@ class PCAGuidedIdifFitter(PCAGuidedIdifFitterBase):
                  num_pca_components: int,
                  pca_comp_filter_min_value: float = 0.0,
                  pca_comp_threshold: float = 0.1,
-                 verbose: bool = False,
-                 auto_rescale_input: bool = False):
+                 verbose: bool = False):
         PCAGuidedIdifFitterBase.__init__(self,
                                          input_image_path=input_image_path,
                                          mask_image_path=mask_image_path,
@@ -345,8 +326,7 @@ class PCAGuidedIdifFitter(PCAGuidedIdifFitterBase):
                                          num_pca_components=num_pca_components,
                                          pca_comp_filter_min_value=pca_comp_filter_min_value,
                                          pca_comp_threshold=pca_comp_threshold,
-                                         verbose=verbose,
-                                         auto_rescale_input=auto_rescale_input)
+                                         verbose=verbose)
 
     @staticmethod
     def _voxel_term_func(voxel_nums: float) -> float:
