@@ -22,14 +22,27 @@ def main():
                         required=False,
                         default='both',
                         choices=['linear','log','both'])
+    parser.add_argument('--yaxis-units',
+                        required=False,
+                        default='Bq/mL',
+                        choices=['Bq/mL','kBq/mL','cps'])
+    parser.add_argument('--xaxis-units',
+                        required=False,
+                        default='minutes',
+                        choices=['minutes','seconds','hours'])
     parser.add_argument('--out-fig-path',required=True)
     args = parser.parse_args()
 
 
     if args.tac_dir is None:
-        fig = TacFigure(plot_type=args.plot_type)
+        fig = TacFigure(plot_type=args.plot_type,
+                        xlabel=fr'$t$ [{args.xaxis_units}]',
+                        ylabel=fr'TAC [$\mathrm{{{args.yaxis_units}}}$]')
     else:
-        fig = RegionalTacFigure(tacs_dir=args.tac_dir,plot_type=args.plot_type)
+        fig = RegionalTacFigure(tacs_dir=args.tac_dir,
+                                plot_type=args.plot_type,
+                                xlabel=fr'$t$ [{args.xaxis_units}]',
+                                ylabel=fr'TAC [$\mathrm{{{args.yaxis_units}}}$]')
 
     for tac_file in args.tac_files:
         tac = TimeActivityCurve.from_tsv(filename=tac_file)
