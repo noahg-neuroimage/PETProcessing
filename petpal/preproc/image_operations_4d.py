@@ -179,7 +179,7 @@ def rescale_image(input_image: ants.core.ANTsImage, rescale_constant: float, op:
     assert op in ('/', '*'), "Operations supported by this function are `/` (division) or `*` (multiplication)."
     if op == '/':
         assert rescale_constant > 0, "Rescaling constant must be greater than zero."
-        return input_image
+        return input_image / rescale_constant
     else:
         input_image * rescale_constant
 
