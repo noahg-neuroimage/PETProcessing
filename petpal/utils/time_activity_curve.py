@@ -112,13 +112,15 @@ class TimeActivityCurve:
 
     def evenly_resampled_tac(self, num_samples: int = 4096) -> 'TimeActivityCurve':
         assert num_samples > 2, "Number of samples must be larger than 2."
-
         new_times = np.linspace(0, self.times[-1], num_samples, dtype=float)
-
         new_activity = scipy_interpolate(*self.tac, kind='linear', fill_value='extrapolate')(new_times)
         new_activity[new_activity < 0] = 0
-
         return TimeActivityCurve(new_times, new_activity)
+
+    def evenly_resampled_tac_given_dt(self, dt: float = 0.1/60.0) -> 'TimeActivityCurve':
+        assert dt > 0, "dt must be larger than 0."
+        num_samples = 1+int(self.times[-1]/dt)
+        return self.evenly_resampled_tac(num_samples=num_samples)
 
 def safe_load_tac(filename: str,
                   with_uncertainty: bool = False,
