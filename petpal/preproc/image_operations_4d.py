@@ -175,6 +175,15 @@ def crop_image(input_image_path: str,
     return cropped_image
 
 
+def rescale_image(input_image: ants.core.ANTsImage, rescale_constant: float, op: str = '/') -> ants.core.ANTsImage:
+    assert op in ('/', '*'), "Operations supported by this function are `/` (division) or `*` (multiplication)."
+    if op == '/':
+        assert rescale_constant > 0, "Rescaling constant must be greater than zero."
+        return input_image
+    else:
+        input_image * rescale_constant
+
+
 def determine_motion_target(motion_target_option: str | tuple | list,
                             input_image_4d_path: str = None,
                             half_life: float = None) -> str:
