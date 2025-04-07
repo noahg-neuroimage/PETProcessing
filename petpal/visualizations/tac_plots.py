@@ -154,6 +154,18 @@ class TacFigure:
             self.fig.legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
 
 
+    def write_fig(self, out_fig_path: str, **kwargs):
+        """
+        Write the figure to a common image file type, such as .png or .jpg. Applies
+        :meth:`plt.savefig` to figure object.
+
+        Args:
+            out_fig_path (str): Path to the file the figure will be written to.
+            kwargs (dict): Additional key word arguments passed to plt.savefig()
+        """
+        self.fig.savefig(fname=out_fig_path, **kwargs)
+
+
 class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
     """
     Handle plotting regional TACs generated with PETPAL.
