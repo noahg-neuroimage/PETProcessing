@@ -12,6 +12,7 @@ import glob
 import pathlib
 from dataclasses import dataclass, field
 import numpy as np
+from scipy.interpolate import interp1d as scipy_interpolate
 
 
 @dataclass
@@ -109,6 +110,15 @@ class TimeActivityCurve:
         """
         safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
 
+    def evenly_resampled_tac(self, num_samples: int = 4096) -> 'TimeActivityCurve':
+        assert num_samples > 2, "Number of samples must be larger than 2."
+
+        new_times = np.linspace(0, self.times[-1], num_samples, dtype=float)
+
+        new_activity = scipy_interpolate(*self.tac, kind='linear', fill_value='extrapolate')(new_times)
+        new_activity[new_activity < 0] = 0
+
+        return TimeActivityCurve(new_times, new_activity)
 
 def safe_load_tac(filename: str,
                   with_uncertainty: bool = False,
