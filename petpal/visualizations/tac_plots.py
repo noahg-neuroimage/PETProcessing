@@ -66,6 +66,8 @@ class TacFigure:
         Get the figure and axes objects for a 1x1 MatPlotLib subplot.
 
         Args:
+            xlabel (str): The label for the x-axis.
+            ylabel (str): The label for the y-axis.
             figsize (tuple): Size of the figure.
         """
         subplot = plt.subplots(1, 1, sharey=True, constrained_layout=True, figsize=figsize)
@@ -80,6 +82,8 @@ class TacFigure:
         Get the figure and axes objects for a 1x1 MatPlotLib subplot.
 
         Args:
+            xlabel (str): The label for the x-axis.
+            ylabel (str): The label for the y-axis.
             figsize (tuple): Size of the figure.
         """
         subplot = plt.subplots(1, 1, sharey=True, constrained_layout=True, figsize=figsize)
@@ -94,6 +98,8 @@ class TacFigure:
         Get the figure and axes objects for a 1x2 MatPlotLib subplot.
 
         Args:
+            xlabel (str): The label for the x-axis.
+            ylabel (str): The label for the y-axis.
             figsize (tuple): Size of the figure.
         """
         subplot = plt.subplots(1, 2, sharey=True, constrained_layout=True, figsize=figsize)
@@ -122,10 +128,13 @@ class TacFigure:
                      uncertainty: np.ndarray,
                      **kwargs):
         """
-        Add errorbars to a TAC plot.
+        Add a lineplot with errorbars to the figure.
 
         Args:
-
+            tac_times (np.ndarray): Array containing times at which TAC is sampled.
+            tac_vals (np.ndarray): Array containing TAC activity concentration.
+            uncertainty (np.ndarray): Array containing uncertainties in TAC measurements.
+            kwargs (dict): Additional keyword arguments for the plt.errorbar() function.
         """
         return [ax.errorbar(tac_times, tac_vals, yerr=uncertainty, **kwargs) for ax in self.fax]
 
