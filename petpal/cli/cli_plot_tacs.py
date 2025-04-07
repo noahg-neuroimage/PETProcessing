@@ -17,16 +17,19 @@ def main():
     parser.add_argument('--tac-files',required=False,nargs='+')
     parser.add_argument('--tac-dir',required=False)
     parser.add_argument('--participant',required=False)
-    parser.add_argument('--regions',required=True,nargs='+')
-    parser.add_argument('--tsv-save',required=True)
+    parser.add_argument('--regions',required=False,nargs='+')
+    parser.add_argument('--plot-type',
+                        required=False,
+                        default='both',
+                        choices=['linear','log','both'])
     parser.add_argument('--out-fig-path',required=True)
     args = parser.parse_args()
 
 
     if args.tac_dir is None:
-        fig = TacFigure()
+        fig = TacFigure(plot_type=args.plot_type)
     else:
-        fig = RegionalTacFigure(tacs_dir=args.tac_dir)
+        fig = RegionalTacFigure(tacs_dir=args.tac_dir,plot_type=args.plot_type)
 
     for tac_file in args.tac_files:
         tac = TimeActivityCurve.from_tsv(filename=tac_file)
