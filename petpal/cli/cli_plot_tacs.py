@@ -2,7 +2,8 @@
 CLI module to plot TACs from a TACs folder created by petpal function write-tacs.
 """
 import argparse
-from ..visualizations.tac_plots import tacs_to_df, tac_plots
+from ..visualizations.tac_plots import TacFigure, RegionalTacFigure
+from ..utils.time_activity_curve import TimeActivityCurve
 
 
 def main():
@@ -13,18 +14,31 @@ def main():
     parser = argparse.ArgumentParser(prog='petpal-plot-tacs',
                                     description='Command line interface for plotting TACs.',
                                     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--tacs-folder',required=True)
-    parser.add_argument('--participant',required=True)
+    parser.add_argument('--tac-files',required=False,nargs='+')
+    parser.add_argument('--tac-dir',required=False)
+    parser.add_argument('--participant',required=False)
     parser.add_argument('--regions',required=True,nargs='+')
     parser.add_argument('--tsv-save',required=True)
-    parser.add_argument('--png-save',required=True)
+    parser.add_argument('--out-fig-path',required=True)
     args = parser.parse_args()
 
-    tacs_df = tacs_to_df(tacs_dir=args.tacs_folder,
-                        participant=args.participant)
-    tacs_df.to_csv(args.tsv_save)
-    p = tac_plots(tacs_data=tacs_df,regions_to_plot=args.regions)
-    p.get_figure().savefig(args.png_save)
+
+    if args.tac_dir is None:
+        fig = TacFigure()
+    else:
+        fig = RegionalTacFigure(tacs_dir=args.tac_dir)
+
+    for tac_file in args.tac_files:
+        tac = TimeActivityCurve.from_tsv(filename=tac_file)
+        fig.add_errorbar(*tac.tac_werr)
+
+    if args.tac_dir is not None:
+        fig.plot_tacs_in_regions_list(regions=args.regions)
+
+    if args.participant is not None:
+        fig.fig.suptitle(t=args.participant)
+
+    fig.write_fig(out_fig_path=args.out_fig_path)
 
 
 if __name__ == "__main__":
