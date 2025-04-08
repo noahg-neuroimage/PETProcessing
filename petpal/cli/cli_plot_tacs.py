@@ -44,12 +44,16 @@ def main():
                                 xlabel=fr'$t$ [{args.xaxis_units}]',
                                 ylabel=fr'TAC [$\mathrm{{{args.yaxis_units}}}$]')
 
-    for tac_file in args.tac_files:
-        tac = TimeActivityCurve.from_tsv(filename=tac_file)
-        fig.add_errorbar(*tac.tac_werr)
+    if args.tac_files is not None:
+        for tac_file in args.tac_files:
+            tac = TimeActivityCurve.from_tsv(filename=tac_file)
+            fig.add_errorbar(*tac.tac_werr)
 
     if args.tac_dir is not None:
-        fig.plot_tacs_in_regions_list(regions=args.regions)
+        if args.regions is None:
+            fig.plot_all_regional_tacs()
+        else:
+            fig.plot_tacs_in_regions_list(regions=args.regions)
 
     if args.participant is not None:
         fig.fig.suptitle(t=args.participant)
