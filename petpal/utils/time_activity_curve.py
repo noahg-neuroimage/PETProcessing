@@ -139,8 +139,8 @@ class TimeActivityCurve:
             even_tac = tac.evenly_resampled_tac_given_dt(dt=dt)
         delta_t = even_tac.times[1] - even_tac.times[0] if dt is None else dt
 
-        shifted_vals = np.zeros_like(even_tac.activity)
         shift_ind = int(shift_in_mins / delta_t)
+        shifted_vals = np.zeros_like(even_tac.activity)
         shifted_vals[:-shift_ind] = even_tac.activity[shift_ind:]
         shifted_vals[-shift_ind:] = scipy_interpolate(even_tac.times[:-shift_ind],
                                                       shifted_vals[:-shift_ind],
@@ -167,8 +167,8 @@ class TimeActivityCurve:
             even_tac = tac.evenly_resampled_tac_given_dt(dt=dt)
         delta_t = even_tac.times[1] - even_tac.times[0] if dt is None else dt
 
-        shifted_vals = np.zeros_like(even_tac.activity)
         shift_ind = int(shift_in_mins / delta_t)
+        shifted_vals = np.zeros_like(even_tac.activity)
         shifted_vals[shift_ind:] = even_tac.activity[:-shift_ind]
         shifted_vals[:shift_ind] = scipy_interpolate(even_tac.times[shift_ind:],
                                                      shifted_vals[shift_ind:],
