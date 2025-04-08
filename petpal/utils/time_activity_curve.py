@@ -305,6 +305,38 @@ class TimeActivityCurve:
         return out_tac
 
     def add_0time_and_activity(self):
+        """
+        Ensures the time-activity curve (TAC) starts at time 0 with zero activity.
+
+        If the first time point in the TAC is not 0.0, this method prepends a time
+        point of 0.0 and assigns it an activity value of 0. The associated uncertainty
+        for this time point is set to `NaN`. The method modifies the TAC in place
+        and returns the updated instance.
+
+        Returns:
+            TimeActivityCurve: The updated `TimeActivityCurve` instance with
+            0.0 prepended to time, activity, and uncertainty arrays (if needed).
+
+        Example:
+            .. code-block:: python
+
+                from petpal.utils.time_activity_curve import TimeActivityCurve
+                import numpy as np
+
+                # Create a TimeActivityCurve object
+                my_tac = TimeActivityCurve(
+                    times=np.array([10, 20, 30]),
+                    activity=np.array([2.0, 3.0, 4.0]),
+                    uncertainty=np.array([0.1, 0.2, 0.3])
+                )
+
+                # Add 0 time and activity if missing
+                my_tac = my_tac.add_0time_and_activity()
+
+                print(my_tac.times)       # Output: [ 0, 10, 20, 30 ]
+                print(my_tac.activity)   # Output: [ 0, 2.0, 3.0, 4.0 ]
+                print(my_tac.uncertainty)  # Output: [ NaN, 0.1, 0.2, 0.3 ]
+        """
         if self.times[0] != 0.0:
             self.times = np.append(0, self.times)
             self.activity = np.append(0, self.activity)
