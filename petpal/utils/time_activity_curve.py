@@ -132,7 +132,7 @@ class TimeActivityCurve:
     def left_shifted_tac(tac: 'TimeActivityCurve',
                          shift_in_mins: float = 10.0 / 60.0,
                          dt: float | None = 0.1 / 60.0) -> 'TimeActivityCurve':
-        assert shift_in_mins >= 0, "shift_in_mins must be larger than 0."
+        assert shift_in_mins > 0, "shift_in_mins must be larger than 0."
         if dt is None:
             even_tac = tac.evenly_resampled_tac()
         else:
@@ -160,7 +160,7 @@ class TimeActivityCurve:
     def right_shifted_tac(tac: 'TimeActivityCurve',
                           shift_in_mins: float = 10.0 / 60.0,
                           dt: float | None = 0.1 / 60.0) -> 'TimeActivityCurve':
-        assert shift_in_mins >= 0, "shift_in_mins must be larger than 0."
+        assert shift_in_mins > 0, "shift_in_mins must be larger than 0."
         if dt is None:
             even_tac = tac.evenly_resampled_tac()
         else:
