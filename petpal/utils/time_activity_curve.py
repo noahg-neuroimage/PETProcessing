@@ -173,6 +173,47 @@ class TimeActivityCurve:
         return self
 
     def evenly_resampled_tac(self, num_samples: int = 4096) -> 'TimeActivityCurve':
+        r"""
+        Generates a time-activity curve (TAC) resampled at evenly spaced time points.
+
+        This method uses linear interpolation to recreate the TAC with a specified
+        number of evenly spaced samples between the initial and final time points.
+        The resulting TAC is sanitized to ensure physical consistency. Uses
+        :func:`scipy_interpolate<scipy.interpolate.interp1d>` for the interpolation
+        with ``kind=='linear'`` and ``fill_value='extrapolate'``.
+
+        .. important::
+            If the TAC will be used for convolution later, prefer powers of two for
+            the number of samples.
+
+        Args:
+            num_samples (int, optional): The number of time points in the resampled TAC.
+                Must be greater than 2. Defaults to 4096.
+
+        Returns:
+            TimeActivityCurve: A new `TimeActivityCurve` instance with evenly spaced
+            time points and resampled activity values.
+
+        Raises:
+            AssertionError: If `num_samples` is less than or equal to 2.
+
+        Example:
+            .. code-block:: python
+
+                from petpal.utils.time_activity_curve import TimeActivityCurve
+
+                # Create a TimeActivityCurve object
+                my_tac = TimeActivityCurve(
+                    times=np.array([0, 10, 20, 30]),
+                    activity=np.array([1.0, 2.0, 3.0, 4.0])
+                )
+
+                # Resample the TAC with evenly spaced time points
+                resampled_tac = my_tac.evenly_resampled_tac(num_samples=10)
+
+                print(resampled_tac.times)  # Output: Array of 10 evenly spaced times
+                print(resampled_tac.activity)  # Output: Interpolated activity values
+        """
         assert num_samples > 2, "Number of samples must be larger than 2."
         new_times = np.linspace(0, self.times[-1], num_samples, dtype=float)
         new_activity = scipy_interpolate(*self.tac, kind='linear', fill_value='extrapolate')(new_times)
