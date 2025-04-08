@@ -134,6 +134,13 @@ class TimeActivityCurve:
         out_tac.sanitize_tac()
         return out_tac
 
+    def add_0time_and_activity(self):
+        if self.times[0] != 0.0:
+            self.times = np.append(0, self.times)
+            self.activity = np.append(0, self.activity)
+            self.uncertainty = np.append(np.nan, self.uncertainty)
+        return self
+
     def shifted_tac(self, shift_in_mins: float = 10.0/60.0, dt: float | None = 0.1/60.0) -> 'TimeActivityCurve':
         assert dt != 0, "dt must be strictly larger than 0."
         if shift_in_mins < 0:
