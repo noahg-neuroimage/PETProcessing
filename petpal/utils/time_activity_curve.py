@@ -45,6 +45,29 @@ class TimeActivityCurve:
     uncertainty: np.ndarray = field(default_factory=lambda: np.array([]))
 
     def __len__(self) -> int:
+        """
+        Returns the number of time points in the time-activity curve (TAC).
+
+        This method provides the length of the `times` attribute, representing the
+        number of discrete time points associated with the TAC.
+
+        Returns:
+            int: The number of time points in the TAC.
+
+        Example:
+            .. code-block:: python
+
+                from petpal.utils.time_activity_curve import TimeActivityCurve
+
+                # Create a TimeActivityCurve object
+                my_tac = TimeActivityCurve(
+                    times=np.array([0, 10, 20, 30]),
+                    activity=np.array([1.2, 2.3, 3.4, 4.5])
+                )
+
+                # Get the number of time points
+                print(len(my_tac))  # Output: 4
+        """
         return len(self.times)
 
     def __post_init__(self):
