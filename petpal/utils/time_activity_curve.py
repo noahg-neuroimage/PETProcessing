@@ -137,6 +137,37 @@ class TimeActivityCurve:
         safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
 
     def sanitize_tac(self) -> 'TimeActivityCurve':
+        r"""
+        Ensures that the time-activity curve (TAC) data is physically consistent.
+
+        This method modifies the TAC object in place by setting `uncertainty` to `NaN`
+        and `activity` to `0` for time points where the `activity` values are negative.
+        Such adjustments help maintain data consistency for downstream analysis.
+
+        Returns:
+            TimeActivityCurve: The updated TAC object with sanitized data.
+
+        Note:
+            The method returns self to allow for `.`-chaining.
+
+        Example:
+            .. code-block:: python
+
+                from petpal.utils.time_activity_curve import TimeActivityCurve
+
+                # Create a TimeActivityCurve object with negative activity
+                my_tac = TimeActivityCurve(
+                    times=np.array([0, 10, 20, 30]),
+                    activity=np.array([1.2, -2.3, 3.4, -4.5]),
+                    uncertainty=np.array([0.1, 0.2, 0.3, 0.4])
+                )
+
+                # Sanitize the TAC
+                my_tac.sanitize_tac()
+
+                print(my_tac.activity)  # Output: [1.2, 0.0, 3.4, 0.0]
+                print(my_tac.uncertainty)  # Output: [0.1, NaN, 0.3, NaN]
+        """
         self.uncertainty[self.activity < 0] = np.nan
         self.activity[self.activity < 0] = 0
         return self
