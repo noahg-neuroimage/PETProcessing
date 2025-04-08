@@ -128,6 +128,13 @@ class TimeActivityCurve:
         num_samples = 1+int(self.times[-1]/dt)
         return self.evenly_resampled_tac(num_samples=num_samples)
 
+    def shifted_tac(self, shift_in_mins: float = 10.0/60.0, dt: float | None = 0.1/60.0) -> 'TimeActivityCurve':
+        assert dt != 0, "dt must be strictly larger than 0."
+        if shift_in_mins < 0:
+            return TimeActivityCurve.right_shifted_tac(tac=self, shift_in_mins=shift_in_mins, dt=dt)
+        else:
+            return TimeActivityCurve.left_shifted_tac(tac=self, shift_in_mins=shift_in_mins, dt=dt)
+
     @staticmethod
     def left_shifted_tac(tac: 'TimeActivityCurve',
                          shift_in_mins: float = 10.0 / 60.0,
