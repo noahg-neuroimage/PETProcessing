@@ -343,7 +343,42 @@ class TimeActivityCurve:
             self.uncertainty = np.append(np.nan, self.uncertainty)
         return self
 
-    def shifted_tac(self, shift_in_mins: float = 10.0/60.0, dt: float | None = 0.1/60.0) -> 'TimeActivityCurve':
+    def shifted_tac(self, shift_in_mins: float = 10.0/60.0, dt: float | None = None) -> 'TimeActivityCurve':
+        """
+        Returns a time-activity curve (TAC) shifted in time by a specified amount.
+
+        If the shift is positive, the TAC is left-shifted; if negative, the TAC is
+        right-shifted. The shift can be applied at the existing time points of the
+        TAC or at oversampled points, depending on the value of `dt`.
+
+        Args:
+            shift_in_mins (float, optional):
+                The amount (in minutes) to shift the TAC. Positive values indicate a left shift;
+                negative values indicate a right shift. Defaults to 10.0 / 60.0 (10 seconds).
+            dt (float | None, optional):
+                The time interval for oversampling. If `None`, the TAC is resampled at its original
+                time points. If a value is provided, the TAC is resampled at an evenly spaced interval of `dt`.
+
+        Returns:
+            TimeActivityCurve: A new `TimeActivityCurve` instance with the shifted activity values.
+
+        Raises:
+            AssertionError: If `dt` is equal to 0.
+
+        Example:
+            .. code-block:: python
+
+                # Left-shifting the TAC
+                shifted_tac = my_tac.shifted_tac(shift_in_mins=5.0 / 60.0)
+
+                # Right-shifting the TAC with oversampling
+                shifted_tac = my_tac.shifted_tac(shift_in_mins=-2.0 / 60.0, dt=0.1 / 60.0)
+
+        See Also:
+            * :meth:`left_shifted_tac`
+            * :meth:`right_shifted_tac`
+
+        """
         assert dt != 0, "dt must be strictly larger than 0."
         if shift_in_mins < 0:
             return TimeActivityCurve.right_shifted_tac(tac=self, shift_in_mins=shift_in_mins, dt=dt)
@@ -354,6 +389,37 @@ class TimeActivityCurve:
     def left_shifted_tac(tac: 'TimeActivityCurve',
                          shift_in_mins: float = 10.0 / 60.0,
                          dt: float | None = 0.1 / 60.0) -> 'TimeActivityCurve':
+        """
+        Produces a TAC left-shifted by a specified amount of time.
+
+        The left shift moves activity values earlier in time and fills the trailing
+        values with interpolated data. The shift can either be applied on the
+        original time points or on a time grid determined by `dt`.
+
+        Args:
+            tac (TimeActivityCurve): The original TAC to be shifted.
+            shift_in_mins (float, optional):
+                The amount (in minutes) to left-shift the TAC. Must be larger than 0.
+                Defaults to 10.0 / 60.0 (10 seconds).
+            dt (float | None, optional):
+                The time interval for oversampling. If `None`, the TAC is resampled at its original
+                time points. If a value is provided, the TAC is resampled at an evenly spaced interval of `dt`.
+
+        Returns:
+            TimeActivityCurve: A new `TimeActivityCurve` instance with the left-shifted activity values.
+
+        Raises:
+            AssertionError: If `shift_in_mins` is not greater than 0.
+
+        Example:
+            .. code-block:: python
+
+                # Perform a left shift on the TAC
+                shifted_tac = TimeActivityCurve.left_shifted_tac(tac=my_tac, shift_in_mins=5.0 / 60.0)
+
+                # Perform a left shift with oversampling
+                shifted_tac = TimeActivityCurve.left_shifted_tac(tac=my_tac, shift_in_mins=2.0 / 60.0, dt=0.05 / 60.0)
+        """
         assert shift_in_mins > 0, "shift_in_mins must be larger than 0."
         if dt is None:
             even_tac = tac.evenly_resampled_tac()
@@ -382,6 +448,38 @@ class TimeActivityCurve:
     def right_shifted_tac(tac: 'TimeActivityCurve',
                           shift_in_mins: float = 10.0 / 60.0,
                           dt: float | None = 0.1 / 60.0) -> 'TimeActivityCurve':
+        """
+        Produces a TAC right-shifted by a specified amount of time.
+
+        The right shift moves activity values later in time and fills the leading
+        values with interpolated data. The shift can either be applied on the
+        original time points or on a time grid determined by `dt`.
+
+        Args:
+            tac (TimeActivityCurve): The original TAC to be shifted.
+            shift_in_mins (float, optional):
+                The amount (in minutes) to right-shift the TAC. Must be larger than 0.
+                Defaults to 10.0 / 60.0 (10 seconds).
+            dt (float | None, optional):
+                The time interval for oversampling. If `None`, the TAC is resampled at its original time points.
+                If a value is provided, the TAC is resampled at an evenly spaced interval of `dt`.
+
+        Returns:
+            TimeActivityCurve: A new `TimeActivityCurve` instance with the right-shifted
+            activity values.
+
+        Raises:
+            AssertionError: If `shift_in_mins` is not greater than 0.
+
+        Example:
+            .. code-block:: python
+
+                # Perform a right shift on the TAC
+                shifted_tac = TimeActivityCurve.right_shifted_tac(tac=my_tac, shift_in_mins=5.0 / 60.0)
+
+                # Perform a right shift with oversampling
+                shifted_tac = TimeActivityCurve.right_shifted_tac(tac=my_tac, shift_in_mins=2.0 / 60.0, dt=0.05 / 60.0)
+        """
         assert shift_in_mins > 0, "shift_in_mins must be larger than 0."
         if dt is None:
             even_tac = tac.evenly_resampled_tac()
