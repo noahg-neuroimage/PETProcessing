@@ -128,6 +128,35 @@ class TimeActivityCurve:
         num_samples = 1+int(self.times[-1]/dt)
         return self.evenly_resampled_tac(num_samples=num_samples)
 
+    @staticmethod
+    def left_shifted_tac(tac: 'TimeActivityCurve',
+                         shift_in_mins: float = 10.0 / 60.0,
+                         dt: float | None = 0.1 / 60.0) -> 'TimeActivityCurve':
+        assert shift_in_mins >= 0, "shift_in_mins must be larger than 0."
+        if dt is None:
+            even_tac = tac.evenly_resampled_tac()
+        else:
+            even_tac = tac.evenly_resampled_tac_given_dt(dt=dt)
+        delta_t = even_tac.times[1] - even_tac.times[0] if dt is None else dt
+
+        shifted_vals = np.zeros_like(even_tac.activity)
+        shift_ind = int(shift_in_mins / delta_t)
+        shifted_vals[:-shift_ind] = even_tac.activity[shift_ind:]
+        shifted_vals[-shift_ind:] = scipy_interpolate(even_tac.times[:-shift_ind],
+                                                      shifted_vals[:-shift_ind],
+                                                      kind='linear',
+                                                      fill_value='extrapolate')(even_tac.times[-shift_ind:])
+        shifted_tac = TimeActivityCurve(even_tac.times, shifted_vals)
+        shifted_tac.sanitize_tac()
+        if dt is None:
+            shifted_vals_on_tac_times = scipy_interpolate(*shifted_tac.tac,
+                                                        kind='linear',
+                                                        fill_value='extrapolate')(tac.times)
+            return TimeActivityCurve(tac.times,
+                                     shifted_vals_on_tac_times)
+        if dt is not None:
+            return shifted_tac
+
 def safe_load_tac(filename: str,
                   with_uncertainty: bool = False,
                   **kwargs) -> np.ndarray:
