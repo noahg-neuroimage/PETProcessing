@@ -83,6 +83,8 @@ class TimeActivityCurve:
         """
         Load an instance of TimeActivityCurve object from a TSV TAC file.
 
+        Reads a TSV file using :func:`~.safe_load_tac` and instantiates a TimeActivityCurve.
+
         Args:
             filename (str): Path to the TSV TAC file.
         
@@ -132,7 +134,7 @@ class TimeActivityCurve:
         Args:
             filename (str): Path to the file that will be written to.
             col_names (list[str]): Custom names for time, activity, and uncertainty columns
-                respectively. See :meth:`safe_write_tac`. Default None.
+                respectively. See :func:`~.safe_write_tac`. Default None.
         """
         safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
 
