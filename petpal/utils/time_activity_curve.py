@@ -44,6 +44,9 @@ class TimeActivityCurve:
     activity: np.ndarray
     uncertainty: np.ndarray = field(default_factory=lambda: np.array([]))
 
+    def __len__(self) -> int:
+        return len(self.times)
+
     def __post_init__(self):
         if self.uncertainty.size == 0:
             self.uncertainty = np.empty_like(self.times)
