@@ -128,6 +128,12 @@ class TimeActivityCurve:
         num_samples = 1+int(self.times[-1]/dt)
         return self.evenly_resampled_tac(num_samples=num_samples)
 
+    def resampled_tac_on_times(self, new_times: np.ndarray):
+        new_values = scipy_interpolate(self.times, self.activity, kind='linear', fill_value='extrapolate')(new_times)
+        out_tac = TimeActivityCurve(new_times, new_values)
+        out_tac.sanitize_tac()
+        return out_tac
+
     def shifted_tac(self, shift_in_mins: float = 10.0/60.0, dt: float | None = 0.1/60.0) -> 'TimeActivityCurve':
         assert dt != 0, "dt must be strictly larger than 0."
         if shift_in_mins < 0:
