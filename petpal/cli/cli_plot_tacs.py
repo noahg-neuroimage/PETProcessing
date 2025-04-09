@@ -43,6 +43,9 @@ def main():
                         required=False,
                         help='Path to a directory containing .tsv TAC files generated with PETPAL.'
                              ' At least one of: --tac-files, --tac-dir, are required.')
+    parser.add_argument('--out-fig-path',
+                        required=True,
+                        help='Path to the file where the figure is saved.')
     parser.add_argument('--participant',
                         required=False,
                         help='Name of the participant the TAC or TACs belong to. Assigned to '
@@ -72,9 +75,7 @@ def main():
                         choices=['minutes','seconds','hours'],
                         help='Set time units for the x-axis. Does not scale units, this only '
                              'assigns the axis label name.')
-    parser.add_argument('--out-fig-path',
-                        required=True,
-                        help='Path to the file where the figure is saved.')
+
     args = parser.parse_args()
 
     if args.tac_dir is None and args.tac_files is None:
