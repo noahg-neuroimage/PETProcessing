@@ -200,7 +200,8 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
     def plot_tacs_in_regions_list(self,
                                   regions: list[str],
                                   show_legend: bool=True,
-                                  colormap: str='Dark2'):
+                                  colormap: str='Dark2',
+                                  **kwargs):
         """
         Plot TACs for a list of provided regions. Region names correspond to abbreviated segment
         names in the dseg file used to generate the regions.
@@ -211,6 +212,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                 True.
             colormap (str): A matplotlib color map used to select colors of different TAC plots.
                 Default 'Dark2'.
+            kwargs (dict): Additional keyword arguments for the plt.errorbar() function.
         """
         colors = colormaps[colormap].colors
         tacs_obj_dict = self.tacs_objects_dict
@@ -220,14 +222,15 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                               tac_vals=tac.activity,
                               uncertainty=tac.uncertainty,
                               label=region,
-                              color=colors[i%len(colors)])
+                              color=colors[i%len(colors)],
+                              **kwargs)
         if show_legend:
             self.gen_legend()
         self.normalize_yaxis()
         return self.fig
 
 
-    def plot_all_regional_tacs(self,show_legend: bool=True, colormap='Dark2'):
+    def plot_all_regional_tacs(self,show_legend: bool=True, colormap='Dark2', **kwargs):
         """
         Plot TACs for all TACs found in a folder. Region names correspond to abbreviated segment
         names in the dseg file used to generate the regions.
@@ -237,8 +240,12 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                 True.
             colormap (str): A matplotlib color map used to select colors of different TAC plots.
                 Default 'Dark2'.
+            kwargs (dict): Additional keyword arguments for the plt.errorbar() function.
         """
         tacs_obj_dict = self.tacs_objects_dict
         regions = list(tacs_obj_dict.keys())
-        self.plot_tacs_in_regions_list(regions=regions, show_legend=show_legend, colormap=colormap)
+        self.plot_tacs_in_regions_list(regions=regions,
+                                       show_legend=show_legend,
+                                       colormap=colormap,
+                                       **kwargs)
         return self.fig

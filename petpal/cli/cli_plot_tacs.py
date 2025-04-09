@@ -75,6 +75,11 @@ def main():
                         choices=['minutes','seconds','hours'],
                         help='Set time units for the x-axis. Does not scale units, this only '
                              'assigns the axis label name.')
+    parser.add_argument('--plot-style',
+                        required=False,
+                        default='lines',
+                        choices=['lines','markers','both'],
+                        help='Set style of TAC plots.')
 
     args = parser.parse_args()
 
@@ -91,16 +96,19 @@ def main():
                                 xlabel=fr'$t$ [{args.xaxis_units}]',
                                 ylabel=fr'TAC [$\mathrm{{{args.yaxis_units}}}$]')
 
+    plot_style_opts = {'lines': '-', 'markers': 'o', 'both': '-o'}
+    plot_style = plot_style_opts[args.plot_style]
+
     if args.tac_files is not None:
         for tac_file in args.tac_files:
             tac = TimeActivityCurve.from_tsv(filename=tac_file)
-            fig.add_errorbar(*tac.tac_werr)
+            fig.add_errorbar(*tac.tac_werr, fmt=plot_style)
 
     if args.tac_dir is not None:
         if args.regions is None:
-            fig.plot_all_regional_tacs()
+            fig.plot_all_regional_tacs(fmt=plot_style)
         else:
-            fig.plot_tacs_in_regions_list(regions=args.regions)
+            fig.plot_tacs_in_regions_list(regions=args.regions, fmt=plot_style)
 
     if args.participant is not None:
         fig.fig.suptitle(t=args.participant)
