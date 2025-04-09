@@ -11,8 +11,11 @@ import os
 import glob
 import pathlib
 from dataclasses import dataclass, field
+from typing import Callable
+
 import numpy as np
 from scipy.interpolate import interp1d as scipy_interpolate
+from scipy.signal import convolve as scipy_convolve
 
 
 @dataclass
@@ -506,6 +509,85 @@ class TimeActivityCurve:
         else:
             return shifted_tac
 
+    @staticmethod
+    def tac_dispersion(tac: 'TimeActivityCurve',
+                       disp_func: Callable[[np.ndarray, ...], np.ndarray],
+                       disp_kwargs: dict,
+                       num_samples: int = 4096):
+        r"""
+        Applies a dispersion function to a time-activity curve (TAC) and returns the convolved TAC.
+
+        This method evaluates the specified dispersion function `disp_func` at supersampled time points.
+        It performs convolution (using :func:`scipy.signal.convolve`)of the supersampled TAC with
+        the dispersion function, and the result is sampled back at the original TAC time points
+        to form the new convolved TAC.
+
+        .. note::
+            We perform the supersampling to ensure that the TACs are sampled evenly before performing
+            the convolution. Convolving non-evenly sampled arrays produces nonsense values.
+
+        Args:
+            tac (TimeActivityCurve): The original time-activity curve to be convolved.
+            disp_func (Callable[[np.ndarray, ...], np.ndarray]):
+                The dispersion function to be applied. This function must accept an array of
+                times as its first argument, followed by any additional arguments specified
+                in `disp_kwargs`.
+            disp_kwargs (dict): Additional keyword arguments to pass to `disp_func`.
+            num_samples (int, optional):
+                The number of evenly spaced samples for supersampling the TAC before convolution.
+                Defaults to 4096.
+
+        Returns:
+            TimeActivityCurve: A new `TimeActivityCurve` instance with the convolved activity values,
+            resampled at the original TAC time points.
+
+        Example:
+            .. code-block:: python
+
+                from petpal.utils.time_activity_curve import TimeActivityCurve
+                import numpy as np
+
+                # Define a sample dispersion function
+                def monoexponential_kernel(t:np.ndarray, tau:float) -> np.ndarray:
+                    return (1.0/tau) * np.exp(-t / tau)
+
+                # Original TAC
+                my_tac = TimeActivityCurve(
+                    times=np.array([0, 10, 20, 30]),
+                    activity=np.array([1.0, 2.0, 3.0, 4.0])
+                )
+
+                # Apply dispersion
+                convolved_tac = TimeActivityCurve.tac_dispersion(
+                    tac=my_tac,
+                    disp_func=monoexponential_kernel,
+                    disp_kwargs={'tau': 5},
+                    num_samples=1024
+                )
+
+                print(convolved_tac.times)     # Output: Original TAC time points
+                print(convolved_tac.activity)  # Output: Activity after applying dispersion
+
+        See Also:
+            * :meth:`evenly_resample_tac`
+
+        """
+
+        even_tac = tac.evenly_resampled_tac(num_samples=num_samples)
+        dt = even_tac.times[1] - even_tac.times[0]
+
+        disp_func_vals = disp_func(even_tac.times, **disp_kwargs)
+        disp_vals_fine = scipy_convolve(in1=even_tac.activity, in2=disp_func_vals, mode='full')
+        disp_vals_fine = disp_vals_fine[:num_samples] * dt
+
+        intp_func = scipy_interpolate(x=even_tac.times,
+                                      y=disp_vals_fine,
+                                      kind='linear',
+                                      fill_value='extrapolate')
+        disp_vals = intp_func(tac.times)
+        disp_tac = TimeActivityCurve(tac.times, disp_vals)
+
+        return disp_tac.sanitize_tac()
 
 def safe_load_tac(filename: str,
                   with_uncertainty: bool = False,
