@@ -6,6 +6,25 @@ from ..visualizations.tac_plots import TacFigure, RegionalTacFigure
 from ..utils.time_activity_curve import TimeActivityCurve
 
 
+_PLOT_EXAMPLES_ = r"""
+Examples:
+  - Plot a single TAC:
+    petpal-plot-tacs --tac-files my_tac.tsv --out-fig-path tac.png
+  - Plot two or more TACs:
+    petpal-plot-tacs --tac-files my_tac_1.tsv my_tac_2.tsv --out-fig-path tac.png
+  - Plot all the TACs in a directory:
+    petpal-plot-tacs --tac-dir sub-001/tacs/ --out-fig-path tac.png
+  - Plot specific regional TACs in a directory based on region names:
+    petpal-plot-tacs --tac-files my_tac.tsv --regions RightPutamen LeftPutamen --out-fig-path tac.png
+  - Set x-axis and y-axis units:
+    petpal-plot-tacs --tac-files my_tac.tsv --yaxis-units cps --xaxis-units hours --out-fig-path tac.png
+  - Plot the linear-linear plot only:
+    petpal-plot-tacs --tac-files my_tac.tsv --plot-type linear --out-fig-path tac.png
+  - Set the figure title to the participant name:
+    petpal-plot-tacs --tac-files my_tac.tsv --participant sub-001 --out-fig-path tac.png
+"""
+
+
 def main():
     """
     CLI for tac plotting
@@ -13,29 +32,53 @@ def main():
 
     parser = argparse.ArgumentParser(prog='petpal-plot-tacs',
                                      description='Command line interface for plotting TACs.',
-                                     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--tac-files',required=False,nargs='+')
-    parser.add_argument('--tac-dir',required=False)
-    parser.add_argument('--participant',required=False)
-    parser.add_argument('--regions',required=False,nargs='+')
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     epilog=_PLOT_EXAMPLES_)
+    parser.add_argument('--tac-files',
+                        required=False,
+                        nargs='+',
+                        help='Path to or more individual .tsv TAC files, separate paths with '
+                             'spaces. At least one of: --tac-files, --tac-dir, are required.')
+    parser.add_argument('--tac-dir',
+                        required=False,
+                        help='Path to a directory containing .tsv TAC files generated with PETPAL.'
+                             ' At least one of: --tac-files, --tac-dir, are required.')
+    parser.add_argument('--participant',
+                        required=False,
+                        help='Name of the participant the TAC or TACs belong to. Assigned to '
+                             'figure title.')
+    parser.add_argument('--regions',
+                        required=False,
+                        nargs='+',
+                        help='If --tac-files is set, list the regions to be plotted. Separate '
+                             'region names with spaces. Expecting TAC file names to follow the '
+                             'convention: *seg-SegmentName* where SegmentName does not contain '
+                             'special characters, especially - and _ which will conflict with '
+                             'PETPAL code.')
     parser.add_argument('--plot-type',
                         required=False,
                         default='both',
-                        choices=['linear','log','both'])
+                        choices=['linear','log','both'],
+                        help='Set whether to plot the TACs as linear-linear, log-linear, or both.')
     parser.add_argument('--yaxis-units',
                         required=False,
                         default='Bq/mL',
-                        choices=['Bq/mL','kBq/mL','cps'])
+                        choices=['Bq/mL','kBq/mL','cps'],
+                        help='Set activity concentration unit label for the y-axis. Does not scale'
+                             ' units, this only assigns the axis label name.')
     parser.add_argument('--xaxis-units',
                         required=False,
                         default='minutes',
-                        choices=['minutes','seconds','hours'])
-    parser.add_argument('--out-fig-path',required=True)
+                        choices=['minutes','seconds','hours'],
+                        help='Set time units for the x-axis. Does not scale units, this only '
+                             'assigns the axis label name.')
+    parser.add_argument('--out-fig-path',
+                        required=True,
+                        help='Path to the file where the figure is saved.')
     args = parser.parse_args()
 
     if args.tac_dir is None and args.tac_files is None:
         raise SystemExit('Both --tac-files and --tac-dir unset. Exiting.')
-
 
     if args.tac_dir is None:
         fig = TacFigure(plot_type=args.plot_type,
