@@ -33,6 +33,9 @@ def main():
     parser.add_argument('--out-fig-path',required=True)
     args = parser.parse_args()
 
+    if args.tac_dir is None and args.tac_files is None:
+        raise SystemExit('Both --tac-files and --tac-dir unset. Exiting.')
+
 
     if args.tac_dir is None:
         fig = TacFigure(plot_type=args.plot_type,
