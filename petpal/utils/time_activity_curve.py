@@ -309,7 +309,7 @@ class TimeActivityCurve:
         out_tac.set_activity_non_negative()
         return out_tac
 
-    def add_0time_and_activity(self):
+    def add_zero_time_and_activity(self):
         """
         Ensures the time-activity curve (TAC) starts at time 0 with zero activity.
 
@@ -336,7 +336,7 @@ class TimeActivityCurve:
                 )
 
                 # Add 0 time and activity if missing
-                my_tac = my_tac.add_0time_and_activity()
+                my_tac = my_tac.add_zero_time_and_activity()
 
                 print(my_tac.times)       # Output: [ 0, 10, 20, 30 ]
                 print(my_tac.activity)   # Output: [ 0, 2.0, 3.0, 4.0 ]
