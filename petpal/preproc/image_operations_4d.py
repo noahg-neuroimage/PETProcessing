@@ -218,7 +218,7 @@ def rescale_image(input_image: ants.core.ANTsImage, rescale_constant: float, op:
         assert rescale_constant > 0, "Rescaling constant must be greater than zero."
         return input_image / rescale_constant
     else:
-        input_image * rescale_constant
+        return input_image * rescale_constant
 
 
 def determine_motion_target(motion_target_option: str | tuple | list,
