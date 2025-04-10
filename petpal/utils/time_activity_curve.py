@@ -141,7 +141,7 @@ class TimeActivityCurve:
         """
         safe_write_tac(filename=filename,tac_data=self.tac_werr,col_names=col_names)
 
-    def sanitize_tac(self) -> 'TimeActivityCurve':
+    def set_activity_non_negative(self) -> 'TimeActivityCurve':
         r"""
         Ensures that the time-activity curve (TAC) data is physically consistent.
 
@@ -168,7 +168,7 @@ class TimeActivityCurve:
                 )
 
                 # Sanitize the TAC
-                my_tac.sanitize_tac()
+                my_tac.set_activity_non_negative()
 
                 print(my_tac.activity)  # Output: [1.2, 0.0, 3.4, 0.0]
                 print(my_tac.uncertainty)  # Output: [0.1, NaN, 0.3, NaN]
@@ -223,7 +223,7 @@ class TimeActivityCurve:
         new_times = np.linspace(0, self.times[-1], num_samples, dtype=float)
         new_activity = scipy_interpolate(*self.tac, kind='linear', fill_value='extrapolate')(new_times)
         new_tac = TimeActivityCurve(new_times, new_activity)
-        new_tac.sanitize_tac()
+        new_tac.set_activity_non_negative()
         return new_tac
 
     def evenly_resampled_tac_given_dt(self, dt: float = 0.1/60.0) -> 'TimeActivityCurve':
@@ -306,7 +306,7 @@ class TimeActivityCurve:
         """
         new_values = scipy_interpolate(self.times, self.activity, kind='linear', fill_value='extrapolate')(new_times)
         out_tac = TimeActivityCurve(new_times, new_values)
-        out_tac.sanitize_tac()
+        out_tac.set_activity_non_negative()
         return out_tac
 
     def add_0time_and_activity(self):
@@ -440,7 +440,7 @@ class TimeActivityCurve:
                                                       kind='linear',
                                                       fill_value='extrapolate')(even_tac.times[-shift_ind:])
         shifted_tac = TimeActivityCurve(even_tac.times, shifted_vals)
-        shifted_tac.sanitize_tac()
+        shifted_tac.set_activity_non_negative()
         if dt is None:
             shifted_vals_on_tac_times = scipy_interpolate(*shifted_tac.tac,
                                                         kind='linear',
@@ -500,7 +500,7 @@ class TimeActivityCurve:
                                                      kind='linear',
                                                      fill_value='extrapolate')(even_tac.times[:shift_ind])
         shifted_tac = TimeActivityCurve(even_tac.times, shifted_vals)
-        shifted_tac.sanitize_tac()
+        shifted_tac.set_activity_non_negative()
         if dt is None:
             shifted_vals_on_tac_times = scipy_interpolate(*shifted_tac.tac,
                                                           kind='linear',
@@ -587,7 +587,7 @@ class TimeActivityCurve:
         disp_vals = intp_func(tac.times)
         disp_tac = TimeActivityCurve(tac.times, disp_vals)
 
-        return disp_tac.sanitize_tac()
+        return disp_tac.set_activity_non_negative()
 
 def safe_load_tac(filename: str,
                   with_uncertainty: bool = False,
