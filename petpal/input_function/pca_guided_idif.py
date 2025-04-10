@@ -216,7 +216,7 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
     def get_pca_component_filter_flags(pca_components: np.ndarray,
                                        comp_min_val: float = 0.0,
                                        threshold: float = 0.1) -> np.ndarray[bool]:
-        pca_components_positive_pts = np.mean(pca_components > comp_min_val, axis=1)
+        pca_components_positive_pts: np.ndarray = np.mean(pca_components > comp_min_val, axis=1)
         pca_components_filter_flags = ~(pca_components_positive_pts > threshold)
         return pca_components_filter_flags
 
