@@ -143,7 +143,7 @@ class TacFigure:
         return [ax.errorbar(tac_times, tac_vals, yerr=uncertainty, **kwargs) for ax in self.fax]
 
 
-    def normalize_yaxis(self, **kwargs):
+    def set_ylim_min_to_zero(self, **kwargs):
         r"""
         Set the y-axis lower limit to zero.
 
@@ -230,7 +230,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                               **kwargs)
         if show_legend:
             self.gen_legend()
-        self.normalize_yaxis()
+        self.set_ylim_min_to_zero()
         return self.fig
 
 
