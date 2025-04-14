@@ -29,11 +29,15 @@ class TacFigure:
 
     .. code-block:: python
 
-        tac_plots = TacFigure()
-        tac_plots.add_tac(tac_times_in_minutes, tac_vals, label='TAC 1', color='blue')
-        tac_plots.add_tac(tac_times_2, tac_vals_2, label='TAC 2', color='red')
-        tac_plots.gen_legend()
-        plt.show()
+        from petpal.visualizations.tac_plots import TacFigure
+        from petpal.utils.time_activity_curve import TimeActivityCurve
+
+        my_tac = TimeActivityCurve.from_tsv("/path/to/tac.tsv")
+        my_fig = tac_plots.TacFigure()
+
+        my_fig.add_tac(*my_tac.tac)
+        my_fig.write_fig(out_fig_path="/path/to/plot.png")
+
 
     """
     def __init__(self,
