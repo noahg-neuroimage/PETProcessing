@@ -321,8 +321,7 @@ class MultiTACAnalysisMixin:
         return tacs_files_list
 
 
-    @staticmethod
-    def get_tacs_objects_dict_from_files_list(tacs_files_list: list[str]):
+    def get_tacs_objects_dict_from_files_list(self, tacs_files_list: list[str]):
         """
         Creates a dict of TAC objects from a list of file paths.
 
@@ -339,8 +338,7 @@ class MultiTACAnalysisMixin:
         return tacs_dict
 
 
-    @staticmethod
-    def get_tacs_objects_dict_from_dir(tacs_dir: str) -> dict:
+    def get_tacs_objects_dict_from_dir(self, tacs_dir: str) -> dict:
         """
         Creates a dict of TAC objects from a directory of TAC files.
 
