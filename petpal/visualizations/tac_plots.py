@@ -55,6 +55,10 @@ class TacFigure:
             ylabel (str): The label for the y-axis. Defaults to 'TAC [$\mathrm{kBq/ml}$]'.
             plot_type (str): Type of plot, with options 'linear', 'log', or 'both'.
         """
+        self.fig = None
+        self.axes = None
+        self.fax = None
+
         if plot_type=='both':
             self.setup_linear_and_log_subplot(xlabel=xlabel, ylabel=ylabel, figsize=figsize)
         elif plot_type=='linear':
