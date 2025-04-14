@@ -181,7 +181,26 @@ class TacFigure:
 
 class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
     """
-    Handle plotting regional TACs generated with PETPAL.
+    Handle plotting regional TACs generated with PETPAL. Used when visualizing activity in several
+    brain regions in the same participant, especially after running PETPAL's write_tacs or sGTM
+    methods.
+
+    Example:
+
+    .. code-block:: python
+
+        from petpal.visualizations.tac_plots import RegionalTacFigure
+        from petpal.utils.time_activity_curve import TimeActivityCurve
+
+        my_tac = TimeActivityCurve.from_tsv("/path/to/tac.tsv")
+        my_regions = ['Putamen', 'Cerebellum', 'Cortical Gray Matter']
+        my_fig = tac_plots.RegionalTacFigure(tacs_dir="/path/to/tacs/folder/")
+
+        my_fig.add_errorbar(*my_tac.tac_werr, label='Whole Brain')
+        my_fig.plot_tacs_in_regions_list(regions=my_regions)
+
+        my_fig.write_fig(out_fig_path="/path/to/plot.png")
+
     """
     def __init__(self,
                  tacs_dir: str,
