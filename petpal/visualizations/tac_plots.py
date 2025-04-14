@@ -245,12 +245,15 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         tacs_obj_dict = self.tacs_objects_dict
         for i, region in enumerate(regions):
             tac = tacs_obj_dict[region]
-            self.add_errorbar(tac_times=tac.times,
-                              tac_vals=tac.activity,
-                              uncertainty=tac.uncertainty,
-                              label=region,
-                              color=colors[i%len(colors)],
-                              **kwargs)
+            plot_method = self.add_errorbar
+            if np.isnan(tac.uncertainty).all():
+                plot_method = self.add_tac
+            plot_method(tac_times=tac.times,
+                        tac_vals=tac.activity,
+                        uncertainty=tac.uncertainty,
+                        label=region,
+                        color=colors[i%len(colors)],
+                        **kwargs)
         if show_legend:
             self.gen_legend()
         self.set_ylim_min_to_zero()
