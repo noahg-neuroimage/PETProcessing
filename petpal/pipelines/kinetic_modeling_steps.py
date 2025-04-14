@@ -580,7 +580,7 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
                  output_prefix: str,
                  method: str,
                  fit_threshold_in_mins: float = 30.0,
-                 image_rescale:float=1.0/37000.):
+                 image_rescale:float=1.0):
         """
         Initializes the ParametricGraphicalAnalysisStep with specified parameters.
 
