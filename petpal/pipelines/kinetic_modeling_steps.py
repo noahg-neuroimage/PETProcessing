@@ -559,7 +559,7 @@ class RTMFittingAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
 class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
     """
     A step for performing parametric graphical analysis on TACs using various methods using
-    :class:`GraphicalAnalysisParametricImages<petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImages>`
+    :class:`~petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImage`
 
     This class sets up parametric graphical analysis, initializes required paths and parameters,
     and provides class methods for creating default steps with common graphical analysis methods
@@ -591,7 +591,7 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
             output_prefix (str): Prefix for the output files.
             method (str): Graphical analysis method.
             fit_threshold_in_mins (float, optional): Threshold in minutes for fitting. Defaults to 30.0
-            image_rescale (float, optional): Image rescale factor. Defaults to 1.0/37000.0
+            image_rescale (float, optional): Image rescale factor. Defaults to 1.0
         """
         TACAnalysisStepMixin.__init__(self, input_tac_path=input_tac_path, pet4D_img_path=input_image_path,
                                       roi_tacs_dir='', output_directory=output_directory, output_prefix=output_prefix,
