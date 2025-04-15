@@ -10,12 +10,14 @@ TODO:
 """
 import os
 
+import petpal.preproc.regional_tac_extraction
+
 from .regional_tac_extraction import write_tacs
 from ..utils.useful_functions import weighted_series_sum
 from ..visualizations import qc_plots
 from . import register, image_operations_4d, motion_corr, segmentation_tools
 
-roi_tac = image_operations_4d.roi_tac
+roi_tac = petpal.preproc.regional_tac_extraction.roi_tac
 resample_segmentation = segmentation_tools.resample_segmentation
 suvr = image_operations_4d.suvr
 gauss_blur = image_operations_4d.gauss_blur
