@@ -31,11 +31,12 @@ import nibabel
 import numpy as np
 from scipy.ndimage import center_of_mass
 
-from petpal.preproc.regional_tac_extraction import extract_mean_roi_tac_from_nifti_using_segmentation
 
 from ..utils.useful_functions import weighted_series_sum
 from ..utils import image_io, math_lib
 from ..preproc.decay_correction import undo_decay_correction, decay_correct
+from ..preproc.regional_tac_extraction import extract_mean_roi_tac_from_nifti_using_segmentation
+
 
 def stitch_broken_scans(input_image_path: str,
                         output_image_path: str,
