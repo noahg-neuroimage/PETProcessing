@@ -81,7 +81,8 @@ class TacFigure:
         subplot = plt.subplots(1, 1, sharey=True, constrained_layout=True, figsize=figsize)
         self.fig, self.axes = subplot
         self.fax = [self.axes]
-        _xlabel_set = [ax.set(xlabel=xlabel) for ax in self.fax]
+        for ax in self.fax:
+            ax.set(xlabel=xlabel)
         self.fax[0].set(ylabel=ylabel, title='Linear')
 
 
@@ -97,7 +98,8 @@ class TacFigure:
         subplot = plt.subplots(1, 1, sharey=True, constrained_layout=True, figsize=figsize)
         self.fig, self.axes = subplot
         self.fax = [self.axes]
-        _xlabel_set = [ax.set(xlabel=xlabel) for ax in self.fax]
+        for ax in self.fax:
+            ax.set(xlabel=xlabel)
         self.fax[0].set(xscale='log',ylabel=ylabel, title='SemiLog-X')
 
 
@@ -113,7 +115,8 @@ class TacFigure:
         subplot = plt.subplots(1, 2, sharey=True, constrained_layout=True, figsize=figsize)
         self.fig, self.axes = subplot
         self.fax = self.axes.flatten()
-        _xlabel_set = [ax.set(xlabel=xlabel) for ax in self.fax]
+        for ax in self.fax:
+            ax.set(xlabel=xlabel)
         self.fax[0].set(ylabel=ylabel, title='Linear')
         self.fax[1].set(xscale='log', title='SemiLog-X')
 
@@ -127,7 +130,8 @@ class TacFigure:
             tac_vals (np.ndarray): The corresponding values for the TAC.
             kwargs (dict): Additional keyword arguments for the plot() function.
         """
-        return [ax.plot(tac_times, tac_vals, **kwargs) for ax in self.fax]
+        for ax in self.fax:
+            ax.plot(tac_times, tac_vals, **kwargs)
 
 
     def add_errorbar(self,
@@ -144,7 +148,8 @@ class TacFigure:
             uncertainty (np.ndarray): Array containing uncertainties in TAC measurements.
             kwargs (dict): Additional keyword arguments for the plt.errorbar() function.
         """
-        return [ax.errorbar(tac_times, tac_vals, yerr=uncertainty, **kwargs) for ax in self.fax]
+        for ax in self.fax:
+            ax.errorbar(tac_times, tac_vals, yerr=uncertainty, **kwargs)
 
 
     def set_ylim_min_to_zero(self, **kwargs):
@@ -154,7 +159,8 @@ class TacFigure:
         Args:
             kwargs (dict): Additional keyword arguments for the set_ylim() function.
         """
-        return [ax.set_ylim(0, None, **kwargs) for ax in self.fax]
+        for ax in self.fax:
+            ax.set_ylim(0, None, **kwargs)
 
 
     def gen_legend(self):
