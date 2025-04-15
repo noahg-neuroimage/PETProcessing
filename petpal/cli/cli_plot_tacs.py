@@ -21,7 +21,7 @@ Examples:
   - Plot the linear-linear plot only:
     petpal-plot-tacs --tac-files my_tac.tsv --plot-type linear --out-fig-path tac.png
   - Set the figure title to the participant name:
-    petpal-plot-tacs --tac-files my_tac.tsv --participant sub-001 --out-fig-path tac.png
+    petpal-plot-tacs --tac-files my_tac.tsv --fig-title sub-001 --out-fig-path tac.png
 """
 
 
@@ -48,8 +48,7 @@ def main():
                         help='Path to the file where the figure is saved.')
     parser.add_argument('--fig-title',
                         required=False,
-                        help='Name of the participant the TAC or TACs belong to. Assigned to '
-                             'figure title.')
+                        help='Sets the figure title.')
     parser.add_argument('--regions',
                         required=False,
                         nargs='+',
@@ -96,22 +95,24 @@ def main():
                                 xlabel=fr'$t$ [{args.xaxis_units}]',
                                 ylabel=fr'TAC [$\mathrm{{{args.yaxis_units}}}$]')
 
-    plot_style_opts = {'lines': '-', 'markers': 'o', 'both': '-o'}
+    plot_style_opts = {'lines': {'marker':'None','ls':'-'},
+                       'markers': {'marker':'.','ls':'None'},
+                       'both': {'marker':'.','ls':'-'}}
     plot_style = plot_style_opts[args.plot_style]
 
     if args.tac_files is not None:
         for tac_file in args.tac_files:
             tac = TimeActivityCurve.from_tsv(filename=tac_file)
-            fig.add_errorbar(*tac.tac_werr, fmt=plot_style)
+            fig.add_errorbar(*tac.tac_werr, **plot_style)
 
     if args.tac_dir is not None:
         if args.regions is None:
-            fig.plot_all_regional_tacs(fmt=plot_style)
+            fig.plot_all_regional_tacs(**plot_style)
         else:
-            fig.plot_tacs_in_regions_list(regions=args.regions, fmt=plot_style)
+            fig.plot_tacs_in_regions_list(regions=args.regions, **plot_style)
 
-    if args.participant is not None:
-        fig.fig.suptitle(t=args.participant)
+    if args.fig_title is not None:
+        fig.fig.suptitle(t=args.fig_title)
 
     fig.write_fig(out_fig_path=args.out_fig_path)
 
