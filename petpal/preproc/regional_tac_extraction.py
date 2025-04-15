@@ -8,7 +8,7 @@ import ants
 
 from ..utils import image_io
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
-
+from ..utils.time_activity_curve import TimeActivityCurve
 
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
                                                        segmentation_image_numpy: np.ndarray,
@@ -57,7 +57,8 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.
     masked_voxels = (seg_image > region - 0.1) & (seg_image < region + 0.1)
     masked_image = pet_image_4d[masked_voxels].reshape((-1, num_frames))
     tac_out = np.mean(masked_image, axis=0)
-    return tac_out
+    uncertainty = np.std(masked_image, axis=0)
+    return tac_out, uncertainty
 
 
 def write_tacs(input_image_path: str,
@@ -88,17 +89,19 @@ def write_tacs(input_image_path: str,
     seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
 
     for i, _maps in enumerate(label_map['mapping']):
-        extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
+        extracted_tac, uncertainty = tac_extraction_func(input_image_4d_numpy=pet_numpy,
                                             segmentation_image_numpy=seg_numpy,
                                             region=int(regions_map[i]),
                                             verbose=verbose)
-        region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
+        region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
+                                            activity=extracted_tac,
+                                            uncertainty=uncertainty)
         header_text = f'{time_frame_keyword}\t{regions_abrev[i]}_mean_activity'
         if out_tac_prefix:
             out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
         else:
             out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
-        np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
+        np.savetxt(out_tac_path,region_tac_file.tac_werr,delimiter='\t',header=header_text,comments='')
 
 
 def roi_tac(input_image_4d_path: str,
