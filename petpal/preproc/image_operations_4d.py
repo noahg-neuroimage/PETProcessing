@@ -31,6 +31,8 @@ import nibabel
 import numpy as np
 from scipy.ndimage import center_of_mass
 
+from petpal.preproc.regional_tac_extraction import extract_mean_roi_tac_from_nifti_using_segmentation
+
 from ..utils.useful_functions import weighted_series_sum
 from ..utils import image_io, math_lib
 from ..preproc.decay_correction import undo_decay_correction, decay_correct
@@ -357,56 +359,6 @@ def brain_mask(input_image_4d_path: str,
     )
     mask = mask_on_pet.get_mask()
     ants.image_write(image=mask,filename=out_image_path)
-
-def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
-                                                       segmentation_image_numpy: np.ndarray,
-                                                       region: int,
-                                                       verbose: bool) -> np.ndarray:
-    """
-    Creates a time-activity curve (TAC) by computing the average value within a region, for each 
-    frame in a 4D PET image series. Takes as input a PET image, which has been registered to
-    anatomical space, a segmentation image, with the same sampling as the PET, and a list of values
-    corresponding to regions in the segmentation image that are used to compute the average
-    regional values. Currently, only the mean over a single region value is implemented.
-
-    Args:
-        input_image_4d_path (str): Path to a .nii or .nii.gz file containing a 4D
-            PET image, registered to anatomical space.
-        segmentation_image_path (str): Path to a .nii or .nii.gz file containing a 3D segmentation
-            image, where integer indices label specific regions. Must have same sampling as PET
-            input.
-        region (int): Value in the segmentation image corresponding to a region
-            over which the TAC is computed.
-        verbose (bool): Set to ``True`` to output processing information.
-
-    Returns:
-        tac_out (np.ndarray): Mean of PET image within regions for each frame in 4D PET series.
-
-    Raises:
-        ValueError: If the segmentation image and PET image have different
-            sampling.
-    """
-
-    pet_image_4d = input_image_4d_numpy
-    if len(pet_image_4d.shape)==4:
-        num_frames = pet_image_4d.shape[3]
-    else:
-        num_frames = 1
-    seg_image = segmentation_image_numpy
-
-    if seg_image.shape[:3]!=pet_image_4d.shape[:3]:
-        raise ValueError('Mis-match in image shape of segmentation image '
-                         f'({seg_image.shape}) and PET image '
-                         f'({pet_image_4d.shape[:3]}). Consider resampling '
-                         'segmentation to PET or vice versa.')
-
-    if verbose:
-        print(f'Running TAC for region index {region}')
-    masked_voxels = (seg_image > region - 0.1) & (seg_image < region + 0.1)
-    masked_image = pet_image_4d[masked_voxels].reshape((-1, num_frames))
-    tac_out = np.mean(masked_image, axis=0)
-    return tac_out
-
 
 def threshold(input_image_numpy: np.ndarray,
               lower_bound: float=-np.inf,
