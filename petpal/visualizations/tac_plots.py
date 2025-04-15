@@ -174,7 +174,7 @@ class TacFigure:
         """
         handles, labels = self.fax[0].get_legend_handles_labels()
         if handles:
-            self.fax[-1].legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
+            self.fig.legend(handles, labels, bbox_to_anchor=(1.0, 0.5), loc='center left')
 
 
     def write_fig(self, out_fig_path: str, **kwargs):
@@ -186,7 +186,7 @@ class TacFigure:
             out_fig_path (str): Path to the file the figure will be written to.
             kwargs (dict): Additional key word arguments passed to plt.savefig()
         """
-        self.fig.savefig(fname=out_fig_path, **kwargs)
+        self.fig.savefig(fname=out_fig_path, bbox_inches='tight', **kwargs)
 
 
 class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
@@ -252,11 +252,11 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         for i, region in enumerate(regions):
             tac = tacs_obj_dict[region]
             plot_method = self.add_errorbar
+            tac_toplot = tac.tac_werr
             if np.isnan(tac.uncertainty).all():
                 plot_method = self.add_tac
-            plot_method(tac_times=tac.times,
-                        tac_vals=tac.activity,
-                        uncertainty=tac.uncertainty,
+                tac_toplot = tac.tac
+            plot_method(*tac_toplot,
                         label=region,
                         color=colors[i%len(colors)],
                         **kwargs)
