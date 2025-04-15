@@ -37,16 +37,16 @@ def main():
     parser.add_argument('--tac-files',
                         required=False,
                         nargs='+',
-                        help='Path to or more individual .tsv TAC files, separate paths with '
-                             'spaces. At least one of: --tac-files, --tac-dir, are required.')
+                        help='Path to one or more individual .tsv TAC files, separate paths with '
+                             'spaces. At least one of: --tac-files, --tac-dir, is required.')
     parser.add_argument('--tac-dir',
                         required=False,
                         help='Path to a directory containing .tsv TAC files generated with PETPAL.'
-                             ' At least one of: --tac-files, --tac-dir, are required.')
+                             ' At least one of: --tac-files, --tac-dir, is required.')
     parser.add_argument('--out-fig-path',
                         required=True,
                         help='Path to the file where the figure is saved.')
-    parser.add_argument('--participant',
+    parser.add_argument('--fig-title',
                         required=False,
                         help='Name of the participant the TAC or TACs belong to. Assigned to '
                              'figure title.')
@@ -66,7 +66,7 @@ def main():
     parser.add_argument('--yaxis-units',
                         required=False,
                         default='Bq/mL',
-                        choices=['Bq/mL','kBq/mL','cps'],
+                        choices=['Bq/mL','kBq/mL','cps','nCi/mL'],
                         help='Set activity concentration unit label for the y-axis. Does not scale'
                              ' units, this only assigns the axis label name.')
     parser.add_argument('--xaxis-units',
