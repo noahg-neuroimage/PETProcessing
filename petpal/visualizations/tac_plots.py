@@ -83,7 +83,7 @@ class TacFigure:
         self.fax = [self.axes]
         for ax in self.fax:
             ax.set(xlabel=xlabel)
-        self.fax[0].set(ylabel=ylabel, title='Linear')
+        self.fax[0].set(ylabel=ylabel)
 
 
     def setup_log_subplot(self, xlabel: str, ylabel: str, figsize: tuple):
@@ -100,7 +100,7 @@ class TacFigure:
         self.fax = [self.axes]
         for ax in self.fax:
             ax.set(xlabel=xlabel)
-        self.fax[0].set(xscale='log',ylabel=ylabel, title='SemiLog-X')
+        self.fax[0].set(xscale='log',ylabel=ylabel)
 
 
     def setup_linear_and_log_subplot(self, xlabel: str, ylabel: str, figsize: tuple):
