@@ -128,20 +128,20 @@ def register_pet(input_reg_image_path: str,
 def warp_pet_atlas(input_image_path: str,
                    anat_image_path: str,
                    atlas_image_path: str,
-                   out_image_path: str,
-                   verbose: bool,
+                   out_image_path: str | None,
+                   verbose: bool = False,
                    type_of_transform: str = 'SyN',
                    **kwargs):
     """
-    Compute and apply a warp on a 3D or 4D image in anatomical space
-    to atlas space using ANTs.
+    Compute and apply a warp on a 3D or 4D image in anatomical space to atlas space.
 
     Args:
         input_image_path (str): Image to be registered to atlas. Must be in
             anatomical space. May be 3D or 4D.
         anat_image_path (str): Image used to compute registration to atlas space.
         atlas_image_path (str): Atlas to which input image is warped.
-        out_image_path (str): Path to which warped image is saved.
+        out_image_path (str): Path to which warped image is saved. If `None`, no image is saved.
+        verbose (bool): If True, prints information while processing. Defaults to False.
         type_of_transform (str): Type of non-linear transform applied to input 
             image using :py:func:`ants.registration`.
         kwargs (keyword arguments): Additional arguments passed to
@@ -171,14 +171,18 @@ def warp_pet_atlas(input_image_path: str,
 
     pet_atlas_xfm = ants.apply_transforms(fixed=atlas_image_ants,
                                           moving=pet_image_ants,
-                                          transformlist=xfm_to_apply, verbose=True,
+                                          transformlist=xfm_to_apply,
+                                          verbose=True,
                                           imagetype=dim)
 
     if verbose:
         print('Computed transform, saving to file.')
-    ants.image_write(pet_atlas_xfm, out_image_path)
 
-    image_io.safe_copy_meta(input_image_path=input_image_path, out_image_path=out_image_path)
+    if out_image_path is not None:
+        ants.image_write(image=pet_atlas_xfm,
+                         filename=out_image_path)
+        image_io.safe_copy_meta(input_image_path=input_image_path,
+                                out_image_path=out_image_path)
 
     return xfm_to_apply
 
