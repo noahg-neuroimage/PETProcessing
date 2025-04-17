@@ -668,7 +668,7 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
     def default_patlak(cls):
         """
         Creates a default instance for Patlak parametric graphical analysis using
-        :class:`GraphicalAnalysisParametricImages<petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImages>`.
+        :class:`GraphicalAnalysisParametricImages<petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImage>`.
         All non-method arguments are set to empty-strings.
         
         Returns:
@@ -680,7 +680,7 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
     def default_logan(cls):
         """
         Creates a default instance for Logan parametric graphical analysis using
-        :class:`GraphicalAnalysisParametricImages<petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImages>`.
+        :class:`GraphicalAnalysisParametricImages<petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImage>`.
         All non-method arguments are set to empty-strings.
 
         Returns:
@@ -692,7 +692,7 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
     def default_alt_logan(cls):
         """
         Creates a default instance for Alt-Logan parametric graphical analysis using
-        :class:`GraphicalAnalysisParametricImages<petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImages>`.
+        :class:`GraphicalAnalysisParametricImages<petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImage>`.
         All non-method arguments are set to empty-strings.
 
         Returns:

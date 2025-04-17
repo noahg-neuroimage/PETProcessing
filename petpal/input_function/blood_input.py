@@ -1,3 +1,7 @@
+r"""General module for extracting and interpolating measured input function data.
+"""
+
+
 from typing import Tuple
 import numpy as np
 from pandas import read_csv

@@ -137,7 +137,7 @@ class TACFitter(object):
             import petpal.visualizations.tac_plots as tac_plots
             
             tcm_func = pet_tcm.generate_tac_1tcm_c1_from_tac
-            pTAC = np.asarray(np.loadtxt('../data/tcm_tacs/fdg_plasma_clamp_evenly_resampled.txt').T)
+            pTAC = np.asarray(np.loadtxt('../../../../../data/tcm_tacs/fdg_plasma_clamp_evenly_resampled.txt').T)
             tTAC = tcm_func(*pTAC, k1=1.0, k2=0.25, vb=0.05)
             tTAC[1] = pet_tst.add_gaussian_noise_to_tac_based_on_max(tTAC[1])
             
