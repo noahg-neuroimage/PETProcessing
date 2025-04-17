@@ -216,7 +216,7 @@ class WriteRegionalTacs:
         region. Writes a JSON for each region with region name, frame start time, and mean 
         value within region.
         """
-        unique_segmentation_labels = self.seg_img.numpy().unique()
+        unique_segmentation_labels = np.unique(self.seg_img.numpy())
 
         if label_map_path is not None:
             label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
