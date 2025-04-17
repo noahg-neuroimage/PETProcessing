@@ -350,14 +350,6 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
     voxels for a specific PCA component to refine the IDIF estimation. The user must specify
     the PCA component and the number of voxels to be analyzed for the calculation.
 
-    Methods:
-        calculate_top_pc_voxels_mask(pca_obj, pca_fit, pca_component, number_of_voxels):
-            Static method that determines the top contributing voxels for a specific PCA component.
-        run(selected_component, num_of_voxels):
-            Executes the analysis by selecting voxels, calculating TACs, and setting the analysis state.
-        __call__(selected_component, num_of_voxels):
-            A callable wrapper around the `run` method that also saves the results to a file.
-
     """
     def __init__(self,
                  input_image_path: str,
@@ -472,6 +464,14 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
 class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
     """Base class for calculating the PCA-guided IDIF by fitting to find the best voxels
 
+    This class extends :class:`~petpal.input_function.pca_guided_idif.PCAGuidedIdifBase` and provides a framework for applying optimizations
+    and heuristics (e.g., voxel count, peak sharpness, and smoothness) to filter and refine the
+    targeted voxel selection for IDIF estimation.
+
+    Notes:
+        This class provides a foundation for subclasses to customize voxel filtering and
+        optimization strategies by overriding the static methods for term functions.
+
     """
     def __init__(self,
                  input_image_path: str,
@@ -481,6 +481,21 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
                  pca_comp_filter_min_value: float,
                  pca_comp_threshold: float,
                  verbose: bool):
+        """Initializes the PCA-guided IDIF fitter base-class.
+
+        Args:
+            input_image_path (str): Path to the dynamic input image.
+            mask_image_path (str): Path to the mask image used to select the region of interest.
+            output_tac_path (str): Path where the output TAC data will be saved.
+            num_pca_components (int): Number of PCA components to compute.
+            pca_comp_filter_min_value (float): Minimum value for filtering PCA components.
+            pca_comp_threshold (float): Threshold for filtering PCA components.
+            verbose (bool): Whether to enable detailed diagnostic output.
+
+        Side Effects:
+            - Initializes several fitting-related attributes (e.g., `alpha`, `beta`, `_fitting_params`).
+            - Calculates PCA filtering flags and signs based on the passed thresholds.
+        """
         PCAGuidedIdifBase.__init__(self,
                                    input_image_path=input_image_path,
                                    mask_image_path=mask_image_path,
@@ -528,28 +543,86 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
     def get_pca_component_filter_flags(pca_components: np.ndarray,
                                        comp_min_val: float = 0.0,
                                        threshold: float = 0.1) -> np.ndarray[bool]:
+        """Generates filtering flags for PCA components based on their contribution.
+
+        Given the `comp_min_val`, we check how many of the time-points of the PCA components are
+        above the threshold, then `threshold` determines if the component contributes with ``>`` (if
+        the fraction of higher points is above the threshold) or ``<`` (if the fraction of higher points is
+        below the threshold).
+
+        Args:
+            pca_components (np.ndarray): Array of PCA components for evaluation.
+            comp_min_val (float): Minimum value for PCA components to contribute positively.
+            threshold (float): Threshold for rejecting components with insufficient contributions.
+
+        Returns:
+            np.ndarray[bool]: Boolean flags indicating whether a PCA filters less than, or greater than.
+        """
         pca_components_positive_pts: np.ndarray = np.mean(pca_components > comp_min_val, axis=1)
         pca_components_filter_flags = ~(pca_components_positive_pts > threshold)
         return pca_components_filter_flags
 
     @staticmethod
     def get_pca_filter_signs_from_flags(pca_component_filter_flags: np.ndarray[bool]) -> list[str]:
+        """Derives signs ('>' or '<') for PCA components based on their filtering flags.
+
+        See Also:
+            :meth:`get_pca_component_filter_flags`
+
+        Args:
+            pca_component_filter_flags (np.ndarray[bool]): Filtering flags for PCA components.
+
+        Returns:
+            list[str]: List of signs corresponding to the filter flags.
+        """
         return ['>' if sgn else '<' for sgn in ~pca_component_filter_flags]
 
     @staticmethod
     def _voxel_term_func(voxel_nums: float) -> float:
+        """Abstract method for computing the voxel-number term for the optimization function.
+
+        Args:
+            voxel_nums (float): Number of valid voxels contributing to the TACs.
+
+        Returns:
+            float: Calculated voxel term.
+        """
         raise NotImplementedError
 
     @staticmethod
     def _noise_term_func(tac_stderrs: np.ndarray[float]) -> float:
+        """Abstract method for computing the noise term for the optimization function.
+
+        Args:
+            tac_stderrs (np.ndarray[float]): Standard deviations of TACs from voxel data.
+
+        Returns:
+            float: Calculated noise term.
+        """
         raise NotImplementedError
 
     @staticmethod
     def _smoothness_term_func(tac_values: np.ndarray[float]) -> float:
+        """Abstract method for computing the smoothness term for the optimization function.
+
+        Args:
+            tac_values (np.ndarray[float]): Mean values of TACs from voxel data.
+
+        Returns:
+            float: Calculated smoothness term.
+        """
         raise NotImplementedError
 
     @staticmethod
     def _peak_term_func(tac_peak_ratio: float) -> float:
+        """Abstract method for computing the peak term for the optimization function.
+
+        Args:
+            tac_peak_ratio (float): Ratio of the voxel TAC peak to the peak of the mask average
+
+        Returns:
+            float: Calculated peak term.
+        """
         raise NotImplementedError
 
     @staticmethod
@@ -557,6 +630,17 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
                                   value: float = 0.5,
                                   lower: float = 1e-4,
                                   upper: float = 0.999) -> lmfit.Parameters:
+        """Generates initial fitting quantile parameters for determining voxel filters.
+
+        Args:
+            num_components (int): The number of PCA components to generate parameters for.
+            value (float): Default value for each quantile parameter (e.g., median = 0.5).
+            lower (float): Lower bound for the quantile parameter (default is 1e-4).
+            upper (float): Upper bound for the quantile parameter (default is 0.999).
+
+        Returns:
+            lmfit.Parameters: A parameter set with quantile values for each PCA component.
+        """
         tmp_dict = {'value': value, 'min': lower, 'max': upper}
         return lmfit.create_params(**{f'pc{i}': tmp_dict for i in range(num_components)})
 
@@ -564,6 +648,22 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
     def calculate_voxel_mask_from_quantiles(params: lmfit.Parameters,
                                             pca_values_per_voxel: np.ndarray,
                                             quantile_flags: np.ndarray[bool]) -> np.ndarray[bool]:
+        """Calculates a mask to identify selected voxels based on quantile thresholds.
+
+        Given the passed in quantile `params`, we check if the value of the principal component for a
+        voxel is above the quantile threshold, then `quantile_flags` is used to flip the signs of
+        the components which should be lower than. For each voxel, the boolean product is calculated to
+        determine if the voxel should be a part of the mask or not. Only voxels where every PC is above (or below)
+        the quantile thresholds in `params` are included in the mask.
+
+        Args:
+            params (lmfit.Parameters): Quantile parameters for each PCA component.
+            pca_values_per_voxel (np.ndarray): PCA values for every voxel.
+            quantile_flags (np.ndarray[bool]): Filtering flags for quantile-based masking.
+
+        Returns:
+            np.ndarray[bool]: Mask identifying selected voxels passing the quantile criteria.
+        """
         voxel_mask = np.ones(len(pca_values_per_voxel), dtype=bool)
         quantile_values = params.valuesdict().values()
         for pca_component, quantile, flag in zip(pca_values_per_voxel.T, quantile_values, quantile_flags):
@@ -571,6 +671,17 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
         return voxel_mask
 
     def calculate_filter_flags_and_signs(self, comp_min_val: float, threshold: float):
+        """Updates PCA filter flags and their respective signs based on component values.
+
+        Args:
+            comp_min_val (float): Minimum acceptable value for filtering PCA components.
+            threshold (float): Threshold percentage for filtering components.
+
+        Side Effects:
+            - Updates the `pca_filter_flags` attribute with new flags for indicating filtered components.
+            - Updates the `filter_signs` attribute with the corresponding value comparison signs
+              based on the flags.
+        """
         self.pca_filter_flags = self.get_pca_component_filter_flags(pca_components=self.pca_obj.components_,
                                                                     comp_min_val=comp_min_val,
                                                                     threshold=threshold)
@@ -583,6 +694,26 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
                  voxel_tacs: np.ndarray,
                  alpha: float,
                  beta: float) -> float:
+        r"""Calculates the residual (objective function) for optimization.
+
+        The residual has the following terms:
+
+        .. math::
+
+            \mathcal{L} = \mathrm{VoxelTerm} + \mathrm{NoiseTerm} + (\alpha\cdot\mathrm{PeakTerm}) + (\beta\cdot\mathrm{SmoothnessTerm})
+
+
+        Args:
+            params (lmfit.Parameters): Parameters for the optimization.
+            pca_values_per_voxel (np.ndarray[float]): PCA values for each voxel.
+            quantile_flags (np.ndarray[bool]): Flags indicating quantile filtering.
+            voxel_tacs (np.ndarray): TACs for valid voxels.
+            alpha (float): Weight for the peak term.
+            beta (float): Weight for the smoothness term.
+
+        Returns:
+            float: Residual value.
+        """
         voxel_mask = self.calculate_voxel_mask_from_quantiles(params, pca_values_per_voxel, quantile_flags)
         valid_voxels_number = np.sum(voxel_mask)
         masked_voxels = voxel_tacs[voxel_mask]
@@ -602,6 +733,22 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
     def run(self,
             alpha: float, beta: float,
             method: str = 'ampgo', **method_kwargs):
+        """Runs the PCA-guided IDIF fitting process using optimization.
+
+        Args:
+            alpha (float): Weight for the peak term in the optimization.
+            beta (float): Weight for the smoothness term in the optimization.
+            method (str): Optimization method to use (default is 'ampgo').
+            **method_kwargs: Additional keyword arguments for the optimizer.
+
+        Side Effects:
+            - Updates optimization-related attributes (e.g., `fit_result`, `fit_quantiles`).
+            - Updates `selected_voxels_mask` with the best voxel subset.
+            - Marks `analysis_has_run` as True.
+
+        Notes:
+            The `run` method uses the residual function as the target for minimization.
+        """
         self.alpha = alpha
         self.beta = beta
         self.fitting_obj = lmfit.Minimizer(userfcn=self.residual,
@@ -618,6 +765,17 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
         self.calculate_tacs_from_mask()
 
     def __call__(self, alpha: float, beta: float, method: str, **meth_kwargs) -> None:
+        """Callable interface for running the fitting process and saving results.
+
+        Args:
+            alpha (float): Weight for the peak term in the optimization.
+            beta (float): Weight for the smoothness term in the optimization.
+            method (str): Optimization method to use.
+            **method_kwargs: Additional keyword arguments for the optimizer.
+
+        Side Effects:
+            - Executes the analysis and saves the resulting TAC data to the output file.
+        """
         self.run(alpha=alpha, beta=beta, method=method, **meth_kwargs)
         self.save()
 
