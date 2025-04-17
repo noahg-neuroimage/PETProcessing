@@ -2,6 +2,7 @@
 CLI module to plot TACs from a TACs folder created by petpal function write-tacs.
 """
 import argparse
+
 from ..visualizations.tac_plots import TacFigure, RegionalTacFigure
 from ..utils.time_activity_curve import TimeActivityCurve
 
