@@ -399,6 +399,22 @@ class MultiTACAnalysisMixin:
         tacs_vals = self.get_tacs_vals_from_objs_list(tacs_objects_list)
         return tacs_vals
 
+
+    @staticmethod
+    def capitalize_first_char_of_str(input_str: str):
+        """
+        Capitalize only the first character of a string, leaving the remainder unchanged.
+
+        Args:
+            input_str (str): The string to capitalize the first character of.
+
+        Returns:
+            output_str (str): The string with only the first character capitalized.
+        """
+        output_str = input_str[0].capitalize()+input_str[1:]
+        return output_str
+
+
     @staticmethod
     def infer_segmentation_label_from_tac_path(tac_path: str, tac_id: int):
         """
@@ -429,6 +445,11 @@ class MultiTACAnalysisMixin:
             return f'UNK{tac_id:03}'
         else:
             segparts = segname.split("-")
+            segparts_capped = []
+            capitalize_first = MultiTACAnalysisMixin.capitalize_first_char_of_str
+            for a_part in segparts:
+                segpart_capped = capitalize_first(input_str=a_part)
+                segparts_capped += [segpart_capped]
             segname = ''.join(segparts)
             return segname
 
