@@ -304,18 +304,42 @@ class PCAGuidedIdifBase(object):
 
     @property
     def idif_tac(self):
+        """Get the calculated IDIF TAC
+
+
+        Returns:
+            np.ndarray: (times, idif_vals)
+        """
         return np.asarray([self.tac_times_in_mins, self.idif_vals])
 
     @property
     def idif_tac_werr(self):
+        """Get the calculated IDIF TAC with the standard deviations
+
+
+        Returns:
+            np.ndarray: (times, idif_vals, idif_stderrs)
+        """
         return np.asarray([self.tac_times_in_mins, self.idif_vals, self.idif_errs])
 
     @property
     def prj_idif_tac(self):
+        """Get the calculated PCA-projected IDIF TAC
+
+
+        Returns:
+            np.ndarray: (times, projected_idif_vals)
+        """
         return np.asarray([self.tac_times_in_mins, self.prj_idif_vals])
 
     @property
     def prj_idif_tac_werr(self):
+        """Get the calculated PCA-projected IDIF TAC with the standard deviations
+
+
+        Returns:
+            np.ndarray: (times, projected_idif_vals, projected_idif_stderrs)
+        """
         return np.asarray([self.tac_times_in_mins, self.prj_idif_vals, self.prj_idif_errs])
 
 
