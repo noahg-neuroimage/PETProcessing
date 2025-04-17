@@ -68,11 +68,10 @@ autoapi_options = [
 ]
 
 autoapi_ignore = ['*cli*']
-# autoapi_ignore = ['*cli*', '*kinetic_modeling*', '*pipelines*', '*preproc*', '*utils*']
 autoapi_own_page_level = 'function'
 autoapi_template_dir = '_templates'
 autoapi_python_class_content = 'both'
-autoapi_member_order = 'groupwise'
+autoapi_member_order = 'bysource'
 autoapi_keep_files = True
 autoapi_generate_api_docs = True
 autoapi_toctree_entries = True

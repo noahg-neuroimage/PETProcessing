@@ -344,7 +344,19 @@ class PCAGuidedIdifBase(object):
 
 
 class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
-    """Class for calculating a PCA-guided IDIF by averaging over the top voxels of a selected principal component.
+    """Class for calculating a PCA-guided IDIF by averaging over the top voxels of a selected principal component (PC).
+
+    This class extends `PCAGuidedIdifBase` and specializes in selecting the most contributing
+    voxels for a specific PCA component to refine the IDIF estimation. The user must specify
+    the PCA component and the number of voxels to be analyzed for the calculation.
+
+    Methods:
+        calculate_top_pc_voxels_mask(pca_obj, pca_fit, pca_component, number_of_voxels):
+            Static method that determines the top contributing voxels for a specific PCA component.
+        run(selected_component, num_of_voxels):
+            Executes the analysis by selecting voxels, calculating TACs, and setting the analysis state.
+        __call__(selected_component, num_of_voxels):
+            A callable wrapper around the `run` method that also saves the results to a file.
 
     """
     def __init__(self,
@@ -353,6 +365,19 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
                  output_tac_path: str,
                  num_pca_components: int,
                  verbose: bool):
+        """Initializes the PCA-guided Top Voxels IDIF class.
+
+        Args:
+            input_image_path (str): Path to the dynamic input image used to calculate the IDIF.
+            mask_image_path (str): Path to the mask image used for voxel selection.
+            output_tac_path (str): Destination path where the output TAC data will be saved.
+            num_pca_components (int): Number of PCA components to compute.
+            verbose (bool): If True, enables detailed diagnostic output.
+
+        Side Effects:
+            Initializes instance-specific attributes (`num_of_voxels` and `selected_component`)
+            as `None` until provided during a call to `run`.
+        """
         PCAGuidedIdifBase.__init__(self,
                                    input_image_path=input_image_path,
                                    mask_image_path=mask_image_path,
@@ -367,11 +392,52 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
                                      pca_fit: np.ndarray,
                                      pca_component: int,
                                      number_of_voxels: int) -> np.ndarray:
+        r"""Determines the top contributing voxels for a specified PCA component.
+
+        Args:
+            pca_obj (PCA): A scikit-learn PCA object used to compute the principal components.
+            pca_fit (np.ndarray): The array of PCA projections for each voxel.
+            pca_component (int): Index of the PCA component for voxel selection (0-based).
+            number_of_voxels (int): The number of top-contributing voxels to include.
+
+        Returns:
+            np.ndarray: A Boolean mask indicating the voxels selected for the specified PCA component.
+
+        Raises:
+            AssertionError: If the `pca_component` index is invalid (e.g., less than 0 or greater
+                            than or equal to the number of PCA components in `pca_obj`).
+
+        Notes:
+            Voxels are ranked and selected based on a descending sort of their contributions
+            to the specified PCA component.
+        """
+
         assert pca_obj.n_components > pca_component >= 0, "PCA component index must be >= 0 and less than the number of total components."
         pc_comp_argsort = np.argsort(pca_fit[:, pca_component])[::-1]
         return pc_comp_argsort[:number_of_voxels]
 
     def run(self, selected_component: int, num_of_voxels: int) -> None:
+        """Executes the PCA-guided IDIF analysis by selecting voxels and calculating TACs.
+
+        Args:
+            selected_component (int): The PCA component index to guide voxel selection (0-based).
+            num_of_voxels (int): The number of top-contributing voxels to include in the analysis.
+
+        Side Effects:
+            - Sets `selected_component` to the chosen PCA component index.
+            - Sets `num_of_voxels` to the number of selected voxels.
+            - Updates `selected_voxels_mask` with a mask indicating top-contributing voxels.
+            - Marks `analysis_has_run` as True after successful execution.
+            - Updates IDIF-related metrics (e.g., `idif_vals`, `prj_idif_vals`) by invoking
+              `calculate_tacs_from_mask`.
+
+        Raises:
+            AssertionError: If `num_of_voxels` is less than 3.
+
+        Notes:
+            This method must be called before saving or further analyzing the results, as it sets
+            the necessary state attributes.
+        """
         assert num_of_voxels > 2, "num_of_voxels must be greater than 2."
         self.selected_component = selected_component
         self.num_of_voxels = num_of_voxels
@@ -383,6 +449,22 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
         self.calculate_tacs_from_mask()
 
     def __call__(self, selected_component: int, num_of_voxels: int) -> None:
+        r"""Callable interface for running the analysis and saving the results.
+
+        This method provides a convenient way to execute the analysis and save the resultant
+        TAC data to the specified output file in a single call.
+
+        Args:
+            selected_component (int): The PCA component index to guide voxel selection (0-based).
+            num_of_voxels (int): The number of top-contributing voxels to include in the analysis.
+
+        Side Effects:
+            - Runs the full analysis using the `run` method.
+            - Saves the resulting TAC data to the file specified in `output_tac_path`.
+
+        Notes:
+            Combines the functionality of `run` and `save` for streamlined usage.
+        """
         self.run(selected_component=selected_component, num_of_voxels=num_of_voxels)
         self.save()
 
