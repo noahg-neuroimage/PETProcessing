@@ -174,6 +174,9 @@ class WriteRegionalTacs:
         pet_img
         seg_img
         tac_extraction_func
+        out_tac_prefix
+        out_tac_dir
+        scan_timing
     """
     def __init__(self,
                  input_image_path: str | pathlib.Path,
@@ -206,17 +209,23 @@ class WriteRegionalTacs:
         region_tac_file.to_tsv(filename=out_tac_path)
 
 
-    def write_tacs(self, label_map_path: str):
+    def write_tacs(self, label_map_path: str=None):
         """
         Function to write Tissue Activity Curves for each region, given a segmentation,
         4D PET image, and label map. Computes the average of the PET image within each
         region. Writes a JSON for each region with region name, frame start time, and mean 
         value within region.
         """
-        label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
-        regions_abrev = label_map['abbreviation']
-        regions_map = label_map['mapping']
+        unique_segmentation_labels = self.seg_img.numpy().unique()
 
-        for i, _maps in enumerate(label_map['mapping']):
+        if label_map_path is not None:
+            label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
+            regions_abrev = label_map['abbreviation']
+            regions_map = label_map['mapping']
+        else:
+            regions_map = [int(label) for label in unique_segmentation_labels]
+            regions_abrev = [str(label) for label in regions_map]
+
+        for i, _label in enumerate(unique_segmentation_labels):
             self.extract_tac_and_write(regions_map[i],
                                        regions_abrev[i])
