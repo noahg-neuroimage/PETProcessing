@@ -1,5 +1,6 @@
 """
-Module to plot TACs.
+Module to create figures and plot TACs generated with PETPAL. Wraps MatPlotLib to make plotting
+TACs convenient.
 
 Key features:
     * :class:`TacFigure` Handles plotting TACs on a figure.
@@ -215,8 +216,9 @@ class TacFigure:
 class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
     """
     Handle plotting regional TACs generated with PETPAL. Used when visualizing activity in several
-    brain regions in the same participant, especially after running PETPAL's write_tacs or sGTM
-    methods.
+    brain regions in the same participant, especially after running PETPAL's
+    :py:func:`petpal.preproc.image_operations_4d.write_tacs` or 
+    :py:class:`petpal.preproc.symmetric_geometric_transfer_matrix.Sgtm` methods.
 
     Example:
 
@@ -229,7 +231,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         my_tac = TimeActivityCurve.from_tsv("/path/to/tac.tsv")
 
         ## Select a list of regions to plot and the folder containing TAC files for those regions
-        my_regions = ['Putamen', 'Cerebellum', 'Cortical Gray Matter']
+        my_regions = ['Putamen', 'Cerebellum', 'CorticalGrayMatter']
         my_fig = tac_plots.RegionalTacFigure(tacs_dir="/path/to/tacs/folder/")
 
         ## Add the individual TAC and the regional TACs to the figure
