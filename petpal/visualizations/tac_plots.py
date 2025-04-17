@@ -10,6 +10,7 @@ Key features:
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 import numpy as np
+
 from ..utils.time_activity_curve import MultiTACAnalysisMixin
 
 
