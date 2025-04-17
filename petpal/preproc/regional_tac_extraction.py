@@ -15,8 +15,7 @@ from ..utils.time_activity_curve import TimeActivityCurve
 
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
                                                        segmentation_image_numpy: np.ndarray,
-                                                       region: int,
-                                                       verbose: bool) -> np.ndarray:
+                                                       region: int) -> np.ndarray:
     """
     Creates a time-activity curve (TAC) by computing the average value within a region, for each 
     frame in a 4D PET image series. Takes as input a PET image, which has been registered to
@@ -55,8 +54,6 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.
                          f'({pet_image_4d.shape[:3]}). Consider resampling '
                          'segmentation to PET or vice versa.')
 
-    if verbose:
-        print(f'Running TAC for region index {region}')
     masked_voxels = (seg_image > region - 0.1) & (seg_image < region + 0.1)
     masked_image = pet_image_4d[masked_voxels].reshape((-1, num_frames))
     tac_out = np.mean(masked_image, axis=0)
@@ -68,7 +65,6 @@ def write_tacs(input_image_path: str,
                label_map_path: str,
                segmentation_image_path: str,
                out_tac_dir: str,
-               verbose: bool,
                time_frame_keyword: str = 'FrameReferenceTime',
                out_tac_prefix: str = '', ):
     """
@@ -94,8 +90,7 @@ def write_tacs(input_image_path: str,
     for i, _maps in enumerate(label_map['mapping']):
         extracted_tac, uncertainty = tac_extraction_func(input_image_4d_numpy=pet_numpy,
                                             segmentation_image_numpy=seg_numpy,
-                                            region=int(regions_map[i]),
-                                            verbose=verbose)
+                                            region=int(regions_map[i]))
         region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
                                             activity=extracted_tac,
                                             uncertainty=uncertainty)
@@ -112,7 +107,6 @@ def roi_tac(input_image_4d_path: str,
             roi_image_path: str,
             region: int,
             out_tac_path: str,
-            verbose: bool,
             time_frame_keyword: str = 'FrameReferenceTime'):
     """
     Function to write Tissue Activity Curves for a single region, given a mask,
@@ -133,8 +127,7 @@ def roi_tac(input_image_4d_path: str,
 
     extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
                                         segmentation_image_numpy=seg_numpy,
-                                        region=region,
-                                        verbose=verbose)
+                                        region=region)
     region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
     header_text = 'mean_activity'
     np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
@@ -195,7 +188,6 @@ class WriteRegionalTacs:
 
     def extract_tac_and_write(self,
                               regions_map,
-                              verbose,
                               scan_timing,
                               out_tac_prefix,
                               out_tac_dir,
@@ -206,8 +198,7 @@ class WriteRegionalTacs:
         """
         extracted_tac, uncertainty = self.tac_extraction_func(input_image_4d_numpy=self.pet_img.numpy(),
                                             segmentation_image_numpy=self.seg_img.numpy(),
-                                            region=int(regions_map[i]),
-                                            verbose=verbose)
+                                            region=int(regions_map[i]))
         region_tac_file = TimeActivityCurve(times=scan_timing.center_in_mins,
                                             activity=extracted_tac,
                                             uncertainty=uncertainty)
@@ -220,9 +211,7 @@ class WriteRegionalTacs:
 
     def write_tacs(self,input_image_path: str,
                    label_map_path: str,
-                   segmentation_image_path: str,
                    out_tac_dir: str,
-                   verbose: bool,
                    out_tac_prefix: str = ''):
         """
         Function to write Tissue Activity Curves for each region, given a segmentation,
@@ -235,16 +224,8 @@ class WriteRegionalTacs:
         regions_abrev = label_map['abbreviation']
         regions_map = label_map['mapping']
 
-        tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
-        pet_numpy = nibabel.load(input_image_path).get_fdata()
-        seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
-
         for i, _maps in enumerate(label_map['mapping']):
-            self.extract_tac_and_write(tac_extraction_func,
-                                       pet_numpy,
-                                       seg_numpy,
-                                       regions_map,
-                                       verbose,
+            self.extract_tac_and_write(regions_map,
                                        scan_timing,
                                        out_tac_prefix,
                                        out_tac_dir,
