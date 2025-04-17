@@ -225,15 +225,22 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         from petpal.visualizations.tac_plots import RegionalTacFigure
         from petpal.utils.time_activity_curve import TimeActivityCurve
 
+        ## Load up an individual TAC file
         my_tac = TimeActivityCurve.from_tsv("/path/to/tac.tsv")
+
+        ## Select a list of regions to plot and the folder containing TAC files for those regions
         my_regions = ['Putamen', 'Cerebellum', 'Cortical Gray Matter']
         my_fig = tac_plots.RegionalTacFigure(tacs_dir="/path/to/tacs/folder/")
 
+        ## Add the individual TAC and the regional TACs to the figure
         my_fig.add_errorbar(*my_tac.tac_werr, label='Whole Brain')
         my_fig.plot_tacs_in_regions_list(regions=my_regions)
 
+        ## Write the figure to file
         my_fig.write_fig(out_fig_path="/path/to/plot.png")
 
+        plt.show() # Comment this out if you don't want to see the figure
+        # plt.close() # Uncomment this if you don't want to see the figure
     """
     def __init__(self,
                  tacs_dir: str,
