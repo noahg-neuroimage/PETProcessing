@@ -24,6 +24,7 @@ class TacFigure:
     Attributes:
         fig (matplotlib.figure.Figure): The figure object that contains the plots.
         axes (ndarray of Axes): The axes objects where the TACs are plotted.
+        fax (list): The flattened list of axes objects for each subplot.
 
     Example:
 
