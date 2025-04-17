@@ -68,6 +68,7 @@ autoapi_options = [
 ]
 
 autoapi_ignore = ['*cli*']
+# autoapi_ignore = ['*cli*', '*kinetic_modeling*', '*pipelines*', '*preproc*', '*utils*']
 autoapi_own_page_level = 'function'
 autoapi_template_dir = '_templates'
 autoapi_python_class_content = 'both'

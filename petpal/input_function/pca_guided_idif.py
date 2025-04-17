@@ -1,3 +1,47 @@
+"""
+PCA Guided IDIF
+===============
+
+This module implements PCA (Principal Component Analysis)-guided methods for generating
+Image-Derived Input Functions (IDIF) from 4D-PET data. IDIFs are used in PET
+(Positron Emission Tomography) imaging workflows for kinetic modeling and quantification.
+The methods provided in this module focus on data-driven approaches based on PCA, offering
+tools for selecting relevant voxels and refining input functions.
+
+The module is designed for flexibility, offering tools for to apply PCA-based analyses over
+4D-PET data and masks. The classes are structured to allow reuse and extension for new functionalities.
+
+Classes
+-------
+- :class:`PCAGuidedIdifBase`: An abstract base class that supports data preparation, PCA operations,
+  and IDIF computation from PCA projections.
+- :class:`PCAGuidedTopVoxelsIDIF`: Implements IDIF generation based on selecting the top PCA component
+  voxels.
+- :class:`PCAGuidedIdifFitterBase`: A base class for deriving optimal voxel fit masks using minimization
+  routines and customizable terms (e.g., smoothness, noise).
+- :class:`PCAGuidedIdifFitter`: A concrete implementation of :class:`PCAGuidedIdifFitterBase`, providing
+  default term definitions.
+
+Dependencies
+------------
+- :mod:`numpy`: For numerical operations and array manipulations.
+- :mod:`ants`: For reading and handling medical image data.
+- :mod:`lmfit`: Used for robust fitting and parameter optimization.
+- :mod:`sklearn`: For PCA implementation.
+- Other project-specific utilities:
+    - :class:`~petpal.utils.scan_timing.ScanTimingInfo`: Handles timing information from NIfTI images.
+    - :func:`~petpal.utils.data_driven_image_analyses.temporal_pca_analysis_of_image_over_mask`: Performs PCA on dynamic image data over a given mask.
+    - :func:`~petpal.preproc.image_operations_4d.extract_roi_voxel_tacs_from_image_using_mask`: Extracts voxel TACS (Time-Activity Curves) from the input image.
+
+Notes
+-----
+- The classes contain abstract (`NotImplementedError`) methods, intended to be overridden by derived
+  classes as per the specific use case. These serve as stubs for users wishing to extend the module.
+- While the module supports large dynamic datasets, care should be taken with memory usage when
+  handling large voxel masks or PCA decomposition.
+
+"""
+
 import numpy as np
 from warnings import warn
 import ants
@@ -10,8 +54,10 @@ from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_usin
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_over_mask as temporal_pca_over_mask
 
-_KBQL_TO_NCiML_ = 37000.0
 
+_kBq_to_mCi_ = 37000.0
+f"""float: Convert kBq/ml to mCi/ml. {_kBq_to_mCi_} kBq = 1 mCi.
+"""
 
 class PCAGuidedIdifBase(object):
     def __init__(self,
@@ -57,7 +103,7 @@ class PCAGuidedIdifBase(object):
                                                             mask_image=ants.image_read(self.mask_path),
                                                             num_components=self.num_components)
 
-    def rescale_tacs(self, rescale_constant: float = 37000.0) -> None:
+    def rescale_tacs(self, rescale_constant: float = _kBq_to_mCi_) -> None:
         assert rescale_constant > 0.0, "rescale_constant must be > 0.0"
 
         self.mask_voxel_tacs /= rescale_constant
