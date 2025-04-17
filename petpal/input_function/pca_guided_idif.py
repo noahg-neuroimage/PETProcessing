@@ -60,12 +60,66 @@ f"""float: Convert kBq/ml to mCi/ml. {_kBq_to_mCi_} kBq = 1 mCi.
 """
 
 class PCAGuidedIdifBase(object):
+    """A base class for PCA-guided Image-Derived Input Function (IDIF) generation.
+
+    This class provides core functionality for processing image data, performing PCA, and
+    generating IDIF-related metrics such as mean voxel time-activity curves (TACs) and
+    PCA-based projections. The class is abstract and intended to be extended with specific
+    methods for voxel selection or further analysis.
+
+    Attributes:
+        image_path (str): Path to the input dynamic image file.
+        mask_path (str): Path to the mask image file used to extract regions of interest.
+        output_tac_path (str): Path for saving the output TAC file.
+        num_components (int): Number of PCA components to compute.
+        verbose (bool): Flag to enable verbose output for diagnostic purposes.
+        tac_times_in_mins (np.ndarray): Array containing the mid-time points of each scan
+            frame in minutes, extracted using `ScanTimingInfo`.
+        idif_vals (np.ndarray): Array of IDIF values calculated from selected voxels.
+        idif_errs (np.ndarray): Array of standard deviations of the IDIF values.
+        prj_idif_vals (np.ndarray): PCA-projected IDIF values.
+        prj_idif_errs (np.ndarray): PCA-projected IDIF value standard deviations.
+        pca_obj (PCA or None): PCA object used to perform decomposition, initialized
+            during processing.
+        pca_fit (np.ndarray or None): Array of PCA-projected voxel representations.
+        mask_voxel_tacs (np.ndarray): Time-activity curves (TACs) extracted from the mask
+            region in the image.
+        mask_avg (np.ndarray): Voxel-wise mean activity within the mask.
+        mask_std (np.ndarray): Voxel-wise standard deviation of activity within the mask.
+        mask_peak_arg (int): Index of the peak voxel activity in the time-activity curve.
+        mask_peak_val (float): Value of the peak voxel activity.
+        selected_voxels_mask (np.ndarray or None): Boolean mask of selected voxels after analysis.
+        selected_voxels_tacs (np.ndarray or float): TACs for the selected voxels.
+        selected_voxels_prj_tacs (np.ndarray or float): PCA-projected TACs for the selected voxels.
+        analysis_has_run (bool): Indicates whether the analysis (typically :meth:`run`) has been executed.
+
+    See Also:
+        - :class:`PCAGuidedTopVoxelsIDIF`
+        - :class:`PCAGuidedIdifFitter`
+
+    """
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
                  verbose: bool):
+        r"""
+        Initializes the base class for PCA-guided IDIF generation.
+
+        This constructor sets up the necessary attributes for processing image and mask data,
+        performing PCA decomposition, and preparing for downstream TAC and IDIF calculations.
+
+        Args:
+            input_image_path (str): The file path for the dynamic 4D image used for generating the IDIF.
+            mask_image_path (str): The file path for the mask image used to extract voxel data.
+            output_tac_path (str): The file path where the resulting TAC data will be saved.
+            num_pca_components (int): The number of PCA components to calculate.
+            verbose (bool): If True, enables verbose output for intermediate steps and diagnostics.
+
+        Raises:
+            FileNotFoundError: If either the input image file or mask file cannot be found.
+        """
         self.image_path: str = input_image_path
         self.mask_path: str = mask_image_path
         self.output_tac_path: str = output_tac_path
