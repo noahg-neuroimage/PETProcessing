@@ -56,7 +56,7 @@ from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_ov
 
 
 _kBq_to_mCi_ = 37000.0
-f"""float: Convert kBq/ml to mCi/ml. {_kBq_to_mCi_} kBq = 1 mCi.
+r"""float: Convert kBq/ml to mCi/ml. 37000 kBq = 1 mCi.
 """
 
 class PCAGuidedIdifBase(object):
@@ -94,8 +94,8 @@ class PCAGuidedIdifBase(object):
         analysis_has_run (bool): Indicates whether the analysis (typically :meth:`run`) has been executed.
 
     See Also:
-        - :class:`PCAGuidedTopVoxelsIDIF`
-        - :class:`PCAGuidedIdifFitter`
+        - :class:`~.PCAGuidedTopVoxelsIDIF`
+        - :class:`~.PCAGuidedIdifFitter`
 
     """
     def __init__(self,
@@ -104,8 +104,7 @@ class PCAGuidedIdifBase(object):
                  output_tac_path: str,
                  num_pca_components: int,
                  verbose: bool):
-        r"""
-        Initializes the base class for PCA-guided IDIF generation.
+        r"""Initializes the base class for PCA-guided IDIF generation.
 
         This constructor sets up the necessary attributes for processing image and mask data,
         performing PCA decomposition, and preparing for downstream TAC and IDIF calculations.
@@ -153,11 +152,50 @@ class PCAGuidedIdifBase(object):
         self.analysis_has_run: bool = False
 
     def perform_temporal_pca(self):
+        """Performs PCA decomposition on the dynamic image data within the specified mask.
+
+        This method applies temporal PCA analysis on the input dynamic image constrained to the
+        region defined by the mask. The resulting PCA object and fitted data are stored as
+        attributes for subsequent processing. Uses
+        :func:`~petpal.preproc.image_operations_4d.extract_roi_voxel_tacs_from_image_using_mask`
+
+        Attributes Updated:
+            - `pca_obj`
+            - `pca_fit`
+
+        Raises:
+            ValueError: If PCA analysis fails during execution.
+        """
         self.pca_obj, self.pca_fit = temporal_pca_over_mask(input_image=ants.image_read(self.image_path),
                                                             mask_image=ants.image_read(self.mask_path),
                                                             num_components=self.num_components)
 
     def rescale_tacs(self, rescale_constant: float = _kBq_to_mCi_) -> None:
+        r"""Rescales the time-activity curves (TACs) and associated data by a constant factor.
+
+        This method uniformly rescales voxel-level TACs, IDIF values, PCA outputs, and other
+        TAC-associated metrics using the specified constant. The default value corresponds to
+        a pre-defined scaling factor to convert units between kilobecquerels and millicuries.
+
+        Args:
+            rescale_constant (float): The constant factor used for rescaling.
+                Must be greater than zero. Default is `_kBq_to_mCi_`.
+
+        Attributes Updated:
+            - `mask_voxel_tacs`
+            - `mask_avg`
+            - `mask_std`
+            - `mask_peak_val`
+            - `idif_vals`
+            - `idif_errs`
+            - `prj_idif_vals`
+            - `prj_idif_errs`
+            - `selected_voxels_tacs`
+            - `selected_voxels_prj_tacs`
+
+        Raises:
+            AssertionError: If the `rescale_constant` is not greater than 0.
+        """
         assert rescale_constant > 0.0, "rescale_constant must be > 0.0"
 
         self.mask_voxel_tacs /= rescale_constant
