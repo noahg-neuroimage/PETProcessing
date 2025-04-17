@@ -250,6 +250,26 @@ class PCAGuidedIdifBase(object):
                    header='\t'.join(out_head))
 
     def calculate_tacs_from_mask(self) -> None:
+        """Calculates Time-Activity Curves (TACs) and IDIF-related metrics from the selected voxel mask.
+
+         This method processes the data from selected voxels within a previously defined mask and
+         computes key metrics such as mean IDIF values, standard deviations, PCA-projected values,
+         and their respective errors. It utilizes PCA transformations to refine the IDIF and ensure
+         consistency with the voxel data.
+
+         Side Effects:
+             idif_vals (np.ndarray): Mean IDIF values calculated from the selected voxel TACs.
+             idif_errs (np.ndarray): Standard deviations of the IDIF values derived from selected voxels.
+             prj_idif_vals (np.ndarray): Mean PCA-projected IDIF values, with negative values set to zero.
+             prj_idif_errs (np.ndarray): Standard deviations for the PCA-projected IDIF values.
+
+         Raises:
+             AssertionError: If the analysis has not been previously performed (i.e., `.run()` was not called).
+
+         Notes:
+             - Negative PCA-projected IDIF values are set to zero since negative values are non-physical.
+
+         """
         assert self.analysis_has_run, "The .run() has not been called yet."
         self.selected_voxels_tacs = self.mask_voxel_tacs[self.selected_voxels_mask]
         self.idif_vals = np.mean(self.selected_voxels_tacs, axis=0)
@@ -260,9 +280,26 @@ class PCAGuidedIdifBase(object):
         self.prj_idif_errs = np.std(self.selected_voxels_tacs, axis=0)
 
     def run(self, *args, **kwargs):
+        """Abstract method to be implemented by concrete subclasses.
+
+        Args:
+            *args:
+            **kwargs:
+
+        """
         raise NotImplementedError
 
     def __call__(self, *args, **kwargs):
+        """Abstract method to be implemented by concrete subclasses.
+
+        Should usually run the `.run()` method and then the `.save()` method to allow for easily running and saving
+        results.
+
+        Args:
+            *args:
+            **kwargs:
+
+        """
         raise NotImplementedError
 
     @property
