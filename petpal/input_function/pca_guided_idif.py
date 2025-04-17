@@ -215,14 +215,39 @@ class PCAGuidedIdifBase(object):
         return None
 
     def save(self):
+        r"""Saves the computed IDIF and related metrics to a file.
+
+        This method exports the time-activity curves (TACs) and other analysis results
+        into a tab-delimited text file. The file will include time points, IDIF values,
+        errors, PCA-projected metrics, and mask-derived averages, along with their
+        associated standard deviations.
+
+        The output file is saved at the path specified in the `output_tac_path` attribute.
+
+        Raises:
+            AssertionError: If the analysis has not been run prior to calling this method.
+
+        Output Format:
+            The saved text file will have the following tab-delimited columns:
+              - time: Time in minutes.
+              - idif: IDIF values.
+              - d_idif: Errors (standard deviations) for IDIF.
+              - prj_idif: PCA-projected IDIF values.
+              - d_prj_idif: Errors (standard deviations) for PCA-projected IDIF values.
+              - mask: Mean voxel activity in the mask.
+              - d_mask: Standard deviation of voxel activity in the mask.
+
+
+        """
         assert self.analysis_has_run is not None, "The .run() has not been called yet."
         out_arr = np.asarray([self.tac_times_in_mins,
                               self.idif_vals, self.idif_errs,
                               self.prj_idif_vals, self.prj_idif_errs,
-                              self.mask_avg, self.mask_std]).T
-        np.savetxt(fname=self.output_tac_path, X=out_arr,
+                              self.mask_avg, self.mask_std])
+        out_head = ['time, idif, d_idif, prj_idif, d_prj_idif, mask, d_mask']
+        np.savetxt(fname=self.output_tac_path, X=out_arr.T,
                    fmt='%.6e', delimiter='\t', comments='',
-                   header='time\tidif\td_idif\tprj_idif\td_prj_idif\tmask\td_mask')
+                   header='\t'.join(out_head))
 
     def calculate_tacs_from_mask(self) -> None:
         assert self.analysis_has_run, "The .run() has not been called yet."
@@ -258,6 +283,9 @@ class PCAGuidedIdifBase(object):
 
 
 class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
+    """Class for calculating a PCA-guided IDIF by averaging over the top voxels of a selected principal component.
+
+    """
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
@@ -299,6 +327,9 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
 
 
 class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
+    """Base class for calculating the PCA-guided IDIF by fitting to find the best voxels
+
+    """
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,
@@ -449,6 +480,9 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
 
 
 class PCAGuidedIdifFitter(PCAGuidedIdifFitterBase):
+    """Class to calculate the PCA-guided IDIF by fitting to find the best voxels
+
+    """
     def __init__(self,
                  input_image_path: str,
                  mask_image_path: str,

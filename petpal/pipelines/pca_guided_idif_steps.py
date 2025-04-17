@@ -10,23 +10,21 @@ class PCAGuidedIDIFMixin(StepsAPI):
                  mask_image_path: str,
                  output_tac_path: str,
                  num_pca_components: int,
-                 verbose: bool,
-                 auto_rescale_input: bool = False
+                 verbose: bool
                  ):
         StepsAPI.__init__(self)
         self.init_kwargs = {'input_image_path': input_image_path,
                             'mask_image_path': mask_image_path,
                             'output_tac_path': output_tac_path,
                             'num_pca_components': num_pca_components,
-                            'verbose': verbose,
-                            'auto_rescale_input': auto_rescale_input}
+                            'verbose': verbose
+                            }
         self.call_kwargs = {}
         self.input_image_path = input_image_path
         self.mask_image_path = mask_image_path
         self.output_tac_path = output_tac_path
         self.num_pca_components = num_pca_components
         self.verbose = verbose
-        self.auto_rescale_input = auto_rescale_input
         self.name = 'pca_guided_idif_base'
 
 
@@ -126,7 +124,6 @@ class PCAGuidedFitIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
                  output_array_path: str,
                  num_pca_components: int,
                  verbose: bool,
-                 auto_rescale_input: bool,
                  alpha: float,
                  beta: float,
                  method: str,
@@ -136,8 +133,7 @@ class PCAGuidedFitIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
                                     mask_image_path=mask_image_path,
                                     output_tac_path=output_array_path,
                                     num_pca_components=num_pca_components,
-                                    verbose=verbose,
-                                    auto_rescale_input=auto_rescale_input)
+                                    verbose=verbose)
         ObjectBasedStep.__init__(self,
                                  name='pca_guided_fit_idif',
                                  class_type=pca_guided_idif.PCAGuidedIdifFitter,
@@ -183,7 +179,6 @@ class PCAGuidedTopVoxelsIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
                  output_array_path: str,
                  num_pca_components: int,
                  verbose: bool,
-                 auto_rescale_input: bool,
                  selected_component: int,
                  num_of_voxels: int):
         PCAGuidedIDIFMixin.__init__(self,
@@ -191,8 +186,7 @@ class PCAGuidedTopVoxelsIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
                                     mask_image_path=mask_image_path,
                                     output_tac_path=output_array_path,
                                     num_pca_components=num_pca_components,
-                                    verbose=verbose,
-                                    auto_rescale_input=auto_rescale_input)
+                                    verbose=verbose)
         ObjectBasedStep.__init__(self,
                                  name='pca_guided_top_voxels_idif',
                                  class_type=pca_guided_idif.PCAGuidedTopVoxelsIDIF,
