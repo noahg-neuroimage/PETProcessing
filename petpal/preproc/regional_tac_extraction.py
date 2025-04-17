@@ -176,58 +176,47 @@ class WriteRegionalTacs:
         tac_extraction_func
     """
     def __init__(self,
-                 pet_path: str | pathlib.Path,
+                 input_image_path: str | pathlib.Path,
                  segmentation_path: str | pathlib.Path,
+                 out_tac_prefix: str,
+                 out_tac_dir: str | pathlib.Path,
                  tac_extraction_func: callable=None,):
-        self.pet_img = ants.image_read(filename=pet_path)
+        self.pet_img = ants.image_read(filename=input_image_path)
         self.seg_img = ants.image_read(filename=segmentation_path)
         if tac_extraction_func is None:
             self.tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
-
-
+        self.out_tac_prefix = out_tac_prefix
+        self.out_tac_dir = out_tac_dir
+        self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
     def extract_tac_and_write(self,
-                              regions_map,
-                              scan_timing,
-                              out_tac_prefix,
-                              out_tac_dir,
-                              regions_abrev,
-                              i):
+                              region_mapping,
+                              region_name):
         """
         Run self.tac_extraction_func on one region and save results to image.
         """
         extracted_tac, uncertainty = self.tac_extraction_func(input_image_4d_numpy=self.pet_img.numpy(),
                                             segmentation_image_numpy=self.seg_img.numpy(),
-                                            region=int(regions_map[i]))
-        region_tac_file = TimeActivityCurve(times=scan_timing.center_in_mins,
+                                            region=int(region_mapping))
+        region_tac_file = TimeActivityCurve(times=self.scan_timing.center_in_mins,
                                             activity=extracted_tac,
                                             uncertainty=uncertainty)
-        if out_tac_prefix:
-            out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
-        else:
-            out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
+        out_tac_path = os.path.join(self.out_tac_dir,
+                                    f'{self.out_tac_prefix}_seg-{region_name}_tac.tsv')
         region_tac_file.to_tsv(filename=out_tac_path)
 
 
-    def write_tacs(self,input_image_path: str,
-                   label_map_path: str,
-                   out_tac_dir: str,
-                   out_tac_prefix: str = ''):
+    def write_tacs(self, label_map_path: str):
         """
         Function to write Tissue Activity Curves for each region, given a segmentation,
         4D PET image, and label map. Computes the average of the PET image within each
         region. Writes a JSON for each region with region name, frame start time, and mean 
         value within region.
         """
-        scan_timing = ScanTimingInfo.from_nifti(input_image_path)
         label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
         regions_abrev = label_map['abbreviation']
         regions_map = label_map['mapping']
 
         for i, _maps in enumerate(label_map['mapping']):
-            self.extract_tac_and_write(regions_map,
-                                       scan_timing,
-                                       out_tac_prefix,
-                                       out_tac_dir,
-                                       regions_abrev,
-                                       i)
+            self.extract_tac_and_write(regions_map[i],
+                                       regions_abrev[i])
