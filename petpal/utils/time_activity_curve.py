@@ -333,8 +333,9 @@ class MultiTACAnalysisMixin:
             dict: Dictionary of region name-TAC object pairs.
         """
         tacs_dict = {}
-        for tac_file in tacs_files_list:
-            region = MultiTACAnalysisMixin.infer_segmentation_label_from_tac_path(tac_path=tac_file)
+        infer_seg_label = MultiTACAnalysisMixin.infer_segmentation_label_from_tac_path
+        for tac_id, tac_file in enumerate(tacs_files_list):
+            region = infer_seg_label(tac_path=tac_file, tac_id=tac_id)
             tacs_dict[region] = TimeActivityCurve.from_tsv(filename=tac_file)
         return tacs_dict
 
@@ -350,8 +351,9 @@ class MultiTACAnalysisMixin:
         Returns:
             dict: Dictionary of region name-TAC object pairs.
         """
+        get_tacs_dict = MultiTACAnalysisMixin.get_tacs_objects_dict_from_files_list
         tacs_files_list = MultiTACAnalysisMixin.get_tacs_list_from_dir(tacs_dir=tacs_dir)
-        tacs_dict = MultiTACAnalysisMixin.get_tacs_objects_dict_from_files_list(tacs_files_list=tacs_files_list)
+        tacs_dict = get_tacs_dict(tacs_files_list=tacs_files_list)
         return tacs_dict
 
     @staticmethod
