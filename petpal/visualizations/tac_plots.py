@@ -263,7 +263,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         if show_legend:
             self.gen_legend()
         self.set_ylim_min_to_zero()
-        return self.fig
+        return None
 
 
     def plot_all_regional_tacs(self,show_legend: bool=True, colormap='Dark2', **kwargs):
@@ -284,4 +284,4 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                                        show_legend=show_legend,
                                        colormap=colormap,
                                        **kwargs)
-        return self.fig
+        return None
