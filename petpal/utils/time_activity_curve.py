@@ -400,7 +400,7 @@ class MultiTACAnalysisMixin:
         return tacs_vals
 
     @staticmethod
-    def infer_segmentation_label_from_tac_path(tac_path: str, tac_id: int=0):
+    def infer_segmentation_label_from_tac_path(tac_path: str, tac_id: int):
         """
         Infers a segmentation label from a TAC file path by analyzing the filename.
 
