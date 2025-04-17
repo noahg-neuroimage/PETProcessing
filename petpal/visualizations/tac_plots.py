@@ -29,17 +29,38 @@ class TacFigure:
 
     Example:
 
-    .. code-block:: python
+    .. code-block:: python 
 
         from petpal.visualizations.tac_plots import TacFigure
         from petpal.utils.time_activity_curve import TimeActivityCurve
 
-        my_tac = TimeActivityCurve.from_tsv("/path/to/tac.tsv")
+        # Simple plot of the time-activity curve
         my_fig = tac_plots.TacFigure()
 
-        my_fig.add_tac(*my_tac.tac)
-        my_fig.write_fig(out_fig_path="/path/to/plot.png")
+        ## Loading our TAC files
+        my_tac = TimeActivityCurve.from_tsv("/path/to/tac.tsv")
+        my_other_tac = TimeActivityCurve.from_tsv("/path/to/other_tac.tsv")
 
+        ## Usual plt.plot kwargs can be used to modify styles
+        my_fig.add_tac(*my_tac.tac, label="My TAC", marker='x', ls='--')
+        my_fig.add_tac(*my_other_tac.tac, label="Other TAC", marker='s', ls='-')
+        
+        ## Saving the figure to disk my_fig.write_fig(out_fig_path="/path/to/plot.png")
+        # plt.show() # Uncomment to see the figure
+        plt.close()
+
+        # Errorbar plot of the time-activity curve, assuming we have uncertainty
+        my_tac = TimeActivityCurve.from_tsv("/path/to/tac_with_uncertainty.tsv")
+        my_fig = tac_plots.TacFigure()
+        
+        ## Usual plt.errorbar kwargs can be used to modify styles
+        my_fig.add_errorbar(*my_tac.tac_werr, label="My TAC", fmt='o-', capsize=2)
+
+        ## Saving the figure to disk
+        # my_fig.write_fig(out_fig_path="/path/to/plot.png") # Uncomment to save to disk
+
+        plt.show() # Comment this out if you don't want to see the figure
+        # plt.close() # Uncomment this if you don't want to see the figure
 
     """
     def __init__(self,
