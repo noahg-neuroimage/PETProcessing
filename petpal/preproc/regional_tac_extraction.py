@@ -1,6 +1,7 @@
 """
 Regional TAC extraction
 """
+import re
 import os
 import pathlib
 import nibabel
@@ -191,6 +192,39 @@ class WriteRegionalTacs:
         self.out_tac_prefix = out_tac_prefix
         self.out_tac_dir = out_tac_dir
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
+
+
+    @staticmethod
+    def capitalize_first_char_of_str(input_str: str):
+        """
+        Capitalize only the first character of a string, leaving the remainder unchanged.
+        Args:
+            input_str (str): The string to capitalize the first character of.
+        Returns:
+            output_str (str): The string with only the first character capitalized.
+        """
+        output_str = input_str[0].capitalize()+input_str[1:]
+        return output_str
+
+
+    @staticmethod
+    def str_to_camel_case(input_str):
+        """
+        Take a string and return the string converted to camel case.
+
+        Special characters (? * - _) are removed and treated as word separaters. Different words are
+        then capitalized at the first character, leaving other alphanumeric characters unchanged.
+        """
+        split_str = re.split(r'[-_?*]', input_str)
+        capped_split_str = []
+        capitalize_first = WriteRegionalTacs.capitalize_first_char_of_str
+        for part in split_str:
+            capped_str = capitalize_first(input_str=part)
+            capped_split_str += [capped_str]
+        camel_case_str = ''.join(capped_split_str)
+        return camel_case_str
+
+
 
     def extract_tac_and_write(self,
                               region_mapping,
