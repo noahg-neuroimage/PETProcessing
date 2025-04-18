@@ -184,7 +184,7 @@ class WriteRegionalTacs:
                  segmentation_path: str | pathlib.Path,
                  out_tac_prefix: str,
                  out_tac_dir: str | pathlib.Path,
-                 tac_extraction_func: callable=None,):
+                 tac_extraction_func: callable=None):
         self.pet_img = ants.image_read(filename=input_image_path)
         self.seg_img = ants.image_read(filename=segmentation_path)
         if tac_extraction_func is None:
@@ -223,7 +223,6 @@ class WriteRegionalTacs:
             capped_split_str += [capped_str]
         camel_case_str = ''.join(capped_split_str)
         return camel_case_str
-
 
 
     def extract_tac_and_write(self,
