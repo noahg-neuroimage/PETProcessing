@@ -267,9 +267,41 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
                                   show_legend: bool=True,
                                   colormap: str='Dark2',
                                   **kwargs):
+        """Plot TACs for a list of provided regions without errorbars.
+        
+        Region names correspond to abbreviated segment names in the dseg file used to generate the
+        regions.
+
+        Args:
+            regions (list[str]): A list of region names whose TACs are plotted.
+            show_legend (bool): Show the legend with region names in the resulting figure. Default
+                True.
+            colormap (str): A matplotlib color map used to select colors of different TAC plots.
+                Default 'Dark2'.
+            kwargs (dict): Additional keyword arguments for the plt.plot() function.
         """
-        Plot TACs for a list of provided regions. Region names correspond to abbreviated segment
-        names in the dseg file used to generate the regions.
+        colors = colormaps[colormap].colors
+        tacs_obj_dict = self.tacs_objects_dict
+        for i, region in enumerate(regions):
+            tac = tacs_obj_dict[region]
+            self.add_errorbar(*tac.tac_werr,
+                              label=region,
+                              color=colors[i%len(colors)],
+                              **kwargs)
+        if show_legend:
+            self.gen_legend()
+        self.set_ylim_min_to_zero()
+
+
+    def plot_tacs_in_regions_list_with_errorbar(self,
+                                                regions: list[str],
+                                                show_legend: bool=True,
+                                                colormap: str='Dark2',
+                                                **kwargs):
+        """Plot TACs for a list of provided regions with errorbars.
+        
+        Region names correspond to abbreviated segment names in the dseg file used to generate the
+        regions.
 
         Args:
             regions (list[str]): A list of region names whose TACs are plotted.
@@ -283,19 +315,13 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         tacs_obj_dict = self.tacs_objects_dict
         for i, region in enumerate(regions):
             tac = tacs_obj_dict[region]
-            plot_method = self.add_errorbar
-            tac_toplot = tac.tac_werr
-            if np.isnan(tac.uncertainty).all():
-                plot_method = self.add_tac
-                tac_toplot = tac.tac
-            plot_method(*tac_toplot,
-                        label=region,
-                        color=colors[i%len(colors)],
-                        **kwargs)
+            self.add_errorbar(*tac.tac_werr,
+                              label=region,
+                              color=colors[i%len(colors)],
+                              **kwargs)
         if show_legend:
             self.gen_legend()
         self.set_ylim_min_to_zero()
-        return None
 
 
     def plot_all_regional_tacs(self,show_legend: bool=True, colormap='Dark2', **kwargs):
