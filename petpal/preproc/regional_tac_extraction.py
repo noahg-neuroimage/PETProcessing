@@ -254,7 +254,7 @@ class WriteRegionalTacs:
 
         if label_map_path is not None:
             label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
-            regions_abrev = label_map['abbreviation']
+            regions_abrev = [self.str_to_camel_case(label) for label in label_map['abbreviation']]
             regions_map = label_map['mapping']
         else:
             regions_map = [int(label) for label in unique_segmentation_labels]
