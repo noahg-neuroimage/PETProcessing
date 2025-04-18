@@ -80,8 +80,16 @@ def main():
                         default='lines',
                         choices=['lines','markers','both'],
                         help='Set style of TAC plots.')
+    parser.add_argument('--errorbars',
+                        required=False,
+                        action=argparse.BooleanOptionalAction,
+                        help='Optional setting that adds errorbars to plots, if uncertainties are'
+                             'available in the TAC files.')
 
     args = parser.parse_args()
+    all_tac_plot_func = None
+    regions_plot_func = None
+
 
     if args.tac_dir is None and args.tac_files is None:
         raise SystemExit('Both --tac-files and --tac-dir unset. Exiting.')
@@ -95,6 +103,12 @@ def main():
                                 plot_type=args.plot_type,
                                 xlabel=fr'$t$ [{args.xaxis_units}]',
                                 ylabel=fr'TAC [$\mathrm{{{args.yaxis_units}}}$]')
+        if args.errorbars is None:
+            all_tac_plot_func = fig.plot_all_regional_tacs
+            regions_plot_func = fig.plot_tacs_in_regions_list
+        else:
+            all_tac_plot_func = fig.plot_all_regional_tacs_with_errorbar
+            regions_plot_func = fig.plot_tacs_in_regions_list_with_errorbar
 
     plot_style_opts = {'lines': {'marker':'None','ls':'-'},
                        'markers': {'marker':'.','ls':'None'},
@@ -102,15 +116,20 @@ def main():
     plot_style = plot_style_opts[args.plot_style]
 
     if args.tac_files is not None:
-        for tac_file in args.tac_files:
-            tac = TimeActivityCurve.from_tsv(filename=tac_file)
-            fig.add_errorbar(*tac.tac_werr, **plot_style)
+        if args.errorbars is None:
+            for tac_file in args.tac_files:
+                tac = TimeActivityCurve.from_tsv(filename=tac_file)
+                fig.add_tac(*tac.tac, **plot_style)
+        else:
+            for tac_file in args.tac_files:
+                tac = TimeActivityCurve.from_tsv(filename=tac_file)
+                fig.add_errorbar(*tac.tac_werr, **plot_style)
 
     if args.tac_dir is not None:
         if args.regions is None:
-            fig.plot_all_regional_tacs(**plot_style)
+            all_tac_plot_func(**plot_style)
         else:
-            fig.plot_tacs_in_regions_list(regions=args.regions, **plot_style)
+            regions_plot_func(regions=args.regions, **plot_style)
 
     if args.fig_title is not None:
         fig.fig.suptitle(t=args.fig_title)
