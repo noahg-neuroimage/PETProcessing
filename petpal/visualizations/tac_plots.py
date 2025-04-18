@@ -284,10 +284,10 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         tacs_obj_dict = self.tacs_objects_dict
         for i, region in enumerate(regions):
             tac = tacs_obj_dict[region]
-            self.add_errorbar(*tac.tac_werr,
-                              label=region,
-                              color=colors[i%len(colors)],
-                              **kwargs)
+            self.add_tac(*tac.tac,
+                         label=region,
+                         color=colors[i%len(colors)],
+                         **kwargs)
         if show_legend:
             self.gen_legend()
         self.set_ylim_min_to_zero()
