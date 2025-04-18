@@ -1,7 +1,4 @@
 """
-PCA Guided IDIF
-===============
-
 This module implements PCA (Principal Component Analysis)-guided methods for generating
 Image-Derived Input Functions (IDIF) from 4D-PET data. IDIFs are used in PET
 (Positron Emission Tomography) imaging workflows for kinetic modeling and quantification.
@@ -29,13 +26,13 @@ Dependencies
 - :mod:`lmfit`: Used for robust fitting and parameter optimization.
 - :mod:`sklearn`: For PCA implementation.
 - Other project-specific utilities:
-    - :class:`~petpal.utils.scan_timing.ScanTimingInfo`: Handles timing information from NIfTI images.
-    - :func:`~petpal.utils.data_driven_image_analyses.temporal_pca_analysis_of_image_over_mask`: Performs PCA on dynamic image data over a given mask.
-    - :func:`~petpal.preproc.image_operations_4d.extract_roi_voxel_tacs_from_image_using_mask`: Extracts voxel TACS (Time-Activity Curves) from the input image.
+    - :class:`~.ScanTimingInfo`: Handles timing information from NIfTI images.
+    - :func:`~.temporal_pca_analysis_of_image_over_mask`: Performs PCA on dynamic image data over a given mask.
+    - :func:`~.extract_roi_voxel_tacs_from_image_using_mask`: Extracts voxel TACS (Time-Activity Curves) from the input image.
 
 Notes
 -----
-- The classes contain abstract (`NotImplementedError`) methods, intended to be overridden by derived
+- The classes contain abstract (``NotImplementedError``) methods, intended to be overridden by derived
   classes as per the specific use case. These serve as stubs for users wishing to extend the module.
 - While the module supports large dynamic datasets, care should be taken with memory usage when
   handling large voxel masks or PCA decomposition.
@@ -43,7 +40,6 @@ Notes
 """
 
 import numpy as np
-from warnings import warn
 import ants
 import lmfit
 from sklearn.decomposition import PCA
@@ -157,7 +153,7 @@ class PCAGuidedIdifBase(object):
         This method applies temporal PCA analysis on the input dynamic image constrained to the
         region defined by the mask. The resulting PCA object and fitted data are stored as
         attributes for subsequent processing. Uses
-        :func:`~petpal.preproc.image_operations_4d.extract_roi_voxel_tacs_from_image_using_mask`
+        :func:`~.extract_roi_voxel_tacs_from_image_using_mask`
 
         Attributes Updated:
             - `pca_obj`
@@ -781,7 +777,12 @@ class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
 
 
 class PCAGuidedIdifFitter(PCAGuidedIdifFitterBase):
-    """Class to calculate the PCA-guided IDIF by fitting to find the best voxels
+    """Class to calculate the PCA-guided Image-Derived Input Function (IDIF) by fitting to find the best voxels.
+
+    This class extends :class:`~.PCAGuidedIdifFitterBase` and implements domain-specific functions to guide the
+    optimization process, including terms for voxel count, noise reduction, smoothness enforcement,
+    and peak emphasis. The optimization aims to refine the voxel selection for IDIF estimation using
+    the provided fitting terms.
 
     """
     def __init__(self,
@@ -792,6 +793,21 @@ class PCAGuidedIdifFitter(PCAGuidedIdifFitterBase):
                  pca_comp_filter_min_value: float = 0.0,
                  pca_comp_threshold: float = 0.1,
                  verbose: bool = False):
+        """Initializes the PCA-guided IDIF fitter.
+
+        Args:
+            input_image_path (str): Path to the input dynamic image used for IDIF estimation.
+            mask_image_path (str): Path to the mask image for selecting the region of interest.
+            output_tac_path (str): Path where the calculated TAC data will be saved.
+            num_pca_components (int): Number of PCA components to compute for voxel selection.
+            pca_comp_filter_min_value (float, optional): Minimum value for filtering PCA components (default: 0.0).
+            pca_comp_threshold (float, optional): Threshold for filtering PCA components (default: 0.1).
+            verbose (bool, optional): Enables detailed diagnostic output if set to `True` (default: `False`).
+
+        Side Effects:
+            - Calls the base class constructor to initialize parameters and fit-related attributes.
+
+        """
         PCAGuidedIdifFitterBase.__init__(self,
                                          input_image_path=input_image_path,
                                          mask_image_path=mask_image_path,
@@ -803,16 +819,83 @@ class PCAGuidedIdifFitter(PCAGuidedIdifFitterBase):
 
     @staticmethod
     def _voxel_term_func(voxel_nums: float) -> float:
+        r"""A softplus function to encourage optimization toward selecting more voxels.
+
+        This term penalizes scenarios where fewer voxels are selected by incrementally rewarding
+        configurations with larger voxel numbers.
+
+        Notes:
+            Applies the softplus function defined as :math:`\ln\left(1+e^{v/6}\right)`
+            where :math:`v` is the number of voxels.
+
+        Args:
+            voxel_nums (float): The number of voxels contributing to the TAC.
+
+        Returns:
+            float: The calculated voxel term value.
+
+        """
         return np.log1p(np.exp(-voxel_nums / 6.0))
 
     @staticmethod
     def _noise_term_func(tac_stderrs: np.ndarray[float]) -> float:
+        r"""Root-mean-square (RMS) noise term to favor voxels with reduced per-frame variance.
+
+        This term penalizes higher noise levels in the selected voxels' TAC data, rewarding smoother
+        per-frame signal averages.
+
+        Notes:
+            The noise term is computed as :math:`\sqrt{\frac{1}{n}\sum_{i}^{n}{\sigma_i}^2}`, where :math:`\sigma_i`
+            is the per-frame standard deviation, and :math:`n` is the number of frames.
+
+        Args:
+            tac_stderrs (np.ndarray[float]): The array of standard errors of the mean (SEM) for the TAC.
+
+        Returns:
+            float: The calculated noise term value.
+
+        """
         return np.sqrt(np.mean(tac_stderrs ** 2))
 
     @staticmethod
     def _smoothness_term_func(tac_values: np.ndarray[float]) -> float:
+        r"""Smoothness term enforcing total variation consistency on the TAC values.
+
+         This term penalizes abrupt changes in frame-to-frame TAC values by calculating the L1-norm
+         of differences in TAC values. It helps ensure smoother TACs from the selected voxels.
+
+         Notes:
+             Defined as the sum of absolute differences in normalized TAC values:
+             :math:`\frac{\beta}{c_\mathrm{max}}\sum_{i}^{n}{\left|c_{i+1} - c_{i}\right|}` where :math:`\beta`
+             is a tuning parameter, and :math:`n` is the number of frames.
+
+         Args:
+             tac_values (np.ndarray[float]): The TAC values obtained from the selected voxels.
+
+         Returns:
+             float: The calculated smoothness term value.
+
+         """
         return np.sum(np.abs(np.diff(tac_values, prepend=tac_values[0]) / np.max(tac_values)))
 
     @staticmethod
     def _peak_term_func(tac_peak_ratio: float) -> float:
+        r"""
+        Peak term driving the TAC peak value to be sufficiently high.
+
+        This term rewards configurations where the TAC has a pronounced peak relative to its
+        baseline, as higher peaks often correlate with improved IDIF estimates.
+
+        Notes:
+            Applies the softplus function defined as :math:`\alpha \times\ln\left(1+e^{-\frac{3}{2}r}\right)` where
+            :math:`\alpha` is the tuning parameter, and :math:`r` is the ratio of the value of the computed TAC
+            to the value of the average TAC of the mask.
+
+        Args:
+            tac_peak_ratio (float): The ratio of the TAC peak value to a reference value.
+
+        Returns:
+            float: The calculated peak term value.
+
+        """
         return np.log1p(np.exp(-tac_peak_ratio * 1.5))
