@@ -325,9 +325,34 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
 
 
     def plot_all_regional_tacs(self,show_legend: bool=True, colormap='Dark2', **kwargs):
+        """ Plot TACs for all TACs found in a folder without errorbars.
+        
+        Region names correspond to abbreviated segment names in the dseg file used to generate the
+        regions.
+
+        Args:
+            show_legend (bool): Show the legend with region names in the resulting figure. Default
+                True.
+            colormap (str): A matplotlib color map used to select colors of different TAC plots.
+                Default 'Dark2'.
+            kwargs (dict): Additional keyword arguments for the plt.plot() function.
         """
-        Plot TACs for all TACs found in a folder. Region names correspond to abbreviated segment
-        names in the dseg file used to generate the regions.
+        tacs_obj_dict = self.tacs_objects_dict
+        regions = list(tacs_obj_dict.keys())
+        self.plot_tacs_in_regions_list(regions=regions,
+                                       show_legend=show_legend,
+                                       colormap=colormap,
+                                       **kwargs)
+
+
+    def plot_all_regional_tacs_with_errorbar(self,
+                                             show_legend: bool=True,
+                                             colormap='Dark2',
+                                             **kwargs):
+        """Plot TACs for all TACs found in a folder with errorbars.
+        
+        Region names correspond to abbreviated segment names in the dseg file used to generate the
+        regions.
 
         Args:
             show_legend (bool): Show the legend with region names in the resulting figure. Default
@@ -338,8 +363,7 @@ class RegionalTacFigure(TacFigure,MultiTACAnalysisMixin):
         """
         tacs_obj_dict = self.tacs_objects_dict
         regions = list(tacs_obj_dict.keys())
-        self.plot_tacs_in_regions_list(regions=regions,
+        self.plot_tacs_in_regions_list_with_errorbar(regions=regions,
                                        show_legend=show_legend,
                                        colormap=colormap,
                                        **kwargs)
-        return None
