@@ -371,15 +371,6 @@ class PreProc:
                        verbose=preproc_props['Verbose'],
                        time_frame_keyword=preproc_props['TimeFrameKeyword'])
 
-        elif method_name=='warp_pet_atlas':
-            outfile = self.generate_outfile_path(method_short='space-atlas', modality=modality)
-            warp_pet_atlas(input_image_path=preproc_props['FilePathWarpInput'],
-                           anat_image_path=preproc_props['FilePathAnat'],
-                           atlas_image_path=preproc_props['FilePathAtlas'],
-                           out_image_path=outfile,
-                           verbose=preproc_props['Verbose'],
-                           kwargs=preproc_props['WarpPars'])
-
         elif method_name=='apply_xfm_ants':
             outfile = self.generate_outfile_path(method_short='space-atlas', modality=modality)
             apply_xfm_ants(input_image_path=preproc_props['FilePathWarpInput'],
