@@ -349,6 +349,26 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
     voxels for a specific PCA component to refine the IDIF estimation. The user must specify
     the PCA component and the number of voxels to be analyzed for the calculation.
 
+    Example:
+
+    .. code-block:: python
+
+        from petpal.input_function.pca_guided_idif import PCAGuidedTopVoxelsIDIF
+
+        ## Initializing the fitting object
+        pca_idif_top = PCAGuidedTopVoxelsIDIF(input_image_path='/path/to/4d/pet/image.nii.gz',
+                                              mask_image_path='/path/to/arterial/mask.nii.gz',
+                                              output_tac_path='/path/to/save/tac.tsv',
+                                              num_pca_components=3,
+                                              verbose=True)
+
+        ## Sorting the voxels with respect to the 1st PC, and averaging over 50 voxels
+        pca_idif_top.run(selected_component=0,
+                         num_of_voxels=50)
+
+        ## Saving the IDIF TACs to disk
+        pca_idif_top.save()
+
     """
     def __init__(self,
                  input_image_path: str,
