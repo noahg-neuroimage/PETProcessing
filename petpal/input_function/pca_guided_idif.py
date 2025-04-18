@@ -37,6 +37,9 @@ Notes
 - While the module supports large dynamic datasets, care should be taken with memory usage when
   handling large voxel masks or PCA decomposition.
 
+TODO:
+    -   Write a tutorial to to use the class to generate an IDIF and use the IF to perform kinetic analysis
+
 """
 
 import numpy as np
@@ -342,7 +345,7 @@ class PCAGuidedIdifBase(object):
 class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
     """Class for calculating a PCA-guided IDIF by averaging over the top voxels of a selected principal component (PC).
 
-    This class extends `PCAGuidedIdifBase` and specializes in selecting the most contributing
+    This class extends :class:`~.PCAGuidedIdifBase` and specializes in selecting the most contributing
     voxels for a specific PCA component to refine the IDIF estimation. The user must specify
     the PCA component and the number of voxels to be analyzed for the calculation.
 
@@ -460,13 +463,15 @@ class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
 class PCAGuidedIdifFitterBase(PCAGuidedIdifBase):
     """Base class for calculating the PCA-guided IDIF by fitting to find the best voxels
 
-    This class extends :class:`~petpal.input_function.pca_guided_idif.PCAGuidedIdifBase` and provides a framework for applying optimizations
+    This class extends :class:`~.PCAGuidedIdifBase` and provides a framework for applying optimizations
     and heuristics (e.g., voxel count, peak sharpness, and smoothness) to filter and refine the
     targeted voxel selection for IDIF estimation.
 
     Notes:
         This class provides a foundation for subclasses to customize voxel filtering and
         optimization strategies by overriding the static methods for term functions.
+
+    See :class:`~.PCAGuidedIdifFitter` for a concrete implementation example.
 
     """
     def __init__(self,
@@ -783,6 +788,31 @@ class PCAGuidedIdifFitter(PCAGuidedIdifFitterBase):
     optimization process, including terms for voxel count, noise reduction, smoothness enforcement,
     and peak emphasis. The optimization aims to refine the voxel selection for IDIF estimation using
     the provided fitting terms.
+
+    Example:
+
+        .. code-block:: python
+
+            from petpal.input_function.pca_guided_idif import PCAGuidedIdifFitter
+
+            ## Initializing the fitting object
+            pca_idif_fit = PCAGuidedIdifFitter(input_image_path='/path/to/4d/pet/image.nii.gz',
+                                               mask_image_path='/path/to/arterial/mask.nii.gz',
+                                               output_tac_path='/path/to/save/tac.tsv',
+                                               num_pca_components=3,
+                                               pca_comp_filter_min_value=0.0,
+                                               pca_comp_threshold=0.1,
+                                               verbose=True)
+
+            ## Running the fitting with the dual_annealing minimization method
+            pca_idif_fit.run(alpha=2.5,
+                             beta=0.0,
+                             method='dual_annealing')
+
+            ## Saving the IDIF TACs to disk
+            pca_idif_fit.save()
+
+
 
     """
     def __init__(self,
