@@ -125,11 +125,11 @@ def register_pet(input_reg_image_path: str,
     image_io.safe_copy_meta(input_image_path=input_reg_image_path, out_image_path=out_image_path)
 
 
-def warp_pet_atlas(input_image: ants.ANTsImage,
-                   anat_image_path: str,
-                   atlas_image_path: str,
-                   type_of_transform: str = 'SyN',
-                   **kwargs) -> ants.ANTsImage:
+def warp_pet_to_atlas(input_image: ants.ANTsImage,
+                      anat_image_path: str,
+                      atlas_image_path: str,
+                      type_of_transform: str = 'SyN',
+                      **kwargs) -> ants.ANTsImage:
     """
     Compute and apply a warp on a 3D or 4D image in anatomical space to atlas space.
 
