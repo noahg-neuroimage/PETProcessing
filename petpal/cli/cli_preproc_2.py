@@ -113,7 +113,7 @@ def _generate_args() -> argparse.Namespace:
     _add_common_args(parser_moco)
     parser_moco.add_argument('--motion-target', default=None, nargs='+',
                             help="Motion target option. Can be an image path, "
-                                 "'weighted_series_sum' or a tuple (i.e. '-t 0 600' for first ten minutes).",
+                                 "'weighted_series_sum' or a tuple (i.e. '--motion-target 0 600' for first ten minutes).",
                             required=True)
     parser_moco.add_argument('--transform-type', required=False,default='Rigid',
                              help='Transformation type (Rigid or Affine).',type=str)
