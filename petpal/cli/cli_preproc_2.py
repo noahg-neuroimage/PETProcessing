@@ -205,7 +205,7 @@ def _generate_args() -> argparse.Namespace:
                                     type=str,
                                     help="Motion target option. Can be an image path , "
                                          "'weighted_series_sum' or 'mean_image'")
-    parser_window_moco.add_argument('-w', '--window_size', default=60.0, type=float,
+    parser_window_moco.add_argument('-w', '--window-size', default=60.0, type=float,
                                     help="Window size in seconds.",)
     xfm_types = ['QuickRigid', 'Rigid', 'DenseRigid', 'Affine', 'AffineFast']
     parser_window_moco.add_argument('-y', '--transform-type', default='QuickRigid', type=str,
