@@ -212,5 +212,11 @@ def main():
                                        verbose=args.verbose,
                                        use_fwhm=True)
 
+    if command=='suvr':
+        image_operations_4d.suvr(input_image_path=args.input_img,
+                                 out_image_path=args.out_img,
+                                 segmentation_image_path=args.segmentation,
+                                 ref_region=args.ref_region)
+
 if __name__ == "__main__":
     main()
