@@ -31,7 +31,7 @@ from ..utils import useful_functions
 from ..preproc import image_operations_4d, motion_corr, register
 
 
-_PREPROC_EXAMPLES_ = (r"""
+_PREPROC_EXAMPLES_ = r"""
 Examples:
   - Weighted Sum:
     petpal-preproc-2 weighted-series-sum -i /path/to/pet.nii -o /path/to/output.nii --half-life 6586.26
@@ -39,22 +39,24 @@ Examples:
     petpal-preproc-2 auto-crop -i /path/to/pet.nii -o /path/to/output.nii -t 0.01
   - Motion Correction:
     petpal-preproc-2 motion-correction -i /path/to/pet.nii -o /path/to/output.nii --motion-target 0 600 --half-life 6586.26 --transform-type Rigid
-""")
+"""
 
 
 def _add_common_args(parser: argparse.ArgumentParser) -> None:
-    """
-    Adds common arguments ('--input-img', '--out-img', '--verbose') to a provided ArgumentParser object.
+    """Adds common arguments ('--input-img', '--out-img', '--verbose') to a provided ArgumentParser
+    object.
 
-    This function modifies the passed ArgumentParser object by adding three arguments commonly used in the script.
-    It uses the add_argument method of the ArgumentParser class. After running this function, the parser will
-    be able to accept and parse these additional arguments from the command line when run.
+    This function modifies the passed ArgumentParser object by adding three arguments commonly
+    used in the script. It uses the add_argument method of the ArgumentParser class. After running
+    this function, the parser will be able to accept and parse these additional arguments from the
+    this function, the parser will
 
     .. note::
         This function modifies the passed `parser` object in-place and does not return anything.
 
     Args:
-        parser (argparse.ArgumentParser): The argument parser object to which the arguments are added.
+        parser (argparse.ArgumentParser): The argument parser object to which the arguments are
+            added.
 
     Raises:
         argparse.ArgumentError: If a duplicate argument tries to be added.
@@ -73,7 +75,10 @@ def _add_common_args(parser: argparse.ArgumentParser) -> None:
             print(args.prefix)
 
     """
-    parser.add_argument('-o', '--out-img', default='petpal_wss_output.nii.gz', help='Output image filename')
+    parser.add_argument('-o',
+                        '--out-img',
+                        default='petpal_wss_output.nii.gz',
+                        help='Output image filename')
     parser.add_argument('-i', '--input-img',required=True,help='Path to input image.',type=str)
     parser.add_argument('-v', '--verbose', action='store_true',
                             help='Print processing information during computation.', required=False)
@@ -84,22 +89,34 @@ def _generate_args() -> argparse.Namespace:
     Generates command line arguments for method :func:`main`.
 
     Returns:
-        args (argparse.Namespace): Arguments used in the command line and their corresponding values.
+        args (argparse.Namespace): Arguments used in the command line and their corresponding
+            values.
     """
     parser = argparse.ArgumentParser(prog='petpal-preproc-2',
-                                     description='Command line interface for running PET pre-processing steps.',
-                                     epilog=_PREPROC_EXAMPLES_, formatter_class=argparse.RawTextHelpFormatter)
+                                     description="Command line interface for running PET "
+                                                 "pre-processing steps.",
+                                     epilog=_PREPROC_EXAMPLES_,
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     subparsers = parser.add_subparsers(dest="command", help="Sub-command help.")
 
-    parser_wss = subparsers.add_parser('weighted-series-sum', help='Half-life weighted sum of 4D PET series.')
+    parser_wss = subparsers.add_parser('weighted-series-sum',
+                                       help='Half-life weighted sum of 4D PET series.')
     _add_common_args(parser_wss)
-    parser_wss.add_argument('--half-life', required=True, help='Half life of radioisotope in seconds.',
+    parser_wss.add_argument('--half-life',
+                            required=True,
+                            help='Half life of radioisotope in seconds.',
                             type=float)
-    parser_wss.add_argument('--start-time', required=False, help='Start time of sum in seconds.',
-                            type=float,default=0)
-    parser_wss.add_argument('--end-time', required=False, help='End time of sum in seconds.',
-                            type=float,default=-1)
+    parser_wss.add_argument('--start-time',
+                            required=False,
+                            help='Start time of sum in seconds.',
+                            type=float,
+                            default=0)
+    parser_wss.add_argument('--end-time',
+                            required=False,
+                            help='End time of sum in seconds.',
+                            type=float,
+                            default=-1)
 
     parser_crop = subparsers.add_parser('auto-crop',
                                         help='Automatically crop 4D PET image using threshold.')
@@ -113,61 +130,100 @@ def _generate_args() -> argparse.Namespace:
     _add_common_args(parser_moco)
     parser_moco.add_argument('--motion-target', default=None, nargs='+',
                             help="Motion target option. Can be an image path, "
-                                 "'weighted_series_sum' or a tuple (i.e. '--motion-target 0 600' for first ten minutes).",
+                                 "'weighted_series_sum' or a tuple "
+                                 "(i.e. '--motion-target 0 600' for first ten minutes).",
                             required=True)
     parser_moco.add_argument('--transform-type', required=False,default='Rigid',
                              help='Transformation type (Rigid or Affine).',type=str)
-    parser_moco.add_argument('--half-life', required=False, 
+    parser_moco.add_argument('--half-life', required=False,
                              help='Half life of radioisotope in seconds.'
                                   'Required for some motion targets.',type=float)
 
-    parser_tac = subparsers.add_parser('write-tacs', help='Write ROI TACs from 4D PET using segmentation masks.')
+    parser_tac = subparsers.add_parser('write-tacs',
+                                       help='Write ROI TACs from 4D PET using segmentation masks.')
     parser_tac.add_argument('-i', '--input-img',required=True,help='Path to input image.',type=str)
-    parser_tac.add_argument('-o', '--out-tac-dir', default='petpal_tacs', help='Output TAC folder dir')
+    parser_tac.add_argument('-o',
+                            '--out-tac-dir',
+                            default='petpal_tacs',
+                            help='Output TAC folder dir')
     parser_tac.add_argument('-s', '--segmentation', required=True,
                             help='Path to segmentation image in anatomical space.')
-    parser_tac.add_argument('-l', '--label-map-path', required=True, help='Path to label map dseg.tsv')
-    parser_tac.add_argument('-k', '--time-frame-keyword', required=False, help='Time keyword used for frame timing',default='FrameReferenceTime')
+    parser_tac.add_argument('-l',
+                            '--label-map-path',
+                            required=True,
+                            help='Path to label map dseg.tsv')
+    parser_tac.add_argument('-k',
+                            '--time-frame-keyword',
+                            required=False,
+                            help='Time keyword used for frame timing',
+                            default='FrameReferenceTime')
 
-    parser_warp = subparsers.add_parser('warp-pet-atlas',help='Perform nonlinear warp on PET to atlas.')
+    parser_warp = subparsers.add_parser('warp-pet-atlas',
+                                        help='Perform nonlinear warp on PET to atlas.')
     _add_common_args(parser_warp)
-    parser_warp.add_argument('-a', '--anatomical', required=True, help='Path to 3D anatomical image (T1w or T2w).',
+    parser_warp.add_argument('-a',
+                             '--anatomical',
+                             required=True,
+                             help='Path to 3D anatomical image (T1w or T2w).',
                             type=str)
-    parser_warp.add_argument('-r','--reference-atlas',required=True,help='Path to anatomical atlas.',type=str)
+    parser_warp.add_argument('-r',
+                             '--reference-atlas',
+                             required=True,
+                             help='Path to anatomical atlas.',
+                             type=str)
 
     parser_suvr = subparsers.add_parser('suvr',help='Compute SUVR on a parametric PET image.')
     _add_common_args(parser_suvr)
     parser_suvr.add_argument('-s', '--segmentation', required=True,
                             help='Path to segmentation image in anatomical space.')
-    parser_suvr.add_argument('-r','--ref-region',help='Reference region to normalize SUVR to.',required=True)
+    parser_suvr.add_argument('-r',
+                             '--ref-region',
+                             help='Reference region to normalize SUVR to.',
+                             required=True)
 
     parser_blur = subparsers.add_parser('gauss-blur',help='Perform 3D gaussian blurring.')
     _add_common_args(parser_blur)
-    parser_blur.add_argument('-b','--blur-size-mm',help='Size of gaussian kernal with which to blur image.')
+    parser_blur.add_argument('-b',
+                             '--blur-size-mm',
+                             help='Size of gaussian kernal with which to blur image.')
 
     parser_rescale = subparsers.add_parser('rescale_image',help='Divide an image by a scalar.')
     _add_common_args(parser_rescale)
-    parser_rescale.add_argument('-r','--scale-factor',help='Divides image by this number',type=float,required=True)
+    parser_rescale.add_argument('-r',
+                                '--scale-factor',
+                                help='Divides image by this number',
+                                type=float,required=True)
 
 
     parser_window_moco = subparsers.add_parser('window-motion-corr',
-                                               help='Windowed motion correction for 4D PET using ANTS')
+                                               help='Windowed motion correction for 4D PET'
+                                                    ' using ANTS')
     _add_common_args(parser_window_moco)
-    parser_window_moco.add_argument('-t', '--motion-target', default='weighted_series_sum', type=str,
-                                    help="Motion target option. Can be an image path , 'weighted_series_sum' or 'mean_image'")
+    parser_window_moco.add_argument('-t',
+                                    '--motion-target',
+                                    default='weighted_series_sum',
+                                    type=str,
+                                    help="Motion target option. Can be an image path , "
+                                         "'weighted_series_sum' or 'mean_image'")
     parser_window_moco.add_argument('-w', '--window_size', default=60.0, type=float,
                                     help="Window size in seconds.",)
+    xfm_types = ['QuickRigid', 'Rigid', 'DenseRigid', 'Affine', 'AffineFast']
     parser_window_moco.add_argument('-y', '--transform-type', default='QuickRigid', type=str,
-                                    choices=['QuickRigid', 'Rigid', 'DenseRigid', 'Affine', 'AffineFast'],
+                                    choices=xfm_types,
                                     help="Type of ANTs transformation to apply when registering.")
 
-    parser_reg = subparsers.add_parser('register-pet', help='Register 4D PET to MRI anatomical space.')
+    parser_reg = subparsers.add_parser('register-pet',
+                                       help='Register 4D PET to MRI anatomical space.')
     _add_common_args(parser_reg)
-    parser_reg.add_argument('-a', '--anatomical', required=True, help='Path to 3D anatomical image (T1w or T2w).',
+    parser_reg.add_argument('-a',
+                            '--anatomical',
+                            required=True,
+                            help='Path to 3D anatomical image (T1w or T2w).',
                             type=str)
     parser_reg.add_argument('-t', '--motion-target', default=None, nargs='+',
                             help="Motion target option. Can be an image path, "
-                                 "'weighted_series_sum' or a tuple (i.e. '-t 0 600' for first ten minutes).")
+                                 "'weighted_series_sum' or a tuple (i.e. '-t 0 600' for first "
+                                 "ten minutes).")
     parser_reg.add_argument('-l', '--half-life', help='Half life of radioisotope in seconds.',
                             type=float)
 
