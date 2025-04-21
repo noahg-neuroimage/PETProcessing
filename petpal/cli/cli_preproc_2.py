@@ -190,6 +190,14 @@ def main():
                                 type_of_transform=args.transform_type,
                                 half_life=args.half_life)
 
+    if command=='register_pet':
+        register.register_pet(input_reg_image_path=args.input_img,
+                              out_image_path=args.out_img,
+                              reference_image_path=args.anatomical,
+                              motion_target_option=args.motion_target,
+                              verbose=args.verbose,
+                              half_life=args.half_life)
+
     if command=='write_tacs':
         image_operations_4d.write_tacs(input_image_path=args.input_img,
                                        out_tac_dir=args.out_tac_dir,
