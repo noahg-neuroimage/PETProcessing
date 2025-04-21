@@ -179,20 +179,23 @@ def _generate_args() -> argparse.Namespace:
     parser_suvr.add_argument('-r',
                              '--ref-region',
                              help='Reference region to normalize SUVR to.',
-                             required=True)
+                             required=True,
+                             type=int)
 
     parser_blur = subparsers.add_parser('gauss-blur',help='Perform 3D gaussian blurring.')
     _add_common_args(parser_blur)
     parser_blur.add_argument('-b',
                              '--blur-size-mm',
-                             help='Size of gaussian kernal with which to blur image.')
+                             help='Size of gaussian kernal with which to blur image.',
+                             type=float)
 
     parser_rescale = subparsers.add_parser('rescale-image',help='Divide an image by a scalar.')
     _add_common_args(parser_rescale)
     parser_rescale.add_argument('-r',
                                 '--scale-factor',
                                 help='Divides image by this number',
-                                type=float,required=True)
+                                type=float,
+                                required=True)
 
 
     parser_window_moco = subparsers.add_parser('window-motion-corr',
@@ -241,12 +244,14 @@ def main():
         preproc_parser.print_help()
         raise SystemExit('Exiting without command')
 
-
+    try:
+        args.verbose
+    except AttributeError:
+        args.verbose = False
 
     command = str(args.command).replace('-','_')
 
-    if args.verbose is not None:
-        print(f"Running {command} with parameters")
+    print(f"Running {command} with parameters")
 
     if command=='weighted_series_sum':
         useful_functions.weighted_series_sum(input_image_4d_path=args.input_img,
