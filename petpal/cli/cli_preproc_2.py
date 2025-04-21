@@ -187,7 +187,7 @@ def _generate_args() -> argparse.Namespace:
                              '--blur-size-mm',
                              help='Size of gaussian kernal with which to blur image.')
 
-    parser_rescale = subparsers.add_parser('rescale_image',help='Divide an image by a scalar.')
+    parser_rescale = subparsers.add_parser('rescale-image',help='Divide an image by a scalar.')
     _add_common_args(parser_rescale)
     parser_rescale.add_argument('-r',
                                 '--scale-factor',
