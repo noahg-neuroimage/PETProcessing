@@ -33,12 +33,24 @@ from ..preproc import image_operations_4d, motion_corr, register
 
 _PREPROC_EXAMPLES_ = r"""
 Examples:
-  - Weighted Sum:
-    petpal-preproc weighted-series-sum -i /path/to/pet.nii -o /path/to/output.nii --half-life 6586.26
-  - Auto Crop:
-    petpal-preproc auto-crop -i /path/to/pet.nii -o /path/to/output.nii -t 0.01
-  - Motion Correction:
-    petpal-preproc motion-correction -i /path/to/pet.nii -o /path/to/output.nii --motion-target 0 600 --half-life 6586.26 --transform-type Rigid
+  - Auto crop:
+    petpal-preproc auto-crop -i /path/to/input_img.nii.gz -o petpal_crop.nii.gz -t 0.05 -v
+  - Windowed moco:
+    petpal-preproc window-motion-corr -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid -v
+  - Register to anatomical:
+    petpal-preproc register-pet -i /path/to/input_img.nii.gz -o petpal_reg.nii.gz --motion-target 0 600 --anatomical /path/to/anat.nii.gz --half-life 6584 -v
+  - Write regional tacs:
+    petpal-preproc write-tacs -i /path/to/input_img.nii.gz -o /tmp/petpal_tacs --segmentation /path/to/segmentation.nii.gz --label-map-path /path/to/dseg.tsv --time-frame-keyword FrameTimesStart
+  - Half life weighted sum of series:
+    petpal-preproc weighted-series-sum -i /path/to/input_img.nii.gz -o petpal_wss.nii.gz --half-life 6584 --start-time 1800 --end-time 7200
+  - SUVR:
+    petpal-preproc suvr -i /path/to/input_img.nii.gz -o petpal_suvr.nii.gz --segmentation /path/to/segmentation.nii.gz --ref-region 1
+  - Gauss blur:
+    petpal-preproc gauss-blur -i /path/to/input_img.nii.gz -o petpal_blur.nii.gz --blur-size-mm 8
+  - Divide image by scale factor:s
+    petpal-preproc rescale-image -i /path/to/input_img.nii.gz -o petpal_rescale.nii.gz --scale-factor 1000
+  - Warp to atlas:
+    petpal-preproc warp-pet-atlas -i /path/to/input_img.nii.gz -o petpal_reg-atlas.nii.gz --anatomical /path/to/anat.nii.gz --reference-atlas /path/to/atlas.nii.gz
 """
 
 
