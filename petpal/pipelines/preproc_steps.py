@@ -713,11 +713,11 @@ class ImageToImageStep(FunctionBasedStep):
         """Creates a default step instance for warping a PET image to an atlas using :func:`~petpal.preproc.register.warp_pet_to_atlas`.
 
         Note:
-            The defaults for this step will not include the anat_image_path or atlas_image_path, as these will depend
+            The defaults for this step do not include the *anat_image_path* or *atlas_image_path*, as these will depend
             on the pipeline construction. These paths will need to be set before a pipeline will be able to run.
 
         Args:
-            name (str): Name of the step. Defaults to 'warp_pet_to_atlas'
+            name (str): Name of the step. Defaults to 'warp_pet_to_atlas'.
             anat_image_path (str): Path to anatomical image used to compute transform to atlas space. Defaults to an
                 empty string ''.
             atlas_image_path (str): Path to atlas image to which pet will be warped
@@ -725,7 +725,8 @@ class ImageToImageStep(FunctionBasedStep):
             **overrides: Override default parameters
 
         Returns:
-            ImageToImageStep: A new step instance for warping the pet image to atlas space.
+            :class:`~petpal.pipelines.preproc_steps.ImageToImageStep`:
+                A new step instance for warping the pet image to atlas space.
         """
         defaults = dict(name=name, function=ANTsImageToANTsImage(warp_pet_to_atlas),
                         input_image_path='', output_image_path='', anat_image_path=anat_image_path,
