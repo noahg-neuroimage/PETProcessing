@@ -120,7 +120,8 @@ def _generate_args() -> argparse.Namespace:
                                   'Required for some motion targets.',type=float)
 
     parser_tac = subparsers.add_parser('write-tacs', help='Write ROI TACs from 4D PET using segmentation masks.')
-    _add_common_args(parser_tac)
+    parser_tac.add_argument('-i', '--input-img',required=True,help='Path to input image.',type=str)
+    parser_tac.add_argument('-o', '--out-tac-dir', default='petpal_tacs', help='Output TAC folder dir')
     parser_tac.add_argument('-s', '--segmentation', required=True,
                             help='Path to segmentation image in anatomical space.')
     parser_tac.add_argument('-l', '--label-map-path', required=True, help='Path to label map dseg.tsv')
@@ -188,6 +189,14 @@ def main():
                                 verbose=True,
                                 type_of_transform=args.transform_type,
                                 half_life=args.half_life)
+
+    if command=='write_tacs':
+        image_operations_4d.write_tacs(input_image_path=args.input_img,
+                                       out_tac_dir=args.out_tac_dir,
+                                       segmentation_image_path=args.segmentation,
+                                       label_map_path=args.label_map_path,
+                                       verbose=args.verbose,
+                                       time_frame_keyword=args.time_frame_keyword)
 
 if __name__ == "__main__":
     main()
