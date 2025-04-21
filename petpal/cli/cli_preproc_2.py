@@ -119,6 +119,34 @@ def _generate_args() -> argparse.Namespace:
                              help='Half life of radioisotope in seconds.'
                                   'Required for some motion targets.',type=float)
 
+    parser_tac = subparsers.add_parser('write-tacs', help='Write ROI TACs from 4D PET using segmentation masks.')
+    _add_common_args(parser_tac)
+    parser_tac.add_argument('-s', '--segmentation', required=True,
+                            help='Path to segmentation image in anatomical space.')
+    parser_tac.add_argument('-l', '--label-map-path', required=True, help='Path to label map dseg.tsv')
+    parser_tac.add_argument('-k', '--time-frame-keyword', required=False, help='Time keyword used for frame timing',default='FrameReferenceTime')
+
+    parser_warp = subparsers.add_parser('warp-pet-atlas',help='Perform nonlinear warp on PET to atlas.')
+    _add_common_args(parser_warp)
+    parser_warp.add_argument('-a', '--anatomical', required=True, help='Path to 3D anatomical image (T1w or T2w).',
+                            type=str)
+    parser_warp.add_argument('-r','--reference-atlas',required=True,help='Path to anatomical atlas.',type=str)
+
+    parser_res = subparsers.add_parser('resample-segmentation',help='Resample segmentation image to PET resolution.')
+    _add_common_args(parser_res)
+    parser_res.add_argument('-s', '--segmentation', required=True,
+                            help='Path to segmentation image in anatomical space.')
+
+    parser_suvr = subparsers.add_parser('suvr',help='Compute SUVR on a parametric PET image.')
+    _add_common_args(parser_suvr)
+    parser_suvr.add_argument('-s', '--segmentation', required=True,
+                            help='Path to segmentation image in anatomical space.')
+    parser_suvr.add_argument('-r','--ref-region',help='Reference region to normalize SUVR to.',required=True)
+
+    parser_blur = subparsers.add_parser('gauss-blur',help='Perform 3D gaussian blurring.')
+    _add_common_args(parser_blur)
+    parser_blur.add_argument('-b','--blur-size-mm',help='Size of gaussian kernal with which to blur image.')
+
     return parser
 
 
