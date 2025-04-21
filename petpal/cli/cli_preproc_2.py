@@ -26,7 +26,7 @@ To do:
 """
 import argparse
 from ..utils import useful_functions
-from ..preproc import image_operations_4d, motion_corr
+from ..preproc import image_operations_4d, motion_corr, register
 
 
 _PREPROC_EXAMPLES_ = (r"""
@@ -197,6 +197,13 @@ def main():
                                        label_map_path=args.label_map_path,
                                        verbose=args.verbose,
                                        time_frame_keyword=args.time_frame_keyword)
+
+    if command=='warp_pet_atlas':
+        register.warp_pet_atlas(input_image_path=args.input_img,
+                                anat_image_path=args.anatomical,
+                                atlas_image_path=args.reference_atlas,
+                                out_image_path=args.out_img,
+                                verbose=args.verbose)
 
 if __name__ == "__main__":
     main()
