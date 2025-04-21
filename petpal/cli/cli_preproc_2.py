@@ -205,5 +205,12 @@ def main():
                                 out_image_path=args.out_img,
                                 verbose=args.verbose)
 
+    if command=='gauss_blur':
+        image_operations_4d.gauss_blur(input_image_path=args.input_img,
+                                       blur_size_mm=args.blur_size_mm,
+                                       out_image_path=args.out_img,
+                                       verbose=args.verbose,
+                                       use_fwhm=True)
+
 if __name__ == "__main__":
     main()
