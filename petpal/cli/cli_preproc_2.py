@@ -226,5 +226,12 @@ def main():
                                  segmentation_image_path=args.segmentation,
                                  ref_region=args.ref_region)
 
+    if command=='window_motion_corr':
+        motion_corr.windowed_motion_corr_to_target(input_image_path=args.input_img,
+                                                   out_image_path=args.out_img,
+                                                   motion_target_option=args.motion_target,
+                                                   w_size=args.window_size,
+                                                   type_of_transform=args.transform_type)
+
 if __name__ == "__main__":
     main()
