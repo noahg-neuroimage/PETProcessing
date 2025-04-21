@@ -25,6 +25,8 @@ To do:
     * Fix docs
 """
 import argparse
+import ants
+
 from ..utils import useful_functions
 from ..preproc import image_operations_4d, motion_corr, register
 
@@ -143,6 +145,10 @@ def _generate_args() -> argparse.Namespace:
     _add_common_args(parser_blur)
     parser_blur.add_argument('-b','--blur-size-mm',help='Size of gaussian kernal with which to blur image.')
 
+    parser_rescale = subparsers.add_parser('rescale_image',help='Divide an image by a scalar.')
+    _add_common_args(parser_rescale)
+    parser_rescale.add_argument('-r','--scale-factor',help='Divides image by this number',type=float,required=True)
+
     return parser
 
 
@@ -232,6 +238,12 @@ def main():
                                                    motion_target_option=args.motion_target,
                                                    w_size=args.window_size,
                                                    type_of_transform=args.transform_type)
+
+    if command=='rescale_image':
+        input_img = ants.image_read(filename=args.input_img)
+        out_img = image_operations_4d.rescale_image(input_image=input_img,
+                                                    rescale_constant=args.scale_factor)
+        ants.image_write(image=out_img, filename=args.out_img)
 
 if __name__ == "__main__":
     main()
