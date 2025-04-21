@@ -245,7 +245,7 @@ def main():
 
     command = str(args.command).replace('-','_')
 
-    if args.verbose:
+    if args.verbose is not None:
         print(f"Running {command} with parameters")
 
     if command=='weighted_series_sum':
