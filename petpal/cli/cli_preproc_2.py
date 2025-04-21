@@ -132,11 +132,6 @@ def _generate_args() -> argparse.Namespace:
                             type=str)
     parser_warp.add_argument('-r','--reference-atlas',required=True,help='Path to anatomical atlas.',type=str)
 
-    parser_res = subparsers.add_parser('resample-segmentation',help='Resample segmentation image to PET resolution.')
-    _add_common_args(parser_res)
-    parser_res.add_argument('-s', '--segmentation', required=True,
-                            help='Path to segmentation image in anatomical space.')
-
     parser_suvr = subparsers.add_parser('suvr',help='Compute SUVR on a parametric PET image.')
     _add_common_args(parser_suvr)
     parser_suvr.add_argument('-s', '--segmentation', required=True,
