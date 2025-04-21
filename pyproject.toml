@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "petpal"
-version = "0.1.0"
+version = "0.2.0"
 description = "PET-PAL (Positron Emission Tomography Processing and Analysis Library)"
 authors = [
     {name = "Furqan Dar", email = "dar@wustl.edu"},
@@ -59,6 +59,7 @@ classifiers = [  # These are added to PyPI package when published; Used for sear
     petpal-brier-fdg-pipeline = "petpal.cli.cli_brier_fdg_processing:main"
     petpal-pib-proc = "petpal.cli.cli_pib_processing:main"
     petpal-pvc = "petpal.cli.cli_pvc:main"
+    petpal-plot-tacs = "petpal.cli.cli_plot_tacs:main"
 
 [project.urls]
     Repository = "https://github.com/FurqanDar/PETPAL.git"
