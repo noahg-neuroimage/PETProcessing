@@ -4,12 +4,10 @@ A comprehensive 4D-PET analysis software suite.
 
 ## Installation
 
-In the top-level directory (where `pyproject.toml` exists), we run the following commands in the terminal:
+In the top-level directory (where `pyproject.toml` exists), we run the following command in the terminal:
 
 ```shell
-pip install build  # Ensures that the build package is available
-python -m build  # Generates a tarball and a wheel that we can use pip to install
-pip install dist/petpal-0.0.2.tar.gz # Installs the package
+pip install .  # Installs the package
 ```
 
 ## Generating Documentation
