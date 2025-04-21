@@ -161,6 +161,16 @@ def _generate_args() -> argparse.Namespace:
                                     choices=['QuickRigid', 'Rigid', 'DenseRigid', 'Affine', 'AffineFast'],
                                     help="Type of ANTs transformation to apply when registering.")
 
+    parser_reg = subparsers.add_parser('register-pet', help='Register 4D PET to MRI anatomical space.')
+    _add_common_args(parser_reg)
+    parser_reg.add_argument('-a', '--anatomical', required=True, help='Path to 3D anatomical image (T1w or T2w).',
+                            type=str)
+    parser_reg.add_argument('-t', '--motion-target', default=None, nargs='+',
+                            help="Motion target option. Can be an image path, "
+                                 "'weighted_series_sum' or a tuple (i.e. '-t 0 600' for first ten minutes).")
+    parser_reg.add_argument('-l', '--half-life', help='Half life of radioisotope in seconds.',
+                            type=float)
+
     return parser
 
 
