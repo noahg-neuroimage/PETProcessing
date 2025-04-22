@@ -43,6 +43,7 @@ Key Features:
 
 """
 
+import warnings
 
 from ..input_function import pca_guided_idif
 from ..pipelines.preproc_steps import ImageToImageStep
@@ -287,6 +288,27 @@ class PCAGuidedFitIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
     def method(self, value):
         self.call_kwargs['method'] = value
 
+    @classmethod
+    def default_pca_guided_idif_fit_step(cls, name: str = 'pca_guided_fit_idif', verbose=False, **overrides):
+        defaults = dict(input_image_path='',
+                        mask_image_path='',
+                        output_array_path='',
+                        num_pca_components=3,
+                        verbose=verbose,
+                        alpha=2.5,
+                        beta=0.0,
+                        method='dual_annealing')
+
+        override_dict = defaults | overrides
+
+        try:
+            out_class = cls(**override_dict)
+            out_class.name = name
+        except RuntimeError as err:
+            warnings.warn(f"Invalid override: {err}. Using default instance instead.", stacklevel=2)
+            out_class = cls(**defaults)
+            out_class.name = name
+        return out_class
 
 class PCAGuidedTopVoxelsIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
     r"""Pipeline step for PCA-guided IDIF calculation using top-ranked voxels.
