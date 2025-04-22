@@ -31,7 +31,8 @@ dependencies = [
     "bids_validator",
     "seaborn",
     "networkx",
-    "scikit-learn"
+    "scikit-learn",
+    "lmfit"
 ]
 readme = "README.md"
 classifiers = [  # These are added to PyPI package when published; Used for searching
