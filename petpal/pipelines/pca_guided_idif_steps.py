@@ -289,7 +289,7 @@ class PCAGuidedFitIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
         self.call_kwargs['method'] = value
 
     @classmethod
-    def default_pca_guided_idif_fit_step(cls, name: str = 'pca_guided_fit_idif', verbose=False, **overrides):
+    def default_pca_guided_idif_fit(cls, name: str = 'pca_guided_fit_idif', verbose=False, **overrides):
         defaults = dict(input_image_path='',
                         mask_image_path='',
                         output_array_path='',
@@ -303,11 +303,10 @@ class PCAGuidedFitIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
 
         try:
             out_class = cls(**override_dict)
-            out_class.name = name
         except RuntimeError as err:
             warnings.warn(f"Invalid override: {err}. Using default instance instead.", stacklevel=2)
             out_class = cls(**defaults)
-            out_class.name = name
+        out_class.name = name
         return out_class
 
 class PCAGuidedTopVoxelsIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
@@ -399,3 +398,23 @@ class PCAGuidedTopVoxelsIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
     @num_of_voxels.setter
     def num_of_voxels(self, value):
         self.call_kwargs['num_of_voxels'] = value
+
+    @classmethod
+    def default_pca_guided_idif_top_voxels(cls, name: str = 'pca_guided_idif_top_voxels', verbose=False, **overrides):
+        defaults = dict(input_image_path = '',
+                        mask_image_path = '',
+                        output_array_path = '',
+                        num_pca_components = 3,
+                        verbose = verbose,
+                        selected_component = 0,
+                        num_of_voxels = 50)
+
+        overrides_dict = defaults | overrides
+
+        try:
+            out_class = cls(**overrides_dict)
+        except TypeError as err:
+            warnings.warn(f"Invalid override: {err}. Using default instance instead.", stacklevel=2)
+            out_class = cls(**defaults)
+        out_class.name = name
+        return out_class
