@@ -243,7 +243,7 @@ class PCAGuidedIdifBase(object):
                               self.idif_vals, self.idif_errs,
                               self.prj_idif_vals, self.prj_idif_errs,
                               self.mask_avg, self.mask_std])
-        out_head = ['time, idif, d_idif, prj_idif, d_prj_idif, mask, d_mask']
+        out_head = ['time', 'idif', 'd_idif', 'prj_idif', 'd_prj_idif', 'mask', 'd_mask']
         np.savetxt(fname=self.output_tac_path, X=out_arr.T,
                    fmt='%.6e', delimiter='\t', comments='',
                    header='\t'.join(out_head))
