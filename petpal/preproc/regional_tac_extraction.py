@@ -47,14 +47,17 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage
     else:
         num_frames = 1
 
-    if segmentation_img.shape[:3]!=input_img.shape[:3]:
+    segmentation_arr = segmentation_img.numpy()
+    input_arr = input_img.numpy()
+
+    if segmentation_arr.shape[:3]!=input_img.shape[:3]:
         raise ValueError('Mis-match in image shape of segmentation image '
-                         f'({segmentation_img.shape}) and PET image '
+                         f'({segmentation_arr.shape}) and PET image '
                          f'({input_img.shape[:3]}). Consider resampling '
                          'segmentation to PET or vice versa.')
 
-    masked_voxels = (segmentation_img > region - 0.1) & (segmentation_img < region + 0.1)
-    masked_image = input_img[masked_voxels].reshape((-1, num_frames))
+    masked_voxels = (segmentation_arr > region - 0.1) & (segmentation_arr < region + 0.1)
+    masked_image = input_arr[masked_voxels].reshape((-1, num_frames))
     tac_out = np.mean(masked_image, axis=0)
     uncertainty = np.std(masked_image, axis=0)
     return tac_out, uncertainty
