@@ -269,3 +269,7 @@ class WriteRegionalTacs:
         for i, _label in enumerate(unique_segmentation_labels):
             self.extract_tac_and_write(regions_map[i],
                                        regions_abrev[i])
+
+
+    def __call__(self, *args, **kwargs):
+        self.write_tacs(*args, **kwargs)
