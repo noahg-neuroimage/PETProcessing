@@ -183,15 +183,22 @@ class WriteRegionalTacs:
                  input_image_path: str | pathlib.Path,
                  segmentation_path: str | pathlib.Path,
                  out_tac_prefix: str,
-                 out_tac_dir: str | pathlib.Path,
-                 tac_extraction_func: callable=None):
+                 out_tac_dir: str | pathlib.Path):
         self.pet_img = ants.image_read(filename=input_image_path)
         self.seg_img = ants.image_read(filename=segmentation_path)
-        if tac_extraction_func is None:
-            self.tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
+        self.tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
         self.out_tac_prefix = out_tac_prefix
         self.out_tac_dir = out_tac_dir
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
+
+
+    def set_tac_extraction_func(self, tac_extraction_func: callable):
+        """Sets the tac extraction function used to a different function.
+        
+        The selected function must take an input image, label image, and a single label mapping as
+        inputs, and return an estimation of activity and uncertainty of that estimation as outputs.
+        """
+        self.tac_extraction_func = tac_extraction_func
 
 
     @staticmethod
