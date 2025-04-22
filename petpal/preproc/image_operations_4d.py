@@ -441,8 +441,7 @@ def suvr(input_image_path: str,
 
     ref_region_avg = extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy=pet_arr,
                                                                         segmentation_image_numpy=segmentation_arr,
-                                                                        region=ref_region,
-                                                                        verbose=verbose)
+                                                                        region=ref_region)
     
     suvr_arr = pet_arr / ref_region_avg[0]
 
