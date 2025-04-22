@@ -429,14 +429,14 @@ class PCAGuidedTopVoxelsIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
         self.call_kwargs['num_of_voxels'] = value
 
     @classmethod
-    def default_pca_guided_idif_top_voxels(cls, name: str = 'pca_guided_idif_top_voxels', verbose=False, **overrides):
+    def default_pca_guided_idif_top_voxels(cls, name: str = 'pca_guided_top_voxels_idif', verbose=False, **overrides):
         r"""Creates a default instance for PCA-guided IDIF calculation based on selecting the top-ranked voxels from a single PCA component.
 
 
          All paths are set to empty strings by default.
 
         Args:
-            name (str): Name of the step. Defaults to 'pca_guided_idif_top_voxels'.
+            name (str): Name of the step. Defaults to 'pca_guided_top_voxels_idif'.
             verbose (bool): Whether to enable verbose mode (default: False).
             **overrides: Parameter values to override the default settings.
 
