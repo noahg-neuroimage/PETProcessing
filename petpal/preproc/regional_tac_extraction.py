@@ -14,8 +14,8 @@ from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from ..utils.time_activity_curve import TimeActivityCurve
 
 
-def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
-                                                       segmentation_image_numpy: np.ndarray,
+def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage,
+                                                       segmentation_img: ants.ANTsImage,
                                                        region: int) -> np.ndarray:
     """
     Creates a time-activity curve (TAC) by computing the average value within a region, for each 
@@ -42,21 +42,19 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.
             sampling.
     """
 
-    pet_image_4d = input_image_4d_numpy
-    if len(pet_image_4d.shape)==4:
-        num_frames = pet_image_4d.shape[3]
+    if len(input_img.shape)==4:
+        num_frames = input_img.shape[3]
     else:
         num_frames = 1
-    seg_image = segmentation_image_numpy
 
-    if seg_image.shape[:3]!=pet_image_4d.shape[:3]:
+    if segmentation_img.shape[:3]!=input_img.shape[:3]:
         raise ValueError('Mis-match in image shape of segmentation image '
-                         f'({seg_image.shape}) and PET image '
-                         f'({pet_image_4d.shape[:3]}). Consider resampling '
+                         f'({segmentation_img.shape}) and PET image '
+                         f'({input_img.shape[:3]}). Consider resampling '
                          'segmentation to PET or vice versa.')
 
-    masked_voxels = (seg_image > region - 0.1) & (seg_image < region + 0.1)
-    masked_image = pet_image_4d[masked_voxels].reshape((-1, num_frames))
+    masked_voxels = (segmentation_img > region - 0.1) & (segmentation_img < region + 0.1)
+    masked_image = input_img[masked_voxels].reshape((-1, num_frames))
     tac_out = np.mean(masked_image, axis=0)
     uncertainty = np.std(masked_image, axis=0)
     return tac_out, uncertainty
@@ -89,8 +87,8 @@ def write_tacs(input_image_path: str,
     seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
 
     for i, _maps in enumerate(label_map['mapping']):
-        extracted_tac, uncertainty = tac_extraction_func(input_image_4d_numpy=pet_numpy,
-                                            segmentation_image_numpy=seg_numpy,
+        extracted_tac, uncertainty = tac_extraction_func(input_img=pet_numpy,
+                                            segmentation_img=seg_numpy,
                                             region=int(regions_map[i]))
         region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
                                             activity=extracted_tac,
@@ -126,8 +124,8 @@ def roi_tac(input_image_4d_path: str,
     seg_numpy = nibabel.load(roi_image_path).get_fdata()
 
 
-    extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
-                                        segmentation_image_numpy=seg_numpy,
+    extracted_tac = tac_extraction_func(input_img=pet_numpy,
+                                        segmentation_img=seg_numpy,
                                         region=region)
     region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
     header_text = 'mean_activity'
@@ -238,8 +236,8 @@ class WriteRegionalTacs:
         """
         Run self.tac_extraction_func on one region and save results to image.
         """
-        extracted_tac, uncertainty = self.tac_extraction_func(input_image_4d_numpy=self.pet_img.numpy(),
-                                            segmentation_image_numpy=self.seg_img.numpy(),
+        extracted_tac, uncertainty = self.tac_extraction_func(input_img=self.pet_img,
+                                            segmentation_img=self.seg_img,
                                             region=int(region_mapping))
         region_tac_file = TimeActivityCurve(times=self.scan_timing.center_in_mins,
                                             activity=extracted_tac,
