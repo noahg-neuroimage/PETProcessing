@@ -290,6 +290,35 @@ class PCAGuidedFitIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
 
     @classmethod
     def default_pca_guided_idif_fit(cls, name: str = 'pca_guided_fit_idif', verbose=False, **overrides):
+        r"""Creates a default instance for PCA-guided IDIF calculation using an optimization-based fitting approach.
+
+
+        Uses :class:`~.pca_guided_idif.PCAGuidedIdifFitter`
+
+        All file paths are set to empty strings by default.
+
+        Args:
+            name (str): Name of the step. Defaults to 'pca_guided_fit_idif'.
+            verbose (bool): Whether to enable verbose mode (default: False).
+            **overrides: Parameter values to override the default settings.
+
+        Returns:
+            PCAGuidedFitIDIFStep: A new instance of the PCA-guided IDIF fitting step.
+
+        Default Parameters:
+            - input_image_path: '' (empty string)
+            - mask_image_path: '' (empty string)
+            - output_array_path: '' (empty string)
+            - num_pca_components: 3
+            - verbose: False
+            - alpha: 2.5
+            - beta: 0.0
+            - method: 'dual_annealing'
+
+        Side Effects:
+            - If an invalid override is provided, a warning is issued, and the default instance is returned instead.
+
+        """
         defaults = dict(input_image_path='',
                         mask_image_path='',
                         output_array_path='',
@@ -401,6 +430,32 @@ class PCAGuidedTopVoxelsIDIFStep(ObjectBasedStep, PCAGuidedIDIFMixin):
 
     @classmethod
     def default_pca_guided_idif_top_voxels(cls, name: str = 'pca_guided_idif_top_voxels', verbose=False, **overrides):
+        r"""Creates a default instance for PCA-guided IDIF calculation based on selecting the top-ranked voxels from a single PCA component.
+
+
+         All paths are set to empty strings by default.
+
+        Args:
+            name (str): Name of the step. Defaults to 'pca_guided_idif_top_voxels'.
+            verbose (bool): Whether to enable verbose mode (default: False).
+            **overrides: Parameter values to override the default settings.
+
+        Returns:
+            PCAGuidedTopVoxelsIDIFStep: A new instance of the PCA-guided top voxels IDIF step.
+
+        Default Parameters:
+            - input_image_path: '' (empty string)
+            - mask_image_path: '' (empty string)
+            - output_array_path: '' (empty string)
+            - num_pca_components: 3
+            - verbose: False
+            - selected_component: 0
+            - num_of_voxels: 50
+
+        Side Effects:
+            - If an invalid override is provided, a warning is issued, and the default instance is returned instead.
+
+        """
         defaults = dict(input_image_path = '',
                         mask_image_path = '',
                         output_array_path = '',
