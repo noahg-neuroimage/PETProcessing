@@ -12,6 +12,7 @@ from nibabel.processing import resample_from_to
 
 from .image_operations_4d import determine_motion_target
 from ..utils import image_io
+from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 
 
 def register_pet_to_pet(input_image_path: str,
@@ -146,6 +147,8 @@ def warp_pet_to_atlas(input_image: ants.ANTsImage,
     anat_image_ants = ants.image_read(anat_image_path)
     atlas_image_ants = ants.image_read(atlas_image_path)
 
+    assert check_physical_space_for_ants_image_pair(input_image,anat_image_ants), (
+        "input image and anatomical image must occupy the same physical space")
 
     anat_atlas_xfm = ants.registration(fixed=atlas_image_ants,
                                        moving=anat_image_ants,
