@@ -3,16 +3,15 @@ Provides tools to register PET images to anatomical or atlas space. Wrapper for
 ANTs and FSL registration software.
 """
 from typing import Union
-import numpy as np
-import fsl.wrappers
+
 import ants
+import fsl.wrappers
 import nibabel
+import numpy as np
 from nibabel.processing import resample_from_to
 
+from .image_operations_4d import determine_motion_target
 from ..utils import image_io
-from . import image_operations_4d
-
-determine_motion_target = image_operations_4d.determine_motion_target
 
 
 def register_pet_to_pet(input_image_path: str,
@@ -146,6 +145,7 @@ def warp_pet_to_atlas(input_image: ants.ANTsImage,
     """
     anat_image_ants = ants.image_read(anat_image_path)
     atlas_image_ants = ants.image_read(atlas_image_path)
+
 
     anat_atlas_xfm = ants.registration(fixed=atlas_image_ants,
                                        moving=anat_image_ants,
