@@ -54,21 +54,9 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage
         ValueError: If the segmentation image and PET image have different
             sampling.
     """
-    if len(input_img.shape)==4:
-        num_frames = input_img.shape[3]
-    else:
-        num_frames = 1
+    assert check_physical_space_for_ants_image_pair(image_1=input_img, image_2=segmentation_img)
 
-    segmentation_arr = segmentation_img.numpy()
-    input_arr = input_img.numpy()
-
-    if segmentation_arr.shape[:3]!=input_img.shape[:3]:
-        raise ValueError('Mis-match in image shape of segmentation image '
-                         f'({segmentation_arr.shape}) and PET image '
-                         f'({input_img.shape[:3]}). Consider resampling '
-                         'segmentation to PET or vice versa.')
-    # implement mask_image with 4d array
-    region_img = ants.mask_image(image=input_img, mask=segmentation_img, level=region)
+    region_img = apply_mask_img_4d(input_img=input_img, mask=segmentation_img, level=region)
     tac_out = region_img.mean(axis=3)
     uncertainty = region_img.std(axis=3)
     return tac_out, uncertainty
