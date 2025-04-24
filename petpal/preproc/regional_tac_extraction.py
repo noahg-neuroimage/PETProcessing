@@ -14,6 +14,19 @@ from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from ..utils.time_activity_curve import TimeActivityCurve
 
 
+def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
+                      mask: ants.ANTsImage | np.ndarray,
+                      level=1):
+    """Apply a mask image to a 4D PET image.
+    
+    """
+    input_img_as_list = ants.ndimage_to_list(image=input_img)
+    masked_img_as_list = [ants.mask_image(frame, mask=mask, level=level) for frame in input_img_as_list]
+    masked_img = ants.list_to_ndimage(image=input_img, image_list=masked_img_as_list)
+
+    return masked_img
+
+
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage,
                                                        segmentation_img: ants.ANTsImage,
                                                        region: int) -> np.ndarray:
@@ -54,7 +67,7 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage
                          f'({segmentation_arr.shape}) and PET image '
                          f'({input_img.shape[:3]}). Consider resampling '
                          'segmentation to PET or vice versa.')
-
+    # implement mask_image with 4d array
     region_img = ants.mask_image(image=input_img, mask=segmentation_img, level=region)
     tac_out = region_img.mean(axis=3)
     uncertainty = region_img.std(axis=3)
