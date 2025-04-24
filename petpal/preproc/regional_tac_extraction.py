@@ -21,7 +21,10 @@ def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
     
     """
     input_img_as_list = ants.ndimage_to_list(image=input_img)
-    masked_img_as_list = [ants.mask_image(frame, mask=mask, level=level) for frame in input_img_as_list]
+    roi_mask = ants.mask_image(mask, mask, level=level, binarize=True)
+    masked_img_as_list = []
+    for frame in input_img_as_list:
+        masked_img_as_list += [frame * roi_mask]
     masked_img = ants.list_to_ndimage(image=input_img, image_list=masked_img_as_list)
 
     return masked_img
