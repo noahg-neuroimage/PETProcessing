@@ -32,7 +32,7 @@ def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
 
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage,
                                                        segmentation_img: ants.ANTsImage,
-                                                       region: int) -> np.ndarray:
+                                                       region: int | list[int]) -> np.ndarray:
     """
     Creates a time-activity curve (TAC) by computing the average value within a region, for each 
     frame in a 4D PET image series. Takes as input a PET image, which has been registered to
@@ -46,8 +46,9 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage
         segmentation_image_path (str): Path to a .nii or .nii.gz file containing a 3D segmentation
             image, where integer indices label specific regions. Must have same sampling as PET
             input.
-        region (int): Value in the segmentation image corresponding to a region
-            over which the TAC is computed.
+        region (int | list[int]): Value(s) in the segmentation image corresponding to a region
+            over which the TAC is computed. If a list is provided, returns the mean over all
+            region mappings included in the list.
         verbose (bool): Set to ``True`` to output processing information.
 
     Returns:
