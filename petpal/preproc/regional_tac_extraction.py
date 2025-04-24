@@ -20,6 +20,8 @@ def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
     """Apply a mask image to a 4D PET image.
     
     """
+    assert check_physical_space_for_ants_image_pair(image_1=input_img, image_2=mask)
+
     input_img_as_list = ants.ndimage_to_list(image=input_img)
     roi_mask = ants.mask_image(mask, mask, level=level, binarize=True)
     masked_img_as_list = []
@@ -28,6 +30,9 @@ def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
     masked_img = ants.list_to_ndimage(image=input_img, image_list=masked_img_as_list)
 
     return masked_img
+
+
+
 
 
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage,
@@ -58,7 +63,6 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage
         ValueError: If the segmentation image and PET image have different
             sampling.
     """
-    assert check_physical_space_for_ants_image_pair(image_1=input_img, image_2=segmentation_img)
 
     region_img = apply_mask_img_4d(input_img=input_img, mask=segmentation_img, level=region)
     tac_out = region_img.mean(axis=3)
