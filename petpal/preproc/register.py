@@ -132,17 +132,18 @@ def warp_pet_to_atlas(input_image_path: str,
                       **kwargs) -> ants.ANTsImage:
     """Warp a (3D or 4D) PET image (in anatomical space) to atlas space using an anatomical image.
 
+
     Args:
         input_image_path (str): Path to PET Image to be registered to atlas. Must be in
             anatomical space (i.e. same space as anat_image_path image). May be 3D or 4D.
         anat_image_path (str): Path to anatomical image used to compute registration to atlas space.
         atlas_image_path (str): Path to atlas to which input image is warped.
         type_of_transform (str): Type of non-linear transform applied to input 
-            image using :py:func:`ants.registration`. Default is 'SyN' (Symmetric Normalization).
-        kwargs (keyword arguments): Additional arguments passed to :py:func:`ants.registration`.
+            image using ants.registration. Default is 'SyN' (Symmetric Normalization).
+        kwargs (keyword arguments): Additional arguments passed to ants.registration().
     
     Returns:
-        :py:class:`~ants.core.ants_image.ANTsImage`: Input image warped to atlas space.
+        ants.ANTsImage: Input image warped to atlas space.
     """
     input_img = ants.image_read(input_image_path)
     anat_img = ants.image_read(anat_image_path)

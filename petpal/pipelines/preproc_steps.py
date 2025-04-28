@@ -725,7 +725,7 @@ class ImageToImageStep(FunctionBasedStep):
             **overrides: Override default parameters
 
         Returns:
-            :class:`~petpal.pipelines.preproc_steps.ImageToImageStep`:
+            ImageToImageStep:
                 A new step instance for warping the pet image to atlas space.
         """
         defaults = dict(name=name, function=ANTsImageToANTsImage(warp_pet_to_atlas),
