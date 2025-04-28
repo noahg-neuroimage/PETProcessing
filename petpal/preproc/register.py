@@ -145,14 +145,14 @@ def warp_pet_to_atlas(input_image_path: str,
         :py:class:`~ants.core.ants_image.ANTsImage`: Input image warped to atlas space.
     """
     input_img = ants.image_read(input_image_path)
-    anat_image_ants = ants.image_read(anat_image_path)
-    atlas_image_ants = ants.image_read(atlas_image_path)
+    anat_img = ants.image_read(anat_image_path)
+    atlas_img = ants.image_read(atlas_image_path)
 
-    assert check_physical_space_for_ants_image_pair(input_img, anat_image_ants), (
+    assert check_physical_space_for_ants_image_pair(input_img, anat_img), (
         "input image and anatomical image must occupy the same physical space")
 
-    anat_atlas_xfm = ants.registration(fixed=atlas_image_ants,
-                                       moving=anat_image_ants,
+    anat_atlas_xfm = ants.registration(fixed=atlas_img,
+                                       moving=anat_img,
                                        type_of_transform=type_of_transform,
                                        write_composite_transform=True,
                                        **kwargs)
@@ -162,7 +162,7 @@ def warp_pet_to_atlas(input_image_path: str,
     else:
         dim = 0
 
-    warped_img = ants.apply_transforms(fixed=atlas_image_ants,
+    warped_img = ants.apply_transforms(fixed=atlas_img,
                                        moving=input_img,
                                        transformlist=anat_atlas_xfm['fwdtransforms'],
                                        verbose=True,
