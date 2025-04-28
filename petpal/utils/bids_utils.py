@@ -12,7 +12,7 @@ from bids_validator import BIDSValidator
 
 def add_description_to_bids_path(filepath: str,
                                  description: str) -> str:
-    """
+    r"""
     Create a copy of a BIDS filepath string with a description entity inserted before the suffix.
 
     See Also:
@@ -20,11 +20,10 @@ def add_description_to_bids_path(filepath: str,
 
     Args:
         filepath (str): BIDS-compliant filepath.
-        description (str): 'desc' label to add to filename. (e.g. passing 'altered' will return a filepath with
-            'desc-altered_' inserted before the suffix.
+        description (str): 'desc' label to add to filename.
 
     Returns:
-        string with 'desc' entity added
+        string with 'desc' entity added (i.e. 'filename_desc-[description]_pet.nii.gz')
     """
 
     original_path = pathlib.Path(filepath)
