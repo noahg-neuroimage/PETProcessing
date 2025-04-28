@@ -125,7 +125,7 @@ def register_pet(input_reg_image_path: str,
     image_io.safe_copy_meta(input_image_path=input_reg_image_path, out_image_path=out_image_path)
 
 
-def warp_pet_to_atlas(input_image: ants.ANTsImage,
+def warp_pet_to_atlas(input_image_path: str,
                       anat_image_path: str,
                       atlas_image_path: str,
                       type_of_transform: str = 'SyN',
@@ -133,7 +133,7 @@ def warp_pet_to_atlas(input_image: ants.ANTsImage,
     """Warp a (3D or 4D) PET image (in anatomical space) to atlas space using an anatomical image.
 
     Args:
-        input_image (:py:class:`~ants.core.ants_image.ANTsImage`): PET Image to be registered to atlas. Must be in
+        input_image_path (str): Path to PET Image to be registered to atlas. Must be in
             anatomical space (i.e. same space as anat_image_path image). May be 3D or 4D.
         anat_image_path (str): Path to anatomical image used to compute registration to atlas space.
         atlas_image_path (str): Atlas to which input image is warped.
@@ -144,10 +144,11 @@ def warp_pet_to_atlas(input_image: ants.ANTsImage,
     Returns:
         :py:class:`~ants.core.ants_image.ANTsImage`: Input image warped to atlas space.
     """
+    input_img = ants.image_read(input_image_path)
     anat_image_ants = ants.image_read(anat_image_path)
     atlas_image_ants = ants.image_read(atlas_image_path)
 
-    assert check_physical_space_for_ants_image_pair(input_image,anat_image_ants), (
+    assert check_physical_space_for_ants_image_pair(input_img, anat_image_ants), (
         "input image and anatomical image must occupy the same physical space")
 
     anat_atlas_xfm = ants.registration(fixed=atlas_image_ants,
@@ -156,13 +157,13 @@ def warp_pet_to_atlas(input_image: ants.ANTsImage,
                                        write_composite_transform=True,
                                        **kwargs)
 
-    if input_image.dimension == 4:
+    if input_img.dimension == 4:
         dim = 3
     else:
         dim = 0
 
     warped_img = ants.apply_transforms(fixed=atlas_image_ants,
-                                       moving=input_image,
+                                       moving=input_img,
                                        transformlist=anat_atlas_xfm['fwdtransforms'],
                                        verbose=True,
                                        imagetype=dim)
