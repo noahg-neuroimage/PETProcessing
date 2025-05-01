@@ -154,12 +154,12 @@ def _add_common_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument('-i', '--input-img',required=True,help='Path to input image.',type=str)
 
 
-def _generate_args() -> argparse.Namespace:
+def _generate_args() -> argparse.ArgumentParser:
     """
     Generates command line arguments for method :func:`main`.
 
     Returns:
-        args (argparse.Namespace): Arguments used in the command line and their corresponding
+        args (argparse.ArgumentParser): Arguments used in the command line and their corresponding
             values.
     """
     parser = argparse.ArgumentParser(prog='petpal-preproc',
