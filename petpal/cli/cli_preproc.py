@@ -19,21 +19,21 @@ Examples:
 
    .. code-block:: bash
 
-       petpal-preproc auto-crop -i /path/to/input_img.nii.gz -o petpal_crop.nii.gz -t 0.05 -v
+       petpal-preproc auto-crop -i /path/to/input_img.nii.gz -o petpal_crop.nii.gz -t 0.05
 
 
    * Windowed Motion Correction:
 
    .. code-block:: bash
 
-       petpal-preproc window-motion-corr -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid -v
+       petpal-preproc window-motion-corr -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid
 
 
    * Register to anatomical:
 
    .. code-block:: bash
 
-       petpal-preproc register-pet -i /path/to/input_img.nii.gz -o petpal_reg.nii.gz --motion-target 0 600 --anatomical /path/to/anat.nii.gz --half-life 6584 -v
+       petpal-preproc register-pet -i /path/to/input_img.nii.gz -o petpal_reg.nii.gz --motion-target 0 600 --anatomical /path/to/anat.nii.gz --half-life 6584
 
 
    * Write regional tacs:
@@ -94,11 +94,11 @@ from ..preproc import image_operations_4d, motion_corr, register
 _PREPROC_EXAMPLES_ = r"""
 Examples:
   - Auto crop:
-    petpal-preproc auto-crop -i /path/to/input_img.nii.gz -o petpal_crop.nii.gz -t 0.05 -v
+    petpal-preproc auto-crop -i /path/to/input_img.nii.gz -o petpal_crop.nii.gz -t 0.05
   - Windowed moco:
-    petpal-preproc window-motion-corr -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid -v
+    petpal-preproc window-motion-corr -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid
   - Register to anatomical:
-    petpal-preproc register-pet -i /path/to/input_img.nii.gz -o petpal_reg.nii.gz --motion-target 0 600 --anatomical /path/to/anat.nii.gz --half-life 6584 -v
+    petpal-preproc register-pet -i /path/to/input_img.nii.gz -o petpal_reg.nii.gz --motion-target 0 600 --anatomical /path/to/anat.nii.gz --half-life 6584
   - Write regional tacs:
     petpal-preproc write-tacs -i /path/to/input_img.nii.gz -o /tmp/petpal_tacs --segmentation /path/to/segmentation.nii.gz --label-map-path /path/to/dseg.tsv --time-frame-keyword FrameTimesStart
   - Half life weighted sum of series:
@@ -115,7 +115,7 @@ Examples:
 
 
 def _add_common_args(parser: argparse.ArgumentParser) -> None:
-    """Adds common arguments ('--input-img', '--out-img', '--verbose') to a provided ArgumentParser
+    """Adds common arguments ('--input-img', '--out-img') to a provided ArgumentParser
     object.
 
     This function modifies the passed ArgumentParser object by adding three arguments commonly
@@ -152,8 +152,6 @@ def _add_common_args(parser: argparse.ArgumentParser) -> None:
                         default='petpal_wss_output.nii.gz',
                         help='Output image filename')
     parser.add_argument('-i', '--input-img',required=True,help='Path to input image.',type=str)
-    parser.add_argument('-v', '--verbose', action='store_true',
-                            help='Print processing information during computation.', required=False)
 
 
 def _generate_args() -> argparse.Namespace:
@@ -316,14 +314,8 @@ def main():
         preproc_parser.print_help()
         raise SystemExit('Exiting without command')
 
-    try:
-        args.verbose
-    except AttributeError:
-        args.verbose = False
 
     command = str(args.command).replace('-','_')
-
-    print(f"Running {command} with parameters")
 
     if command=='weighted_series_sum':
         useful_functions.weighted_series_sum(input_image_4d_path=args.input_img,
@@ -331,13 +323,13 @@ def main():
                                              half_life=args.half_life,
                                              start_time=args.start_time,
                                              end_time=args.end_time,
-                                             verbose=args.verbose)
+                                             verbose=True)
 
     if command=='auto_crop':
         image_operations_4d.SimpleAutoImageCropper(input_image_path=args.input_img,
                                                    out_image_path=args.out_img,
                                                    thresh_val=args.thresh_val,
-                                                   verbose=args.verbose)
+                                                   verbose=True)
 
     if command=='motion_correction':
         if len(args.motion_target)==1:
@@ -356,7 +348,7 @@ def main():
                               out_image_path=args.out_img,
                               reference_image_path=args.anatomical,
                               motion_target_option=args.motion_target,
-                              verbose=args.verbose,
+                              verbose=True,
                               half_life=args.half_life)
 
     if command=='write_tacs':
@@ -364,7 +356,7 @@ def main():
                                        out_tac_dir=args.out_tac_dir,
                                        segmentation_image_path=args.segmentation,
                                        label_map_path=args.label_map_path,
-                                       verbose=args.verbose,
+                                       verbose=True,
                                        time_frame_keyword=args.time_frame_keyword)
 
     if command=='warp_pet_atlas':
@@ -372,13 +364,13 @@ def main():
                                 anat_image_path=args.anatomical,
                                 atlas_image_path=args.reference_atlas,
                                 out_image_path=args.out_img,
-                                verbose=args.verbose)
+                                verbose=True)
 
     if command=='gauss_blur':
         image_operations_4d.gauss_blur(input_image_path=args.input_img,
                                        blur_size_mm=args.blur_size_mm,
                                        out_image_path=args.out_img,
-                                       verbose=args.verbose,
+                                       verbose=True,
                                        use_fwhm=True)
 
     if command=='suvr':
