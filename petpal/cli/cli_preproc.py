@@ -14,15 +14,75 @@ The user must provide:
     
 
 Examples:
-(Need to fix these)
+
+   * Auto Crop:
+
+   .. code-block:: bash
+
+       petpal-preproc auto-crop -i /path/to/input_img.nii.gz -o petpal_crop.nii.gz -t 0.05 -v
+
+
+   * Windowed Motion Correction:
+
+   .. code-block:: bash
+
+       petpal-preproc window-motion-corr -i /path/to/input_img.nii.gz -o petpal_moco.nii.gz --window-size 120 --transform-type QuickRigid -v
+
+
+   * Register to anatomical:
+
+   .. code-block:: bash
+
+       petpal-preproc register-pet -i /path/to/input_img.nii.gz -o petpal_reg.nii.gz --motion-target 0 600 --anatomical /path/to/anat.nii.gz --half-life 6584 -v
+
+
+   * Write regional tacs:
+
+   .. code-block:: bash
+
+       petpal-preproc write-tacs -i /path/to/input_img.nii.gz -o /tmp/petpal_tacs --segmentation /path/to/segmentation.nii.gz --label-map-path /path/to/dseg.tsv --time-frame-keyword FrameTimesStart
+
+
+   * Half life weighted sum of series:
+
+   .. code-block:: bash
+
+       petpal-preproc weighted-series-sum -i /path/to/input_img.nii.gz -o petpal_wss.nii.gz --half-life 6584 --start-time 1800 --end-time 7200
+
+
+   * SUVR Image:
+
+   .. code-block:: bash
+
+       petpal-preproc suvr -i /path/to/input_img.nii.gz -o petpal_suvr.nii.gz --segmentation /path/to/segmentation.nii.gz --ref-region 1
+
+
+   * Gaussian blur image:
+
+   .. code-block:: bash
+
+       petpal-preproc gauss-blur -i /path/to/input_img.nii.gz -o petpal_blur.nii.gz --blur-size-mm 8
+
+
+   * Divide image by scale factor:
+
+   .. code-block:: bash
+
+       petpal-preproc rescale-image -i /path/to/input_img.nii.gz -o petpal_rescale.nii.gz --scale-factor 1000
+
+
+   * Warp image to atlas:
+
+   .. code-block:: bash
+
+       petpal-preproc warp-pet-atlas -i /path/to/input_img.nii.gz -o petpal_reg-atlas.nii.gz --anatomical /path/to/anat.nii.gz --reference-atlas /path/to/atlas.nii.gz
+ 
 
 See Also:
-    * :mod:`petpal.preproc.image_operations_4d` - module used for operations on 4D images.
-    * :mod:`petpal.preproc.motion_corr` - module for motion correction tools.
-    * :mod:`petpal.preproc.register` - module for MRI and atlas registration.
+    * :mod:`~petpal.preproc.image_operations_4d` - module used for operations on 4D images.
+    * :mod:`~petpal.preproc.motion_corr` - module for motion correction tools.
+    * :mod:`~petpal.preproc.register` - module for MRI and atlas registration.
 
-To do:
-    * Fix docs
 """
 import argparse
 import ants
