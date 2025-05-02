@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "petpal"
-version = "0.2.0"
+version = "0.2.2"
 description = "PET-PAL (Positron Emission Tomography Processing and Analysis Library)"
 authors = [
     {name = "Furqan Dar", email = "dar@wustl.edu"},
@@ -47,7 +47,6 @@ classifiers = [  # These are added to PyPI package when published; Used for sear
 
 [project.scripts]
     petpal-preproc = "petpal.cli.cli_preproc:main"
-    petpal-preproc-2 = "petpal.cli.cli_preproc_2:main"
     petpal-bids = "petpal.cli.cli_bids:main"
     petpal-tac-interpolate = "petpal.cli.cli_tac_interpolation:main"
     petpal-graph-plot = "petpal.cli.cli_graphical_plots:main"

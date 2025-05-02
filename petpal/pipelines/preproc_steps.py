@@ -4,8 +4,8 @@ from typing import Union
 
 
 from .steps_base import *
-from ..preproc.image_operations_4d import SimpleAutoImageCropper, rescale_image
-from ..preproc.register import register_pet
+from ..preproc.image_operations_4d import SimpleAutoImageCropper, write_tacs, rescale_image
+from ..preproc.register import register_pet, warp_pet_to_atlas
 from ..preproc.motion_corr import (motion_corr_frames_above_mean_value,
                                    windowed_motion_corr_to_target)
 from ..preproc.regional_tac_extraction import write_tacs
@@ -710,5 +710,35 @@ class ImageToImageStep(FunctionBasedStep):
             warnings.warn(f"Invalid override: {err}. Using default instance instead.", stacklevel=2)
             return cls(**defaults)
 
+    @classmethod
+    def default_warp_pet_to_atlas(cls, name: str = 'warp_pet_to_atlas', anat_image_path: str = '', atlas_image_path: str = '', **overrides):
+        """Creates a default step instance for warping a PET image to an atlas using :func:`~petpal.preproc.register.warp_pet_to_atlas`.
+
+        Note:
+            The defaults for this step do not include the *anat_image_path* or *atlas_image_path*, as these will depend
+            on the pipeline construction. These paths will need to be set before a pipeline will be able to run.
+
+        Args:
+            name (str): Name of the step. Defaults to 'warp_pet_to_atlas'.
+            anat_image_path (str): Path to anatomical image used to compute transform to atlas space. Defaults to an
+                empty string ''.
+            atlas_image_path (str): Path to atlas image to which pet will be warped
+                (indirectly, via the anatomical image).
+            **overrides: Override default parameters
+
+        Returns:
+            ImageToImageStep:
+                A new step instance for warping the pet image to atlas space.
+        """
+        defaults = dict(name=name, function=ANTsImageToANTsImage(warp_pet_to_atlas),
+                        input_image_path='', output_image_path='', anat_image_path=anat_image_path,
+                        atlas_image_path=atlas_image_path, )
+        override_dict = defaults | overrides
+
+        try:
+            return cls(**override_dict)
+        except RuntimeError as err:
+            warnings.warn(f"Invalid override: {err}. Using default instance instead.", stacklevel=2)
+            return cls(**defaults)
 
 PreprocStepType = Union[TACsFromSegmentationStep, ResampleBloodTACStep, ImageToImageStep]

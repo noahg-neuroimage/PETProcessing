@@ -86,6 +86,7 @@ intersphinx_mapping = {
     'numpy': ('https://numpy.org/doc/stable/', None),
     'numba': ('https://numba.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
+    'ants': ('https://antspy.readthedocs.io/en/stable/', None),
 }
 
 def skip_main_funcs(app, what, name, obj, skip, options):
