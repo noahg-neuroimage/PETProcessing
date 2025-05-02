@@ -4,7 +4,7 @@ from typing import Union
 
 
 from .steps_base import *
-from ..preproc.image_operations_4d import SimpleAutoImageCropper, write_tacs, rescale_image
+from ..preproc.image_operations_4d import SimpleAutoImageCropper, rescale_image
 from ..preproc.register import register_pet, warp_pet_to_atlas
 from ..preproc.motion_corr import (motion_corr_frames_above_mean_value,
                                    windowed_motion_corr_to_target)
