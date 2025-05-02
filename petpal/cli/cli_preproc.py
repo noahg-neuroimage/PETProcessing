@@ -118,11 +118,11 @@ def _add_common_args(parser: argparse.ArgumentParser) -> None:
     """Adds common arguments ('--input-img', '--out-img') to a provided ArgumentParser
     object.
 
-    This function modifies the passed ArgumentParser object by adding three arguments commonly
-    used in the script. It uses the add_argument method of the ArgumentParser class. After running
-    this function, the parser will be able to accept and parse these additional arguments from the
-    this function, the parser will
-
+    This function modifies the passed ArgumentParser object by adding two arguments commonly
+    used for the command line scripts. It uses the add_argument method of the ArgumentParser class.
+    After running this function, the parser will be able to accept and parse these additional
+    arguments from the command line when run.
+    
     .. note::
         This function modifies the passed `parser` object in-place and does not return anything.
 
