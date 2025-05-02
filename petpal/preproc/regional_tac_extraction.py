@@ -34,7 +34,7 @@ def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
     assert check_physical_space_for_ants_image_pair(image_1=input_img, image_2=mask)
 
     input_img_as_list = ants.ndimage_to_list(image=input_img)
-    roi_mask = ants.mask_image(mask, mask, level=level, binarize=True)
+    roi_mask = mask_seg_by_level(segmentation_img=mask, level=level)
     masked_img_as_list = []
     for frame in input_img_as_list:
         masked_img_as_list += [frame * roi_mask]
