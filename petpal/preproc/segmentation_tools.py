@@ -18,6 +18,7 @@ import pandas as pd
 
 from . import image_operations_4d, motion_corr
 from ..utils import math_lib
+from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 
 
 def region_blend(segmentation_numpy: np.ndarray,
@@ -536,3 +537,20 @@ def calc_vesselness_mask_from_quantiled_vesselness(input_image: ants.core.ANTsIm
         vess_mask_img = vess_mask_img.morphology(operation='dilate', radius=morph_dil_radius)
     return vess_mask_img
 
+
+def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
+                      mask: ants.ANTsImage | np.ndarray,
+                      level=1):
+    """Apply a mask image to a 4D PET image.
+    
+    """
+    assert check_physical_space_for_ants_image_pair(image_1=input_img, image_2=mask)
+
+    input_img_as_list = ants.ndimage_to_list(image=input_img)
+    roi_mask = ants.mask_image(mask, mask, level=level, binarize=True)
+    masked_img_as_list = []
+    for frame in input_img_as_list:
+        masked_img_as_list += [frame * roi_mask]
+    masked_img = ants.list_to_ndimage(image=input_img, image_list=masked_img_as_list)
+
+    return masked_img
