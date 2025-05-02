@@ -20,7 +20,7 @@ resample_segmentation = segmentation_tools.resample_segmentation
 suvr = image_operations_4d.suvr
 gauss_blur = image_operations_4d.gauss_blur
 register_pet = register.register_pet
-warp_pet_atlas = register.warp_pet_atlas
+warp_pet_atlas = register.warp_pet_to_atlas
 apply_xfm_ants = register.apply_xfm_ants
 apply_xfm_fsl = register.apply_xfm_fsl
 thresh_crop = image_operations_4d.SimpleAutoImageCropper
@@ -370,15 +370,6 @@ class PreProc:
                        out_tac_dir=outdir,
                        verbose=preproc_props['Verbose'],
                        time_frame_keyword=preproc_props['TimeFrameKeyword'])
-
-        elif method_name=='warp_pet_atlas':
-            outfile = self.generate_outfile_path(method_short='space-atlas', modality=modality)
-            warp_pet_atlas(input_image_path=preproc_props['FilePathWarpInput'],
-                           anat_image_path=preproc_props['FilePathAnat'],
-                           atlas_image_path=preproc_props['FilePathAtlas'],
-                           out_image_path=outfile,
-                           verbose=preproc_props['Verbose'],
-                           kwargs=preproc_props['WarpPars'])
 
         elif method_name=='apply_xfm_ants':
             outfile = self.generate_outfile_path(method_short='space-atlas', modality=modality)
