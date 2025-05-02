@@ -32,9 +32,6 @@ def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
     return masked_img
 
 
-
-
-
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage,
                                                        segmentation_img: ants.ANTsImage,
                                                        region: int | list[int]) -> np.ndarray:
@@ -65,8 +62,8 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage
     """
 
     region_img = apply_mask_img_4d(input_img=input_img, mask=segmentation_img, level=region)
-    tac_out = region_img.mean(axis=3)
-    uncertainty = region_img.std(axis=3)
+    tac_out = region_img[region_img.nonzero()].mean(axis=3)
+    uncertainty = region_img[region_img.nonzero()].std(axis=3)
     return tac_out, uncertainty
 
 
