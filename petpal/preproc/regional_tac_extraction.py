@@ -14,6 +14,17 @@ from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from ..utils.time_activity_curve import TimeActivityCurve
 
 
+def mask_seg_by_level(segmentation_img: ants.ANTsImage | np.ndarray,
+                      level: int | list[int]):
+    """
+    Create a mask from a segmentation image and one or more levels.
+    """
+    if isinstance(level, int):
+        level = [level]
+    mask = sum(segmentation_img==l for l in level)
+    return mask
+
+
 def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
                       mask: ants.ANTsImage | np.ndarray,
                       level=1):
