@@ -4,7 +4,7 @@ Extracting TACs from masks or regions, getting statistics, and writing to file.
 import ants
 import numpy as np
 
-from petpal.utils.useful_functions import check_physical_space_for_ants_image_pair
+from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 
 
 def apply_mask_4d(input_image: ants.core.ANTsImage | np.ndarray,
