@@ -82,7 +82,7 @@ def write_tacs(input_image_path: str,
                segmentation_image_path: str,
                out_tac_dir: str,
                verbose: bool,
-               out_tac_prefix: str = '', ):
+               out_tac_prefix: str = ''):
     """
     Function to write Tissue Activity Curves for each region, given a segmentation,
     4D PET image, and label map. Computes the average of the PET image within each
@@ -100,7 +100,7 @@ def write_tacs(input_image_path: str,
     scan_timing_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
     tac_times_in_mins = scan_timing_info.center_in_mins
 
-    for i, _maps in enumerate(label_map['mapping']):
+    for i, _maps in enumerate(regions_map):
         extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
                                             segmentation_image_numpy=seg_numpy,
                                             region=int(regions_map[i]),
