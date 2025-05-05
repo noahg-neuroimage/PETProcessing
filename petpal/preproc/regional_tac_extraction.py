@@ -49,16 +49,17 @@ def apply_mask_4d(input_arr: np.ndarray,
     single flattened numpy array.
 
     Args:
-        input_image (ants.core.ANTsImage): Input 4D-image from which to extract ROI voxel tacs.
-        mask_image (ants.core.ANTsImage): Mask image which determines which voxels to extract.
-        verbose (bool, optional): If True, prints information about the shape of extracted voxel tacs.
+        input_arr (np.ndarray): Input 4D-image from which to extract ROI voxel tacs.
+        mask_arr (np.ndarray): Mask image which determines which voxels to extract.
+        verbose (bool, optional): If True, prints information about the shape of extracted voxel
+            tacs.
 
     Returns:
-        out_voxels (np.ndarray): Array of voxel TACs of shape (num_voxels, num_frames)
+        out_voxels (np.ndarray): Time series of each voxel in the mask, as a flattened numpy array.
 
     Raises:
-         AssertionError: If input image is not 4D-image.
-         AssertionError: If mask image is not in the same physical space as the input image.
+         AssertionError: If input array is not 4D.
+         AssertionError: If input and mask array shapes are mismatched.
 
     """
     assert len(input_arr.shape) == 4, "Input array must be 4D."
