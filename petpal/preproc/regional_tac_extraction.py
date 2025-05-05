@@ -4,7 +4,6 @@ Extracting TACs from masks or regions, getting statistics, and writing to file.
 import os
 import ants
 import numpy as np
-import nibabel
 
 from petpal.preproc.image_operations_4d import extract_mean_roi_tac_from_nifti_using_segmentation
 from petpal.utils import image_io
@@ -102,8 +101,8 @@ def write_tacs(input_image_path: str,
     regions_map = label_map['mapping']
 
     tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
-    pet_numpy = nibabel.load(input_image_path).get_fdata()
-    seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
+    pet_numpy = ants.image_read(input_image_path).numpy()
+    seg_numpy = ants.image_read(segmentation_image_path).numpy()
 
     for i, _maps in enumerate(label_map['mapping']):
         extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
