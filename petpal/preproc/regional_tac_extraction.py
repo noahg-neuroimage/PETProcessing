@@ -108,7 +108,7 @@ def write_tacs(input_image_path: str,
                                             verbose=verbose)
 
         region_tac= TimeActivityCurve(times=tac_times_in_mins,
-                                            activity=extracted_tac)
+                                      activity=extracted_tac)
         if out_tac_prefix:
             out_tac_path = os.path.join(out_tac_dir,
                                         f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
