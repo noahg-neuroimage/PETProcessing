@@ -154,12 +154,11 @@ def vat_protocol(subjstring: str,
     tac_prefix = f'{sub}_{ses}'
     if 'tacs' not in skip:
         petpal.preproc.regional_tac_extraction.write_tacs(input_image_path=pet_reg_anat_file,
-                                       label_map_path=segmentation_label_file,
-                                       segmentation_image_path=vat_wm_ref_segmentation_file,
-                                       out_tac_dir=tac_save_dir,
-                                       verbose=True,
-                                       out_tac_prefix=tac_prefix,
-                                       time_frame_keyword='FrameTimesStart')
+                                                          label_map_path=segmentation_label_file,
+                                                          segmentation_image_path=vat_wm_ref_segmentation_file,
+                                                          out_tac_dir=tac_save_dir,
+                                                          verbose=True,
+                                                          out_tac_prefix=tac_prefix)
 
     # kinetic modeling
     wmref_tac_path = vat_bids_filepath(suffix='tac',folder='tacs',seg='WMRef',ext='.tsv')

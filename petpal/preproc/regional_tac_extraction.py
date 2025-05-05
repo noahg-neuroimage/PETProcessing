@@ -82,7 +82,6 @@ def write_tacs(input_image_path: str,
                segmentation_image_path: str,
                out_tac_dir: str,
                verbose: bool,
-               time_frame_keyword: str = 'FrameReferenceTime',
                out_tac_prefix: str = '', ):
     """
     Function to write Tissue Activity Curves for each region, given a segmentation,
@@ -90,12 +89,6 @@ def write_tacs(input_image_path: str,
     region. Writes a JSON for each region with region name, frame start time, and mean 
     value within region.
     """
-
-    if time_frame_keyword not in ['FrameReferenceTime', 'FrameTimesStart']:
-        raise ValueError("'time_frame_keyword' must be one of "
-                         "'FrameReferenceTime' or 'FrameTimesStart'")
-
-    pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_path)
     label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
     regions_abrev = label_map['abbreviation']
     regions_map = label_map['mapping']
@@ -114,7 +107,7 @@ def write_tacs(input_image_path: str,
                                             verbose=verbose)
         
         region_tac_file = np.array([tac_times_in_mins,extracted_tac]).T
-        header_text = f'{time_frame_keyword}\t{regions_abrev[i]}_mean_activity'
+        header_text = f'TacTimesInMins\t{regions_abrev[i]}_mean_activity'
         if out_tac_prefix:
             out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
         else:
