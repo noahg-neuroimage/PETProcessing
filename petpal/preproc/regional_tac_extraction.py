@@ -5,9 +5,8 @@ import os
 import ants
 import numpy as np
 
-from petpal.preproc.image_operations_4d import extract_mean_roi_tac_from_nifti_using_segmentation
-from petpal.utils import image_io
-
+from ..preproc.image_operations_4d import extract_mean_roi_tac_from_nifti_using_segmentation
+from ..utils import image_io
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 
 
