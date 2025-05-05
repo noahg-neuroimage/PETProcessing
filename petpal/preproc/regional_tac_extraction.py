@@ -8,6 +8,7 @@ import numpy as np
 from ..preproc.image_operations_4d import extract_mean_roi_tac_from_nifti_using_segmentation
 from ..utils import image_io
 from ..utils.scan_timing import ScanTimingInfo
+from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 
 
@@ -105,11 +106,12 @@ def write_tacs(input_image_path: str,
                                             segmentation_image_numpy=seg_numpy,
                                             region=int(region),
                                             verbose=verbose)
-        
-        region_tac_file = np.array([tac_times_in_mins,extracted_tac]).T
-        header_text = f'TacTimesInMins\t{regions_abrev[i]}_mean_activity'
+
+        region_tac= TimeActivityCurve(times=tac_times_in_mins,
+                                            activity=extracted_tac)
         if out_tac_prefix:
-            out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
+            out_tac_path = os.path.join(out_tac_dir,
+                                        f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
         else:
             out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
-        np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
+        region_tac.to_tsv(filename=out_tac_path)
