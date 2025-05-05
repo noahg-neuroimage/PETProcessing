@@ -24,6 +24,37 @@ def mask_seg_by_level(segmentation_img: ants.ANTsImage | np.ndarray,
                       level: int | list[int]):
     """
     Create a mask from a segmentation image and one or more levels.
+
+    If just one level is provided, this function will return a mask where values are 1 at voxels
+    equal to that level, and 0 elsewhere. If the levels provided are in a list, the mask will be 1
+    at voxels in the segmentation that are equal to any of the provided values, and zero elsewhere.
+
+    Args:
+        segmentation_img (ants.core.ANTsImage | np.ndarray): Image or array of brain regions.
+        level (int | list[int]): Level or levels to mask the segmentation with.
+    
+    Returns:
+        mask (ants.core.ANTsImage | np.ndarray): Image or array of mask on the provided levels.
+            Output type matches the type used in ``segmentation_img``.
+
+    Example:
+            
+        .. code-block:: python
+
+            import ants
+        
+            from petpal.preproc.segmentation_tools import mask_seg_by_level
+
+            # Load the image
+            seg_img = ants.image_read('/path/to/seg.nii.gz')
+
+            # If the segmentation is FreeSurfer aparc+aseg, then region 12 is the Right Putamen
+            right_putamen = mask_seg_by_level(segmentation_img = seg_img, level=12)
+
+            # If we want a mask of both the right and left putamen, use regions 12 and 51
+            whole_putamen = mask_seg_by_level(segmentation_img = seg_img, level=[12, 51])
+    
+
     """
     if isinstance(level, int):
         level = [level]
