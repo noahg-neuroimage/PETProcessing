@@ -100,10 +100,10 @@ def write_tacs(input_image_path: str,
     scan_timing_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
     tac_times_in_mins = scan_timing_info.center_in_mins
 
-    for i, _maps in enumerate(regions_map):
+    for i, region in enumerate(regions_map):
         extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
                                             segmentation_image_numpy=seg_numpy,
-                                            region=int(regions_map[i]),
+                                            region=int(region),
                                             verbose=verbose)
         
         region_tac_file = np.array([tac_times_in_mins,extracted_tac]).T
