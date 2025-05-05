@@ -7,14 +7,14 @@ import numpy as np
 from petpal.utils.useful_functions import check_physical_space_for_ants_image_pair
 
 
-def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
-                                                 mask_image: ants.core.ANTsImage,
-                                                 verbose: bool = False) -> np.ndarray:
+def apply_mask_4d(input_image: ants.core.ANTsImage,
+                  mask_image: ants.core.ANTsImage,
+                  verbose: bool = False) -> np.ndarray:
     """
     Function to extract ROI voxel tacs from an image using a mask image.
 
-    This function returns all the voxel TACs, and unlike :func:`extract_mean_roi_tac_from_nifti_using_segmentation`,
-    does not calculate the mean over all the voxels.
+    This function applies a 3D mask to a 4D image, returning the time series for each voxel in a
+    single flattened numpy array.
 
     Args:
         input_image (ants.core.ANTsImage): Input 4D-image from which to extract ROI voxel tacs.

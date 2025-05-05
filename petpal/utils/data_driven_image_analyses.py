@@ -2,7 +2,7 @@ import ants
 import numpy as np
 from sklearn.decomposition import PCA
 
-from ..preproc.regional_tac_extraction import extract_roi_voxel_tacs_from_image_using_mask
+from ..preproc.regional_tac_extraction import apply_mask_4d
 from .useful_functions import check_physical_space_for_ants_image_pair
 from .scan_timing import ScanTimingInfo
 
@@ -71,15 +71,15 @@ def temporal_pca_analysis_of_image_over_mask(input_image: ants.core.ANTsImage,
           (e.g., clustering) are planned.
 
     See Also:
-        - :func:`extract_roi_voxel_tacs_from_image_using_mask<petpal.preproc.image_operations_4d.extract_roi_voxel_tacs_from_image_using_mask>`: Extracts voxel-level TACs for regions of interest
+        - :func:`apply_mask_4d<petpal.preproc.image_operations_4d.apply_mask_4d>`: Extracts voxel-level TACs for regions of interest
           in the input image, used in TAC calculations here.
         - :class:`sklearn.decomposition.PCA`: Underlying PCA implementation used in this function.
     """
     assert len(input_image.shape) == 4, "Input image must be 4D."
     assert check_physical_space_for_ants_image_pair(input_image, mask_image), (
         "Images must have the same physical dimensions.")
-    mask_voxels = extract_roi_voxel_tacs_from_image_using_mask(input_image=input_image,
-                                                               mask_image=mask_image)
+    mask_voxels = apply_mask_4d(input_image=input_image,
+                                mask_image=mask_image)
     pca_obj = PCA(n_components=num_components, svd_solver=svd_solver, whiten=whiten, **sklearn_pca_kwargs)
     pca_obj.fit(mask_voxels)
     return pca_obj, np.ascontiguousarray(pca_obj.fit_transform(mask_voxels), float)
@@ -327,7 +327,7 @@ def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_ima
     See Also:
         - :func:`extract_temporal_pca_projection_of_image_over_mask`: Computes PCA projections used as input
           for thresholding in this function.
-        - :func:`extract_roi_voxel_tacs_from_image_using_mask<petpal.preproc.image_operations_4d.extract_roi_voxel_tacs_from_image_using_mask>`: Extracts voxel-level TACs for regions of interest
+        - :func:`apply_mask_4d<petpal.preproc.image_operations_4d.apply_mask_4d>`: Extracts voxel-level TACs for regions of interest
           in the input image, used in TAC calculations here.
         - :class:`sklearn.decomposition.PCA`: Core PCA implementation used in this analysis.
     """
@@ -349,7 +349,7 @@ def extract_temporal_pca_quantile_thresholded_tacs_of_image_using_mask(input_ima
                                                                           **sklearn_pca_kwargs)
     voxels_pca_projs = voxels_pca_projs[:, threshold_components]
 
-    roi_voxels = extract_roi_voxel_tacs_from_image_using_mask(input_image=input_image, mask_image=mask_image)
+    roi_voxels = apply_mask_4d(input_image=input_image, mask_image=mask_image)
 
     num_components = len(threshold_components)
     num_quantiles = len(quantiles)
