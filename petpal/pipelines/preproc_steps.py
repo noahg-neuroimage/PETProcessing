@@ -2,8 +2,10 @@ import warnings
 import copy
 from typing import Union
 
+from ..preproc.regional_tac_extraction import write_tacs
+
 from .steps_base import *
-from ..preproc.image_operations_4d import SimpleAutoImageCropper, write_tacs, rescale_image
+from ..preproc.image_operations_4d import SimpleAutoImageCropper, rescale_image
 from ..preproc.register import register_pet, warp_pet_to_atlas
 from ..preproc.motion_corr import (motion_corr_frames_above_mean_value,
                                    windowed_motion_corr_to_target)
@@ -18,7 +20,7 @@ class TACsFromSegmentationStep(FunctionBasedStep):
 
     This class is specialized for handling the input and output paths related to TAC generation,
     extending the :class:`FunctionBasedStep<petpal.pipelines.steps_base.FunctionBasedStep>` with specific properties
-    and methods for TACs. The class uses :func:`write_tacs<petpal.preproc.image_operations_4d.write_tacs>` which
+    and methods for TACs. The class uses :func:`write_tacs<petpal.preproc.regional_tac_extraction.write_tacs>` which
     uses segmentation information to generate ROI TACs, and write them to disk.
 
     Attributes:
