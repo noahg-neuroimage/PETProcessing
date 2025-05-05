@@ -7,6 +7,7 @@ import numpy as np
 
 from ..preproc.image_operations_4d import extract_mean_roi_tac_from_nifti_using_segmentation
 from ..utils import image_io
+from ..utils.scan_timing import ScanTimingInfo
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 
 
@@ -103,12 +104,16 @@ def write_tacs(input_image_path: str,
     pet_numpy = ants.image_read(input_image_path).numpy()
     seg_numpy = ants.image_read(segmentation_image_path).numpy()
 
+    scan_timing_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
+    tac_times_in_mins = scan_timing_info.center_in_mins
+
     for i, _maps in enumerate(label_map['mapping']):
         extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
                                             segmentation_image_numpy=seg_numpy,
                                             region=int(regions_map[i]),
                                             verbose=verbose)
-        region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
+        
+        region_tac_file = np.array([tac_times_in_mins,extracted_tac]).T
         header_text = f'{time_frame_keyword}\t{regions_abrev[i]}_mean_activity'
         if out_tac_prefix:
             out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
