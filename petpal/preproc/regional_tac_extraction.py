@@ -82,7 +82,7 @@ def write_tacs(input_image_path: str,
                label_map_path: str,
                segmentation_image_path: str,
                out_tac_dir: str,
-               verbose: bool,
+               verbose: bool = False,
                out_tac_prefix: str = ''):
     """
     Function to write Tissue Activity Curves for each region, given a segmentation,
@@ -98,7 +98,7 @@ def write_tacs(input_image_path: str,
         segmentation_image_path (str): Path to the segmentation image containing ROIs. Must be in
             the same space as input_image.
         out_tac_dir (str): Path to the directory where regional TACs will be written to.
-        verbose (bool): If true, outputs information during processing.
+        verbose (bool): If true, outputs information during processing. Default False.
         out_tac_prefix (str): Prefix for output TAC files. Typically the participant ID.
 
 
