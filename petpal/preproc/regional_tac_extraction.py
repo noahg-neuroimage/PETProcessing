@@ -114,10 +114,10 @@ def write_tacs(input_image_path: str,
 
             # run write_tacs
             write_tacs(input_image_path=pet_path,
-                    label_map_path='dseg.tsv',
-                    segmentation_image_path=segmentation_path,
-                    out_tac_dir='/path/to/output/',
-                    verbose=False)
+                       label_map_path='dseg.tsv',
+                       segmentation_image_path=segmentation_path,
+                       out_tac_dir='/path/to/output/',
+                       verbose=False)
 
     """
     label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
