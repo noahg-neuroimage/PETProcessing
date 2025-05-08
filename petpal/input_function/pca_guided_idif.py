@@ -53,6 +53,7 @@ from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_usin
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_over_mask as temporal_pca_over_mask
 from ..utils.constants import CONVERT_kBq_to_mCi_
+from ..utils.time_activity_curve import TimeActivityCurve
 
 
 class PCAGuidedIdifBase(object):
@@ -304,9 +305,12 @@ class PCAGuidedIdifBase(object):
 
 
         Returns:
-            np.ndarray: (times, idif_vals)
+            TimeActivityCurve: TAC object with (times, idif_vals)
+
+        See Also:
+            :class:`~.TimeActivityCurve`
         """
-        return np.asarray([self.tac_times_in_mins, self.idif_vals])
+        return TimeActivityCurve(self.tac_times_in_mins, self.idif_vals)
 
     @property
     def idif_tac_werr(self):
@@ -314,9 +318,12 @@ class PCAGuidedIdifBase(object):
 
 
         Returns:
-            np.ndarray: (times, idif_vals, idif_stderrs)
+            TimeActivityCurve: TAC object with (times, idif_vals, idif_stderrs)
+
+        See Also:
+            :class:`~.TimeActivityCurve`
         """
-        return np.asarray([self.tac_times_in_mins, self.idif_vals, self.idif_errs])
+        return TimeActivityCurve(self.tac_times_in_mins, self.idif_vals, self.idif_errs)
 
     @property
     def prj_idif_tac(self):
@@ -324,9 +331,12 @@ class PCAGuidedIdifBase(object):
 
 
         Returns:
-            np.ndarray: (times, projected_idif_vals)
+            TimeActivityCurve: TAC object with (times, projected_idif_vals)
+
+        See Also:
+            :class:`~.TimeActivityCurve`
         """
-        return np.asarray([self.tac_times_in_mins, self.prj_idif_vals])
+        return TimeActivityCurve(self.tac_times_in_mins, self.prj_idif_vals)
 
     @property
     def prj_idif_tac_werr(self):
@@ -334,9 +344,12 @@ class PCAGuidedIdifBase(object):
 
 
         Returns:
-            np.ndarray: (times, projected_idif_vals, projected_idif_stderrs)
+            TimeActivityCurve: TAC object with (times, projected_idif_vals, projected_idif_stderrs)
+
+        See Also:
+            :class:`~.TimeActivityCurve`
         """
-        return np.asarray([self.tac_times_in_mins, self.prj_idif_vals, self.prj_idif_errs])
+        return TimeActivityCurve(self.tac_times_in_mins, self.prj_idif_vals, self.prj_idif_errs)
 
 
 class PCAGuidedTopVoxelsIDIF(PCAGuidedIdifBase):
