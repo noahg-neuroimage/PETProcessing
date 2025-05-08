@@ -52,11 +52,8 @@ from lmfit.minimizer import MinimizerResult
 from ..preproc.image_operations_4d import extract_roi_voxel_tacs_from_image_using_mask as extract_masked_voxels
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.data_driven_image_analyses import temporal_pca_analysis_of_image_over_mask as temporal_pca_over_mask
+from ..utils.constants import CONVERT_kBq_to_mCi_
 
-
-_kBq_to_mCi_ = 37000.0
-r"""float: Convert kBq/ml to mCi/ml. 37000 kBq = 1 mCi.
-"""
 
 class PCAGuidedIdifBase(object):
     """A base class for PCA-guided Image-Derived Input Function (IDIF) generation.
@@ -169,7 +166,7 @@ class PCAGuidedIdifBase(object):
                                                             mask_image=ants.image_read(self.mask_path),
                                                             num_components=self.num_components)
 
-    def rescale_tacs(self, rescale_constant: float = _kBq_to_mCi_) -> None:
+    def rescale_tacs(self, rescale_constant: float = CONVERT_kBq_to_mCi_) -> None:
         r"""Rescales the time-activity curves (TACs) and associated data by a constant factor.
 
         This method uniformly rescales voxel-level TACs, IDIF values, PCA outputs, and other
@@ -178,7 +175,7 @@ class PCAGuidedIdifBase(object):
 
         Args:
             rescale_constant (float): The constant factor used for rescaling.
-                Must be greater than zero. Default is `_kBq_to_mCi_`.
+                Must be greater than zero. Default is 37000.0.
 
         Attributes Updated:
             - `mask_voxel_tacs`
