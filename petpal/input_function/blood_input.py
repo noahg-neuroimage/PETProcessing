@@ -189,7 +189,7 @@ def resample_blood_data_on_scanner_times(blood_tac_path: str,
     resampled_blood *= rescale_constant
     resampled_tac = np.asarray([frame_times, resampled_blood], dtype=float)
     
-    np.savetxt(X=resampled_tac.T, fname=out_tac_path, header="time(mins)\tactivity", comments='')
+    np.savetxt(X=resampled_tac.T, fname=out_tac_path, header="time(mins)\tactivity", comments='', delimiter='\t')
     
     return None
 
