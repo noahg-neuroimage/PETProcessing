@@ -7,9 +7,36 @@ filepaths for efficient retrieval, and supporting various neuroimaging file type
 import os
 import pathlib
 
-
 from bids_validator import BIDSValidator
 
+
+def add_description_to_bids_path(filepath: str,
+                                 description: str) -> str:
+    r"""Create a copy of a BIDS filepath string with a description entity inserted before the suffix.
+
+    Note:
+        If a description 'desc-' entity already exists, it will be overwritten.
+
+    See Also:
+        `Brain Imaging Data Structure (BIDS) <https://bids.neuroimaging.io/>`_
+
+    Args:
+        filepath (str): BIDS-compliant filepath.
+        description (str): 'desc' label to add to filename.
+
+    Returns:
+        string with 'desc' entity added (i.e. 'filename_desc-[description]_pet.nii.gz')
+    """
+
+    original_path = pathlib.Path(filepath)
+    original_stem = original_path.stem
+    split_stem = original_stem.split("_")
+    split_stem_without_desc = [x for x in split_stem if not x.startswith('desc-')]
+    split_stem_without_desc.insert(-1, f'desc-{description}')
+    stem_with_desc = "_".join(split_stem_without_desc)
+    new_path = str(original_path).replace(original_stem, stem_with_desc)
+
+    return new_path
 
 def validate_filepath_as_bids(filepath: str) -> bool:
     """
