@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "petpal"
-version = "0.2.2"
+version = "0.3.0"
 description = "PET-PAL (Positron Emission Tomography Processing and Analysis Library)"
 authors = [
     {name = "Furqan Dar", email = "dar@wustl.edu"},
@@ -31,7 +31,8 @@ dependencies = [
     "bids_validator",
     "seaborn",
     "networkx",
-    "scikit-learn"
+    "scikit-learn",
+    "lmfit"
 ]
 readme = "README.md"
 classifiers = [  # These are added to PyPI package when published; Used for searching
