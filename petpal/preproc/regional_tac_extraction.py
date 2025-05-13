@@ -176,10 +176,12 @@ def write_tacs(input_image_path: str,
         extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
                                             segmentation_image_numpy=seg_numpy,
                                             region=int(region),
-                                            verbose=verbose)
+                                            verbose=verbose,
+                                            with_std=True)
 
         region_tac = TimeActivityCurve(times=tac_times_in_mins,
-                                      activity=extracted_tac)
+                                       activity=extracted_tac[0],
+                                       uncertainty=extracted_tac[1])
         if out_tac_prefix:
             out_tac_path = os.path.join(out_tac_dir,
                                         f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')

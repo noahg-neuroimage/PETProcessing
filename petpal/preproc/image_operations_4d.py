@@ -360,7 +360,8 @@ def brain_mask(input_image_4d_path: str,
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
                                                        segmentation_image_numpy: np.ndarray,
                                                        region: int,
-                                                       verbose: bool) -> np.ndarray:
+                                                       verbose: bool,
+                                                       with_std: bool=False) -> np.ndarray:
     """
     Creates a time-activity curve (TAC) by computing the average value within a region, for each 
     frame in a 4D PET image series. Takes as input a PET image, which has been registered to
@@ -377,6 +378,8 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.
         region (int): Value in the segmentation image corresponding to a region
             over which the TAC is computed.
         verbose (bool): Set to ``True`` to output processing information.
+        with_std (bool): If True, returns mean and standard deviation as a tuple. If False,
+            returns mean alone. Default False.
 
     Returns:
         tac_out (np.ndarray): Mean of PET image within regions for each frame in 4D PET series.
@@ -404,6 +407,11 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.
     masked_voxels = (seg_image > region - 0.1) & (seg_image < region + 0.1)
     masked_image = pet_image_4d[masked_voxels].reshape((-1, num_frames))
     tac_out = np.mean(masked_image, axis=0)
+
+    if with_std:
+        tac_std = np.std(masked_image, axis=0)
+        return tac_out, tac_std
+
     return tac_out
 
 
