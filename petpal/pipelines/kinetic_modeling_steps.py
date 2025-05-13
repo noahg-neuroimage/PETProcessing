@@ -4,7 +4,11 @@ from ..kinetic_modeling import parametric_images
 from ..kinetic_modeling import tac_fitting
 from ..kinetic_modeling import rtm_analysis as pet_rtms
 from ..kinetic_modeling import graphical_analysis as pet_grph
-from .preproc_steps import TACsFromSegmentationStep, ResampleBloodTACStep, PreprocStepType, ImageToImageStep
+from .preproc_steps import (TACsFromSegmentationStep,
+                            ResampleBloodTACStep,
+                            PreprocStepType,
+                            ImageToImageStep)
+from .pca_guided_idif_steps import PCAGuidedIDIFMixin
 from ..utils.bids_utils import parse_path_to_get_subject_and_session_id, gen_bids_like_dir_path
 
 class TACAnalysisStepMixin(StepsAPI):
@@ -259,6 +263,8 @@ class TACAnalysisStepMixin(StepsAPI):
                 self.roi_tacs_dir = sending_step.out_tacs_dir
             elif isinstance(sending_step, ResampleBloodTACStep):
                 self.input_tac_path = sending_step.resampled_tac_path
+            elif isinstance(sending_step, PCAGuidedIDIFMixin):
+                self.input_tac_path = sending_step.output_tac_path
             else:
                 super().set_input_as_output_from(sending_step)
 
@@ -320,8 +326,7 @@ class GraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
         in_kwargs = ArgsDict(dict(input_tac_path=self.input_tac_path, roi_tacs_dir=self.roi_tacs_dir,
                                   output_directory=self.output_directory, output_prefix=self.output_prefix,
                                   method=self.init_kwargs['method'],
-                                  fit_threshold_in_mins=self.init_kwargs['fit_thresh_in_mins'],
-                                  image_rescale=self.init_kwargs['image_rescale'], ))
+                                  fit_threshold_in_mins=self.init_kwargs['fit_thresh_in_mins'] ))
         
         for arg_name, arg_val in in_kwargs.items():
             info_str.append(f'{arg_name}={repr(arg_val)},')
@@ -554,7 +559,7 @@ class RTMFittingAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
 class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
     """
     A step for performing parametric graphical analysis on TACs using various methods using
-    :class:`GraphicalAnalysisParametricImages<petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImages>`
+    :class:`~petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImage`
 
     This class sets up parametric graphical analysis, initializes required paths and parameters,
     and provides class methods for creating default steps with common graphical analysis methods
@@ -575,7 +580,7 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
                  output_prefix: str,
                  method: str,
                  fit_threshold_in_mins: float = 30.0,
-                 image_rescale:float=1.0/37000.):
+                 image_rescale:float=1.0):
         """
         Initializes the ParametricGraphicalAnalysisStep with specified parameters.
 
@@ -586,7 +591,7 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
             output_prefix (str): Prefix for the output files.
             method (str): Graphical analysis method.
             fit_threshold_in_mins (float, optional): Threshold in minutes for fitting. Defaults to 30.0
-            image_rescale (float, optional): Image rescale factor. Defaults to 1.0/37000.0
+            image_rescale (float, optional): Image rescale factor. Defaults to 1.0
         """
         TACAnalysisStepMixin.__init__(self, input_tac_path=input_tac_path, pet4D_img_path=input_image_path,
                                       roi_tacs_dir='', output_directory=output_directory, output_prefix=output_prefix,
@@ -661,6 +666,8 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
                 self.input_tac_path = sending_step.resampled_tac_path
             elif isinstance(sending_step, ImageToImageStep):
                 self.input_image_path = sending_step.output_image_path
+            elif isinstance(sending_step, PCAGuidedIDIFMixin):
+                self.input_tac_path = sending_step.output_tac_path
             else:
                 raise NotImplementedError
     

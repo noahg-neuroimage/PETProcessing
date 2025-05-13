@@ -20,3 +20,8 @@ HALF_LIVES = {
     "zr89": 282240,
     "i124": 360806.4,
 }
+
+
+CONVERT_kBq_to_mCi_ = 37000.0
+r"""float: Convert kBq/ml to mCi/ml. 37000 kBq = 1 mCi.
+"""
