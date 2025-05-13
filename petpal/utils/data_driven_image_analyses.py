@@ -1,3 +1,6 @@
+"""
+Data driven image analyses, including PCA analysis and input function extraction.
+"""
 import ants
 import numpy as np
 from sklearn.decomposition import PCA
