@@ -137,7 +137,7 @@ class StepsContainer:
         Executes all steps in the container in sequence.
         """
         for step_id, (step_name, a_step) in enumerate(zip(self.step_names, self.step_objs)):
-            a_step.execute()
+            a_step()
     
     def __getitem__(self, step: Union[int, str]):
         """
@@ -433,7 +433,7 @@ class StepsPipeline:
         """
         for step_name in nx.topological_sort(self.dependency_graph):
             step = self.get_step_from_node_label(node_label=step_name)
-            step.execute()
+            step()
     
     def add_step(self, container_name: str, step: StepType):
         """

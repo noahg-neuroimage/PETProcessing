@@ -45,8 +45,8 @@ def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImag
             masked_region_img = ants.image_read("/path/to/mask_region.nii.gz")
 
             # Run ROI extraction and save
-            time_series = tac_func(input_image=pet_img, mask_image=masked_region_img)
-            np.savetxt("time_series.tsv", time_series, delimiter='\t)
+            time_series = tac_func(input_image=pet_img, mask_image=masked_region_img).T
+            np.savetxt("time_series.tsv", time_series, delimiter='\t')
             
     """
     assert len(input_image.shape) == 4, "Input image must be 4D."
@@ -99,8 +99,8 @@ def apply_mask_4d(input_arr: np.ndarray,
             masked_region_arr = masked_region_img.numpy()
 
             # Run ROI extraction and save
-            time_series = apply_mask_4d(input_arr=pet_arr, mask_arr=masked_region_arr)
-            np.savetxt("time_series.tsv", time_series, delimiter='\t)
+            time_series = apply_mask_4d(input_arr=pet_arr, mask_arr=masked_region_arr).T
+            np.savetxt("time_series.tsv", time_series, delimiter='\t')
 
     """
     assert len(input_arr.shape) == 4, "Input array must be 4D."
