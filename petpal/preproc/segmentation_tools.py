@@ -2,7 +2,7 @@
 Methods applying to segmentations.
 
 Available methods:
-* :meth:`combine_binarized_regions`: Merge regions in a segmentation image into a mask with value 1
+* :meth:`combine_regions_as_mask`: Merge regions in a segmentation image into a mask with value 1
 * :meth:`resample_segmentation`: Resample a segmentation image to the affine of a 4D PET image.
 * :meth:`vat_wm_ref_region`: Compute the white matter reference region for the VAT radiotracer.
 
@@ -20,8 +20,8 @@ from . import image_operations_4d, motion_corr
 from ..utils import math_lib
 
 
-def combine_binarized_regions(segmentation_img: ants.ANTsImage | np.ndarray,
-                              label: int | list[int]):
+def combine_regions_as_mask(segmentation_img: ants.ANTsImage | np.ndarray,
+                            label: int | list[int]):
     """
     Create a mask from a segmentation image and one or more labels.
 
@@ -43,16 +43,16 @@ def combine_binarized_regions(segmentation_img: ants.ANTsImage | np.ndarray,
 
             import ants
         
-            from petpal.preproc.segmentation_tools import combine_binarized_regions
+            from petpal.preproc.segmentation_tools import combine_regions_as_mask
 
             # Load the image
             seg_img = ants.image_read('/path/to/seg.nii.gz')
 
             # If the segmentation is FreeSurfer aparc+aseg, then region 12 is the Right Putamen
-            right_putamen = combine_binarized_regions(segmentation_img = seg_img, label=12)
+            right_putamen = combine_regions_as_mask(segmentation_img = seg_img, label=12)
 
             # If we want a mask of both the right and left putamen, use regions 12 and 51
-            whole_putamen = combine_binarized_regions(segmentation_img = seg_img, label=[12, 51])
+            whole_putamen = combine_regions_as_mask(segmentation_img = seg_img, label=[12, 51])
     
 
     """
@@ -182,8 +182,8 @@ def replace_probabilistic_region(segmentation_numpy: np.ndarray,
     """
     segmentations_combined = []
     for region in regions:
-        region_mask = combine_binarized_regions(segmentation_img=segmentation_numpy,
-                                        label=[region])
+        region_mask = combine_regions_as_mask(segmentation_img=segmentation_numpy,
+                                              label=[region])
 
         region_blur = math_lib.gauss_blur_computation(input_image=region_mask,
                                                       blur_size_mm=blur_size_mm,
@@ -193,8 +193,8 @@ def replace_probabilistic_region(segmentation_numpy: np.ndarray,
     
     segmentations_combined_np = np.array(segmentations_combined)
     probability_map = np.argmax(segmentations_combined_np,axis=0)
-    blend = combine_binarized_regions(segmentation_img=segmentation_numpy,
-                                        label=[regions_to_replace])
+    blend = combine_regions_as_mask(segmentation_img=segmentation_numpy,
+                                    label=[regions_to_replace])
 
     for i, region in enumerate(regions):
         region_match = (probability_map == i) & (blend > 0)
@@ -263,10 +263,10 @@ def vat_wm_ref_region(input_segmentation_path: str,
     seg_image = segmentation.get_fdata()
     seg_resolution = segmentation.header.get_zooms()
 
-    wm_merged = combine_binarized_regions(segmentation_img=seg_image,
-                                  label=wm_regions)
-    csf_merged = combine_binarized_regions(segmentation_img=seg_image,
-                                   label=csf_regions)
+    wm_merged = combine_regions_as_mask(segmentation_img=seg_image,
+                                        label=wm_regions)
+    csf_merged = combine_regions_as_mask(segmentation_img=seg_image,
+                                         label=csf_regions)
     wm_csf_merged = wm_merged + csf_merged
 
     wm_csf_blurred = math_lib.gauss_blur_computation(input_image=wm_csf_merged,
