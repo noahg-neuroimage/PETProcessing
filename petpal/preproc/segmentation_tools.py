@@ -194,7 +194,7 @@ def replace_probabilistic_region(segmentation_numpy: np.ndarray,
     segmentations_combined_np = np.array(segmentations_combined)
     probability_map = np.argmax(segmentations_combined_np,axis=0)
     blend = combine_regions_as_mask(segmentation_img=segmentation_numpy,
-                                    label=[regions_to_replace])
+                                    label=regions_to_replace)
 
     for i, region in enumerate(regions):
         region_match = (probability_map == i) & (blend > 0)
