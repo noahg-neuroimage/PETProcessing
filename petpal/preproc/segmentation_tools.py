@@ -20,8 +20,8 @@ from . import image_operations_4d, motion_corr
 from ..utils import math_lib
 
 
-def combine_regions_as_mask(segmentation_img: ants.ANTsImage | np.ndarray,
-                            label: int | list[int]):
+def combine_regions_as_mask(segmentation_img: ants.core.ANTsImage | np.ndarray,
+                            label: int | list[int]) -> ants.core.ANTsImage:
     """
     Create a mask from a segmentation image and one or more labels.
 
@@ -555,4 +555,3 @@ def calc_vesselness_mask_from_quantiled_vesselness(input_image: ants.core.ANTsIm
     if morph_dil_radius > 0:
         vess_mask_img = vess_mask_img.morphology(operation='dilate', radius=morph_dil_radius)
     return vess_mask_img
-
