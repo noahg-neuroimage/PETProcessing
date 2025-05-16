@@ -273,7 +273,7 @@ def vat_wm_ref_region(input_segmentation_path: str,
                                                      blur_size_mm=9,
                                                      input_zooms=seg_resolution,
                                                      use_fwhm=True)
-    
+
     wm_csf_eroded = image_operations_4d.threshold(input_image_numpy=wm_csf_blurred,
                                                   lower_bound=0.95)
     wm_csf_eroded_keep = np.where(wm_csf_eroded>0)
