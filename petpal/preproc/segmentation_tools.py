@@ -6,9 +6,6 @@ Available methods:
 * :meth:`resample_segmentation`: Resample a segmentation image to the affine of a 4D PET image.
 * :meth:`vat_wm_ref_region`: Compute the white matter reference region for the VAT radiotracer.
 
-TODO:
- * Find a more efficient way to find the region mask in :meth:`segmentations_merge` that works for region=1
-
 """
 import numpy as np
 import ants
@@ -16,7 +13,7 @@ import nibabel
 from nibabel import processing
 import pandas as pd
 
-from . import image_operations_4d, motion_corr
+from . import motion_corr
 from ..utils import math_lib
 
 
@@ -124,13 +121,15 @@ def parcellate_right_left(segmentation_numpy: np.ndarray,
     nibabel. Use outside of these assumptions at your own risk.
 
     Args:
-        segmentation_numpy (np.ndarray): Segmentation image array loaded with Nibabel, RAS+ orientation
+        segmentation_numpy (np.ndarray): Segmentation image array loaded with Nibabel, RAS+
+            orientation
         region (int): Region index in segmentation image to be split into left and right.
         new_right_region (int): Region on the right side assigned to previous region.
         new_left_region (int): Region on the left side assined to previous region.
 
     Returns:
-        split_segmentation (np.ndarray): Original segmentation image array with new left and right values.
+        split_segmentation (np.ndarray): Original segmentation image array with new left and right
+            values.
     """
     seg_shape = segmentation_numpy.shape
     x_mid = (seg_shape[0] - 1) // 2
@@ -145,7 +144,7 @@ def parcellate_right_left(segmentation_numpy: np.ndarray,
     seg_region_left = tuple((seg_region[0][left_region],
                              seg_region[1][left_region],
                              seg_region[2][left_region]))
-    
+
     split_segmentation = segmentation_numpy
     split_segmentation[seg_region_right] = new_right_region
     split_segmentation[seg_region_left] = new_left_region
@@ -190,7 +189,7 @@ def replace_probabilistic_region(segmentation_numpy: np.ndarray,
                                                       input_zooms=segmentation_zooms,
                                                       use_fwhm=True)
         segmentations_combined += [region_blur]
-    
+
     segmentations_combined_np = np.array(segmentations_combined)
     probability_map = np.argmax(segmentations_combined_np,axis=0)
     blend = combine_regions_as_mask(segmentation_img=segmentation_numpy,
@@ -199,7 +198,7 @@ def replace_probabilistic_region(segmentation_numpy: np.ndarray,
     for i, region in enumerate(regions):
         region_match = (probability_map == i) & (blend > 0)
         segmentation_numpy[region_match] = region
-    
+
     return segmentation_numpy
 
 
@@ -259,34 +258,24 @@ def vat_wm_ref_region(input_segmentation_path: str,
                   4030,4031,4032,4033,4034,4035,5001,5002]
     csf_regions = [4,14,15,43,24]
 
-    segmentation = nibabel.load(input_segmentation_path)
-    seg_image = segmentation.get_fdata()
-    seg_resolution = segmentation.header.get_zooms()
+    seg_img = ants.image_read(input_segmentation_path)
 
-    wm_merged = combine_regions_as_mask(segmentation_img=seg_image,
+    wm_merged = combine_regions_as_mask(segmentation_img=seg_img,
                                         label=wm_regions)
-    csf_merged = combine_regions_as_mask(segmentation_img=seg_image,
+    csf_merged = combine_regions_as_mask(segmentation_img=seg_img,
                                          label=csf_regions)
     wm_csf_merged = wm_merged + csf_merged
 
-    wm_csf_blurred = math_lib.gauss_blur_computation(input_image=wm_csf_merged,
-                                                     blur_size_mm=9,
-                                                     input_zooms=seg_resolution,
-                                                     use_fwhm=True)
+    wm_csf_blurred = ants.smooth_image(image=wm_csf_merged,
+                                       sigma=9,
+                                       sigma_in_physical_coordinates=True,
+                                       FWHM=True,max_kernel_width=16)
 
-    wm_csf_eroded = image_operations_4d.threshold(input_image_numpy=wm_csf_blurred,
-                                                  lower_bound=0.95)
-    wm_csf_eroded_keep = np.where(wm_csf_eroded>0)
-    wm_csf_eroded_mask = np.zeros(wm_csf_eroded.shape)
-    wm_csf_eroded_mask[wm_csf_eroded_keep] = 1
+    wm_csf_eroded = ants.threshold_image(image=wm_csf_blurred, low_thresh=0.95, binary=True)
+    wm_erode = ants.mask_image(image=wm_merged, mask=wm_csf_eroded)
 
-    wm_erode = wm_csf_eroded_mask * wm_merged
+    ants.image_write(image=wm_erode, filename=out_segmentation_path)
 
-    wm_erode_save = nibabel.nifti1.Nifti1Image(dataobj=wm_erode,
-                                               affine=segmentation.affine,
-                                               header=segmentation.header)
-    nibabel.save(img=wm_erode_save,
-                 filename=out_segmentation_path)
 
 def vat_wm_region_merge(wmparc_segmentation_path: str,
                         out_image_path: str,
