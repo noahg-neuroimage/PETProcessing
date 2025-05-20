@@ -1,14 +1,18 @@
 import warnings
 import copy
 from typing import Union
+
+from ..preproc.regional_tac_extraction import write_tacs
+
 from .steps_base import *
-from ..preproc.image_operations_4d import SimpleAutoImageCropper, write_tacs
-from ..preproc.register import register_pet
+from ..preproc.image_operations_4d import SimpleAutoImageCropper, rescale_image
+from ..preproc.register import register_pet, warp_pet_to_atlas
 from ..preproc.motion_corr import (motion_corr_frames_above_mean_value,
                                    windowed_motion_corr_to_target)
 from ..input_function import blood_input
 from ..utils.bids_utils import parse_path_to_get_subject_and_session_id, snake_to_camel_case, gen_bids_like_dir_path, gen_bids_like_filepath
 from ..utils.image_io import safe_copy_meta
+from ..utils.decorators import ANTsImageToANTsImage
 
 class TACsFromSegmentationStep(FunctionBasedStep):
     """
@@ -16,7 +20,7 @@ class TACsFromSegmentationStep(FunctionBasedStep):
 
     This class is specialized for handling the input and output paths related to TAC generation,
     extending the :class:`FunctionBasedStep<petpal.pipelines.steps_base.FunctionBasedStep>` with specific properties
-    and methods for TACs. The class uses :func:`write_tacs<petpal.preproc.image_operations_4d.write_tacs>` which
+    and methods for TACs. The class uses :func:`write_tacs<petpal.preproc.regional_tac_extraction.write_tacs>` which
     uses segmentation information to generate ROI TACs, and write them to disk.
 
     Attributes:
@@ -25,7 +29,6 @@ class TACsFromSegmentationStep(FunctionBasedStep):
         segmentation_label_map_path (str): Path to the segmentation label map.
         out_tacs_dir (str): Directory where the output TACs will be saved.
         out_tacs_prefix (str): Prefix for the output TACs.
-        time_keyword (str): Keyword for the time frame, default is 'FrameReferenceTime'.
         verbose (bool): Verbosity flag, default is False.
 
     """
@@ -35,7 +38,6 @@ class TACsFromSegmentationStep(FunctionBasedStep):
                  segmentation_label_map_path: str,
                  out_tacs_dir: str,
                  out_tacs_prefix: str,
-                 time_keyword='FrameReferenceTime',
                  verbose=False) -> None:
         """
         Initializes a TACsFromSegmentationStep with specified parameters.
@@ -46,19 +48,17 @@ class TACsFromSegmentationStep(FunctionBasedStep):
             segmentation_label_map_path (str): Path to the segmentation label map.
             out_tacs_dir (str): Directory where the output TACs will be saved.
             out_tacs_prefix (str): Prefix for the output TACs.
-            time_keyword (str): Keyword for the time frame, default is 'FrameReferenceTime'.
             verbose (bool): Verbosity flag, default is False.
         """
         super().__init__(name='write_roi_tacs', function=write_tacs, input_image_path=input_image_path,
                          segmentation_image_path=segmentation_image_path, label_map_path=segmentation_label_map_path,
-                         out_tac_dir=out_tacs_dir, out_tac_prefix=out_tacs_prefix, time_frame_keyword=time_keyword,
+                         out_tac_dir=out_tacs_dir, out_tac_prefix=out_tacs_prefix,
                          verbose=verbose, )
         self._input_image = input_image_path
         self._segmentation_image = segmentation_image_path
         self._segmentation_label_map = segmentation_label_map_path
         self._out_tacs_path = out_tacs_dir
         self._out_tacs_prefix = out_tacs_prefix
-        self.time_keyword = time_keyword
         self.verbose = verbose
     
     def __repr__(self):
@@ -74,7 +74,7 @@ class TACsFromSegmentationStep(FunctionBasedStep):
         in_kwargs = ArgsDict(
             dict(input_image_path=self.input_image_path, segmentation_image_path=self.segmentation_image_path,
                  segmentation_label_map_path=self.segmentation_label_map_path, out_tacs_dir=self.out_tacs_dir,
-                 out_tacs_prefix=self.out_tacs_prefix, time_keyword=self.time_keyword, verbose=self.verbose))
+                 out_tacs_prefix=self.out_tacs_prefix, verbose=self.verbose))
         
         for arg_name, arg_val in in_kwargs.items():
             info_str.append(f'{arg_name}={repr(arg_val)},')
@@ -251,14 +251,14 @@ class TACsFromSegmentationStep(FunctionBasedStep):
     def default_write_tacs_from_segmentation_rois(cls, **overrides):
         """
         Provides a class method to create an instance with default parameters. All paths
-        are set to empty strings, `time_keyword=FrameReferenceTime`, and `verbose=False`.
+        are set to empty strings, and `verbose=False`.
 
         Returns:
             TACsFromSegmentationStep: A new instance with default parameters.
         """
 
         defaults = dict(input_image_path='', segmentation_image_path='', segmentation_label_map_path='',
-                        out_tacs_dir='', out_tacs_prefix='', time_keyword='FrameReferenceTime', verbose=False)
+                        out_tacs_dir='', out_tacs_prefix='', verbose=False)
         override_dict = defaults | overrides
 
         try:
@@ -523,7 +523,8 @@ class ImageToImageStep(FunctionBasedStep):
         sup_str_list.insert(args_ind, f"Input & Output Paths:\n{io_dict}")
         def_args_ind = sup_str_list.index("Default Arguments:")
         sup_str_list.pop(def_args_ind + 1)
-        sup_str_list.pop(def_args_ind + 1)
+        if not hasattr(self.function, '__wrapped__'):
+            sup_str_list.pop(def_args_ind + 1)
         
         return "\n".join(sup_str_list)
     
@@ -575,18 +576,19 @@ class ImageToImageStep(FunctionBasedStep):
         self.output_image_path = filepath
     
     @classmethod
-    def default_threshold_cropping(cls, **overrides):
+    def default_threshold_cropping(cls, name: str = 'thresh_crop',  **overrides):
         """
         Creates a default instance for threshold cropping using :class:`SimpleAutoImageCropper<petpal.preproc.image_operations_4d.SimpleAutoImageCropper>`.
         All paths are empty-strings.
 
         Args:
+            name (str): Name of the step. Defaults to 'thresh_crop'.
             **overrides: Override default parameters.
 
         Returns:
             ImageToImageStep: A new instance for threshold cropping.
         """
-        defaults = dict(name='thresh_crop', function=SimpleAutoImageCropper, input_image_path='',
+        defaults = dict(name=name, function=SimpleAutoImageCropper, input_image_path='',
                         output_image_path='', )
         override_dict = defaults | overrides
         try:
@@ -596,20 +598,21 @@ class ImageToImageStep(FunctionBasedStep):
             return cls(**defaults)
     
     @classmethod
-    def default_moco_frames_above_mean(cls, verbose=False, **overrides):
+    def default_moco_frames_above_mean(cls, name: str = 'moco_frames_above_mean', verbose=False, **overrides):
         """
         Creates a default instance for motion correction frames above mean value using
         :func:`motion_corr_frames_above_mean_value<petpal.preproc.motion_corr.motion_corr_frames_above_mean_value>`.
         All paths are empty-strings.
 
         Args:
+            name (str): Name of the step. Defaults to 'moco_frames_above_mean'
             verbose (bool): Whether to run in verbose mode.
             **overrides: Override default parameters.
 
         Returns:
             ImageToImageStep: A new instance for motion correction frames above mean value.
         """
-        defaults = dict(name='moco_frames_above_mean', function=motion_corr_frames_above_mean_value,
+        defaults = dict(name=name, function=motion_corr_frames_above_mean_value,
                         input_image_path='', output_image_path='', motion_target_option='mean_image', verbose=verbose,
                         half_life=None, )
         override_dict = defaults | overrides
@@ -620,20 +623,21 @@ class ImageToImageStep(FunctionBasedStep):
             return cls(**defaults)
 
     @classmethod
-    def default_windowed_moco(cls, verbose=False, **overrides):
+    def default_windowed_moco(cls, name: str = 'windowed_moco', verbose=False, **overrides):
         """
         Creates a default instance for motion correction of frames using a windowed strategy.
         See :func:`windowed_motion_corr_to_target<petpal.preproc.motion_corr.windowed_motion_corr_to_target>`
         for more details. All paths are empty-strings.
 
         Args:
+            name (str): Name of the step. Defaults to 'windowed_moco'.
             verbose:
             **overrides:
 
         Returns:
             ImageToImageStep: A new instance for windowed motion correction of frames.
         """
-        defaults = dict(name='windowed_moco', function=windowed_motion_corr_to_target,
+        defaults = dict(name=name, function=windowed_motion_corr_to_target,
                         input_image_path='', output_image_path='',
                         motion_target_option='weighted_series_sum', w_size=60.0,
                         verbose=verbose)
@@ -645,12 +649,13 @@ class ImageToImageStep(FunctionBasedStep):
             return cls(**defaults)
 
     @classmethod
-    def default_register_pet_to_t1(cls, reference_image_path='', half_life:float=None, verbose=False, **overrides):
+    def default_register_pet_to_t1(cls, name:str = 'register_pet_to_t1', reference_image_path='', half_life:float=None, verbose=False, **overrides):
         """
         Creates a default instance for registering PET to T1 image using :func:`register_pet<petpal.preproc.register.register_pet>`.
         All paths are empty-strings.
 
         Args:
+            name (str): Name of the step. Defaults to 'register_pet_to_t1'
             reference_image_path (str): Path to the reference image.
             half_life (float): Half-life value, in seconds, for the radiotracer. Used to
                 generate a weighted_series_sum image.
@@ -661,7 +666,7 @@ class ImageToImageStep(FunctionBasedStep):
             ImageToImageStep: A new instance for registering PET to T1 image.
 
         """
-        defaults = dict(name='register_pet_to_t1', function=register_pet, input_image_path='', output_image_path='',
+        defaults = dict(name=name, function=register_pet, input_image_path='', output_image_path='',
                         reference_image_path=reference_image_path, motion_target_option='weighted_series_sum',
                         verbose=verbose, half_life=half_life)
         override_dict = defaults | overrides
@@ -671,5 +676,190 @@ class ImageToImageStep(FunctionBasedStep):
             warnings.warn(f"Invalid override: {err}. Using default instance instead.", stacklevel=2)
             return cls(**defaults)
 
+    @classmethod
+    def default_rescale_image(cls, name: str = 'rescale_image', **overrides):
+        r"""Creates a default step-instance for rescaling an image using :class:`rescale_image<petpal.preproc.image_operations_4d.rescale_image>`.
 
-PreprocStepType = Union[TACsFromSegmentationStep, ResampleBloodTACStep, ImageToImageStep]
+        The defaults for this step will divide the input image by 37000.0 which is usually done to go
+        from kBq/ml to nCi/ml.
+
+        Notes:
+             The function :class:`rescale_image<petpal.preproc.image_operations_4d.rescale_image>` is wrapped using
+             :func:`ANTsImageToANTsImage<petpal.utils.decorators.ANTsImageToANTsImage>` since steps require input and output
+             paths.
+
+        Args:
+            name (str): Name of the step. Defaults to 'rescale_image'.
+            **overrides:
+
+        Returns:
+            ImageToImageStep: A new step instance for rescaling the input image.
+        """
+        defaults = dict(name=name, function=ANTsImageToANTsImage(rescale_image),
+                        input_image_path='', output_image_path='',
+                        rescale_constant=37000.0, op='/')
+        override_dict = defaults | overrides
+
+        try:
+            return cls(**override_dict)
+        except RuntimeError as err:
+            warnings.warn(f"Invalid override: {err}. Using default instance instead.", stacklevel=2)
+            return cls(**defaults)
+
+    @classmethod
+    def default_warp_pet_to_atlas(cls, name: str = 'warp_pet_to_atlas', anat_image_path: str = '', atlas_image_path: str = '', **overrides):
+        """Creates a default step instance for warping a PET image to an atlas using :func:`~petpal.preproc.register.warp_pet_to_atlas`.
+
+        Note:
+            The defaults for this step do not include the *anat_image_path* or *atlas_image_path*, as these will depend
+            on the pipeline construction. These paths will need to be set before a pipeline will be able to run.
+
+        Args:
+            name (str): Name of the step. Defaults to 'warp_pet_to_atlas'.
+            anat_image_path (str): Path to anatomical image used to compute transform to atlas space. Defaults to an
+                empty string ''.
+            atlas_image_path (str): Path to atlas image to which pet will be warped
+                (indirectly, via the anatomical image).
+            **overrides: Override default parameters
+
+        Returns:
+            ImageToImageStep:
+                A new step instance for warping the pet image to atlas space.
+        """
+        defaults = dict(name=name, function=ANTsImageToANTsImage(warp_pet_to_atlas),
+                        input_image_path='', output_image_path='', anat_image_path=anat_image_path,
+                        atlas_image_path=atlas_image_path, )
+        override_dict = defaults | overrides
+
+        try:
+            return cls(**override_dict)
+        except RuntimeError as err:
+            warnings.warn(f"Invalid override: {err}. Using default instance instead.", stacklevel=2)
+            return cls(**defaults)
+
+class ImagePairToArrayStep(FunctionBasedStep):
+    """
+    A step in a processing pipeline for transforming two input image files into an output array.
+
+    This class extends the :class:`FunctionBasedStep<petpal.pipelines.steps_base.FunctionBasedStep>` and is designed
+    for tasks that require combining or processing information from two image inputs and outputing an array e.g.
+    getting the mean activity from a 4D-PET image given a voxel mask image. It handles input image paths, output
+    array paths, and provides methods for setting inputs from connected pipeline steps or for inferring output
+    array paths.
+
+    .. attention::
+
+       The passed function must have the following arguments order:
+       ``func(input_image, second_image, output_array, *args, **kwargs)`` where ``input_image`` and ``output_image``
+       can be named something else. The first argument must be an input image path, the second argument must be the
+       path to the second image, and the third argument must be an output array path.
+
+    Attributes:
+        input_image_path (str): Path to the first input image file.
+        second_image_path (str): Path to the second input image file.
+        output_array_path (str): Path to the output array file.
+
+    """
+    def __init__(self,
+                 name: str,
+                 function: Callable,
+                 input_image_path: str,
+                 second_image_path: str,
+                 output_array_path: str,
+                 *args,
+                 **kwargs):
+        """
+        Initializes an ImagePairToArrayStep with specified parameters.
+
+        Args:
+            name (str): The name of the step.
+            function (Callable): The function that uses the two input images and outputs an array.
+            input_image_path (str): Path to the first input image file.
+            second_image_path (str): Path to the second input image file.
+            output_array_path (str): Path to the output array file.
+            *args: Additional positional arguments for the processing function.
+            **kwargs: Additional keyword arguments for the processing function.
+
+        Notes:
+            The passed function (``func``) must have the following arguments order:
+            ``func(input_image, second_image, output_array, *args, **kwargs)`` where ``input_image``, ``second_image``,
+            and ``output_array`` can be named something else. The first argument must be an input image path,
+            the second argument must be the path to the second image, and the third argument must be an output
+            array path.
+
+        """
+        super().__init__(name, function,
+                         *(input_image_path, output_array_path,
+                           second_image_path, *args),
+                         **kwargs)
+        self.input_image_path = copy.copy(self.args[0])
+        self.second_image_path = copy.copy(self.args[1])
+        self.output_array_path = copy.copy(self.args[2])
+        self.args = copy.copy(self.args[3:])
+
+    def execute(self):
+        """
+        Executes the function to process the two input images into an output array.
+
+        The specified function will be called with the paths to the two input images, the output array,
+        any additional arguments, and keyword arguments.
+
+        """
+        print(f"(Info): Executing {self.name}")
+        self.function(self.input_image_path,
+                      self.second_image_path,
+                      self.output_array_path,
+                      *self.args,
+                      **self.kwargs)
+        print(f"(Info): Finished {self.name}")
+
+    def set_input_as_output_from(self, *sending_steps) -> None:
+        """
+        Sets the input image paths based on the output paths from other steps in the pipeline.
+        The first sending step will set the input image path, and the second sending step will
+        set the second image path.
+
+        Args:
+            sending_steps (tuple[FunctionBasedStep]): Two pipeline steps whose outputs will be used
+                as the input image path and second image input path.
+
+        Raises:
+            AssertionError: If the number of provided sending steps is not exactly two.
+        """
+        assert len(sending_steps) == 2, "ImagePairToArrayStep must have 2 sending ImageToImageStep steps."
+        if isinstance(sending_steps[0], ImageToImageStep):
+            self.input_image_path = sending_steps[0].output_image_path
+        else:
+            super().set_input_as_output_from(sending_steps[0])
+        if isinstance(sending_steps[1], ImageToImageStep):
+            self.second_image_path = sending_steps[1].output_image_path
+        else:
+            super().set_input_as_output_from(sending_steps[1])
+
+    def infer_outputs_from_inputs(self,
+                                  out_dir: str,
+                                  der_type: str = 'tacs',
+                                  suffix: str = 'tac',
+                                  ext: str = '.tsv',
+                                  **extra_desc):
+        """
+        Infers the output array path based on the inputs and specified parameters.
+
+        This method generates a BIDS-like derivatives filepath for the output based on the subject and
+        session IDs extracted from the input image path.
+
+        Args:
+            out_dir (str): Directory where the output array will be saved.
+            der_type (str, optional): Type of derivative. Will set the sub-directory in `out_dir`. Defaults to 'tacs'.
+            suffix (str, optional): Suffix for the output filename. Defaults to 'tac'.
+            ext (str, optional): File extension for the output file. Defaults to '.tsv'.
+            **extra_desc: Additional descriptive parameters for the output filename.
+        """
+        sub_id, ses_id = parse_path_to_get_subject_and_session_id(self.input_image_path)
+        step_name_in_camel_case = snake_to_camel_case(self.name)
+        filepath = gen_bids_like_filepath(sub_id=sub_id, ses_id=ses_id, suffix=suffix, bids_dir=out_dir,
+                                          modality=der_type, ext=ext, desc=step_name_in_camel_case, **extra_desc)
+        self.output_array_path = filepath
+
+
+PreprocStepType = Union[TACsFromSegmentationStep, ResampleBloodTACStep, ImageToImageStep, ImagePairToArrayStep]

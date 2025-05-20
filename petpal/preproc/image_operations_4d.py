@@ -1,25 +1,24 @@
-"""
+r"""
 The 'image_operations_4d' module provides several functions used to do preprocessing
 on 4D PET imaging series. These functions typically take one or more paths to imaging
 data in NIfTI format, and save modified data to a NIfTI file, and may return the
 modified imaging array as output.
 
 TODO:
-    * (weighted_series_sum) Refactor the DecayFactor key extraction into its own function
-    * (weighted_series_sum) Refactor verbose reporting into the class as it is unrelated to
-      computation
-    * (write_tacs) Shift to accepting color-key dictionaries rather than a file path.
-    * (extract_tac_from_4dnifty_using_mask) Write the number of voxels in the mask, or the
-      volume of the mask. This is necessary for certain analyses with the resulting tacs,
-      such as finding the average uptake encompassing two regions.
-    * Methods that create new images should copy over a previous metadata file, if one exists,
-      and create a new one if it does not.
-    * (stitch_broken_scans) Separate 'add desc entity' section to its own function somewhere.
-    * (stitch_broken_scans) Assumes non-BIDS key 'DecayFactor' instead of BIDS-required 'DecayCorrectionFactor' for
-      ease-of-use with NIL data. Should be changed in the future.
-    * (stitch_broken_scans) Currently writes intermediate files even if output_image_path is None.
-    * (suvr) Allow list to be passed as ref_region to use multiple regions together as a reference region (i.e. left
-    and right cerebellum gray matter).
+    *   (weighted_series_sum) Refactor the DecayFactor key extraction into its own function
+    *   (weighted_series_sum) Refactor verbose reporting into the class as it is unrelated to
+        computation
+    *   (extract_tac_from_4dnifty_using_mask) Write the number of voxels in the mask, or the
+        volume of the mask. This is necessary for certain analyses with the resulting tacs,
+        such as finding the average uptake encompassing two regions.
+    *   Methods that create new images should copy over a previous metadata file, if one exists,
+        and create a new one if it does not.
+    *   (stitch_broken_scans) Separate 'add desc entity' section to its own function somewhere.
+    *   (stitch_broken_scans) Assumes non-BIDS key 'DecayFactor' instead of BIDS-required 'DecayCorrectionFactor' for
+        ease-of-use with NIL data. Should be changed in the future.
+    *   (stitch_broken_scans) Currently writes intermediate files even if output_image_path is None.
+    *   (suvr) Allow list to be passed as ref_region to use multiple regions together as a reference region (i.e. left
+        and right cerebellum gray matter).
 
 """
 import os
@@ -31,7 +30,7 @@ import nibabel
 import numpy as np
 from scipy.ndimage import center_of_mass
 
-from ..utils.useful_functions import weighted_series_sum, check_physical_space_for_ants_image_pair
+from ..utils.useful_functions import weighted_series_sum
 from ..utils import image_io, math_lib
 from ..preproc.decay_correction import undo_decay_correction, decay_correct
 
@@ -110,6 +109,7 @@ def stitch_broken_scans(input_image_path: str,
         corrected_arrays.append(corrected_image.numpy())
         updated_metadata = image_io.load_metadata_for_nifti_with_same_filename(image_path=corrected_image_path)
         new_metadata['FrameTimesStart'].extend(updated_metadata['FrameTimesStart'])
+        new_metadata['FrameReferenceTime'].extend(updated_metadata['FrameReferenceTime'])
         new_metadata['FrameDuration'].extend(updated_metadata['FrameDuration'])
         new_metadata['DecayFactor'].extend(updated_metadata['DecayFactor'])
         new_metadata['ImageDecayCorrected'] = updated_metadata['ImageDecayCorrected']
@@ -172,6 +172,52 @@ def crop_image(input_image_path: str,
     image_io.safe_copy_meta(input_image_path=input_image_path,
                             out_image_path=out_image_path)
     return cropped_image
+
+
+def rescale_image(input_image: ants.core.ANTsImage, rescale_constant: float, op: str = '/') -> ants.core.ANTsImage:
+    r"""Rescales a 3D or 4D ANTsImage intensity values by performing division or
+    multiplication with a given constant.
+
+    This function supports two operations: dividing the input image by a
+    rescale constant or multiplying it by the constant. Division is only
+    allowed with a positive rescale constant to avoid invalid operations.
+    The operation is applied element-wise across the image data.
+
+    Args:
+        input_image (ants.core.ANTsImage): Input image, given as an ANTsImage object.
+        rescale_constant (float): The constant to rescale the image intensities. For division (`op="/"`),
+            this value must be greater than zero.
+        op (str, optional): Operation to perform, either `'/'` for division or `'*'` for
+            multiplication. Default is `'/'`.
+
+    Returns:
+        ants.core.ANTsImage: The rescaled ANTsImage with updated intensity values.
+
+    Raises:
+        AssertionError: If `op` is not one of `'/'` or `'*'`.
+        AssertionError: If division (`op="/"`) is requested, but `rescale_constant` is not greater than zero.
+
+    Example:
+        .. code-block:: python
+
+            import ants
+            from petpal.preproc.image_operations_4d import rescale_image
+
+            # Load a sample ANTsImage
+            input_img = ants.image_read('example_image.nii')
+
+            # Rescale intensities by division with a constant (e.g., 2.0)
+            rescaled_img = rescale_image(input_image=input_img, rescale_constant=2.0, op='/')
+
+            # Rescale intensities by multiplication with a constant (e.g., 1.5)
+            rescaled_img = rescale_image(input_image=input_img, rescale_constant=1.5, op='*')
+    """
+    assert op in ('/', '*'), "Operations supported by this function are `/` (division) or `*` (multiplication)."
+    if op == '/':
+        assert rescale_constant > 0, "Rescaling constant must be greater than zero."
+        return input_image / rescale_constant
+    else:
+        return input_image * rescale_constant
 
 
 def determine_motion_target(motion_target_option: str | tuple | list,
@@ -314,7 +360,8 @@ def brain_mask(input_image_4d_path: str,
 def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.ndarray,
                                                        segmentation_image_numpy: np.ndarray,
                                                        region: int,
-                                                       verbose: bool) -> np.ndarray:
+                                                       verbose: bool,
+                                                       with_std: bool=False) -> np.ndarray:
     """
     Creates a time-activity curve (TAC) by computing the average value within a region, for each 
     frame in a 4D PET image series. Takes as input a PET image, which has been registered to
@@ -331,6 +378,8 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.
         region (int): Value in the segmentation image corresponding to a region
             over which the TAC is computed.
         verbose (bool): Set to ``True`` to output processing information.
+        with_std (bool): If True, returns mean and standard deviation as a tuple. If False,
+            returns mean alone. Default False.
 
     Returns:
         tac_out (np.ndarray): Mean of PET image within regions for each frame in 4D PET series.
@@ -358,6 +407,11 @@ def extract_mean_roi_tac_from_nifti_using_segmentation(input_image_4d_numpy: np.
     masked_voxels = (seg_image > region - 0.1) & (seg_image < region + 0.1)
     masked_image = pet_image_4d[masked_voxels].reshape((-1, num_frames))
     tac_out = np.mean(masked_image, axis=0)
+
+    if with_std:
+        tac_std = np.std(masked_image, axis=0)
+        return tac_out, tac_std
+
     return tac_out
 
 
@@ -532,80 +586,6 @@ def roi_tac(input_image_4d_path: str,
     region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
     header_text = 'mean_activity'
     np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
-
-
-def write_tacs(input_image_path: str,
-               label_map_path: str,
-               segmentation_image_path: str,
-               out_tac_dir: str,
-               verbose: bool,
-               time_frame_keyword: str = 'FrameReferenceTime',
-               out_tac_prefix: str = '', ):
-    """
-    Function to write Tissue Activity Curves for each region, given a segmentation,
-    4D PET image, and label map. Computes the average of the PET image within each
-    region. Writes a JSON for each region with region name, frame start time, and mean 
-    value within region.
-    """
-
-    if time_frame_keyword not in ['FrameReferenceTime', 'FrameTimesStart']:
-        raise ValueError("'time_frame_keyword' must be one of "
-                         "'FrameReferenceTime' or 'FrameTimesStart'")
-
-    pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_path)
-    label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
-    regions_abrev = label_map['abbreviation']
-    regions_map = label_map['mapping']
-
-    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
-    pet_numpy = nibabel.load(input_image_path).get_fdata()
-    seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
-
-    for i, _maps in enumerate(label_map['mapping']):
-        extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
-                                            segmentation_image_numpy=seg_numpy,
-                                            region=int(regions_map[i]),
-                                            verbose=verbose)
-        region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
-        header_text = f'{time_frame_keyword}\t{regions_abrev[i]}_mean_activity'
-        if out_tac_prefix:
-            out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
-        else:
-            out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
-        np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
-
-
-def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
-                                                 mask_image: ants.core.ANTsImage,
-                                                 verbose: bool = False) -> np.ndarray:
-    """
-    Function to extract ROI voxel tacs from an image using a mask image.
-
-    This function returns all the voxel TACs, and unlike :func:`extract_mean_roi_tac_from_nifti_using_segmentation`,
-    does not calculate the mean over all the voxels.
-
-    Args:
-        input_image (ants.core.ANTsImage): Input 4D-image from which to extract ROI voxel tacs.
-        mask_image (ants.core.ANTsImage): Mask image which determines which voxels to extract.
-        verbose (bool, optional): If True, prints information about the shape of extracted voxel tacs.
-
-    Returns:
-        out_voxels (np.ndarray): Array of voxel TACs of shape (num_voxels, num_frames)
-
-    Raises:
-         AssertionError: If input image is not 4D-image.
-         AssertionError: If mask image is not in the same physical space as the input image.
-
-    """
-    assert len(input_image.shape) == 4, "Input image must be 4D."
-    assert check_physical_space_for_ants_image_pair(input_image, mask_image), (
-        "Images must have the same physical dimensions.")
-
-    x_inds, y_inds, z_inds = mask_image.nonzero()
-    out_voxels = input_image.numpy()[x_inds, y_inds, z_inds, :]
-    if verbose:
-        print(f"(ImageOps): Output TACs have shape {out_voxels.shape}")
-    return out_voxels
 
 
 class SimpleAutoImageCropper(object):

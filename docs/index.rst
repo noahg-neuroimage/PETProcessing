@@ -3,16 +3,57 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-###################################
-PET Processing Module Documentation
-###################################
+####################
+PETPAL Documentation
+####################
 
 .. toctree::
+   :includehidden:
+   :hidden:
    :maxdepth: 1
-   :caption: API Reference:
 
-   petpal
-   petpal.cli
+   autoapi/index
+   tutorials/index
+
+.. grid:: 1 1 2 2
+   :gutter: 2 3 4 4
+
+   .. grid-item-card:: Installation
+      :text-align: center
+
+      +++
+
+      .. button-ref:: index
+         :expand:
+         :color: secondary
+         :click-parent:
+
+         To the installation guide (stub)
+
+   .. grid-item-card:: Tutorials
+      :text-align: center
+
+      +++
+
+      .. button-ref:: tutorials/index
+         :expand:
+         :color: secondary
+         :click-parent:
+
+         To PETPAL tutorials
+
+
+   .. grid-item-card:: API Reference
+      :text-align: center
+
+      +++
+
+      .. button-ref:: autoapi/index
+         :expand:
+         :color: secondary
+         :click-parent:
+
+         To the API reference guide
 
 
 

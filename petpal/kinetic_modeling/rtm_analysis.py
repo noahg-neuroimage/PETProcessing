@@ -13,7 +13,8 @@ from petpal.kinetic_modeling.reference_tissue_models import (calc_k2prime_from_m
                                                              calc_bp_from_mrtm2_2003_fit,
                                                              calc_bp_from_mrtm_original_fit,
                                                              calc_bp_from_mrtm_2003_fit)
-from petpal.utils.image_io import safe_load_tac, safe_load_meta, get_half_life_from_meta
+from ..utils.image_io import get_half_life_from_meta, safe_load_meta
+from ..utils.time_activity_curve import safe_load_tac
 from ..utils.time_activity_curve import MultiTACAnalysisMixin
 
 
@@ -328,9 +329,9 @@ class RTMAnalysis:
         else:
             bp_val = calc_bp_from_mrtm2_2003_fit(fit_ans)
             k2_val = None
-        props_dict["k2Prime"] = k2_val.round(5)
-        props_dict["BP"] = bp_val.round(5)
-        props_dict["RawFits"] = list(fit_ans.round(5))
+        props_dict["k2Prime"] = k2_val
+        props_dict["BP"] = bp_val
+        props_dict["RawFits"] = list(fit_ans)
 
         if write_simulated:
             props_dict["SimulatedFits"] = list(y_fit.round(7))

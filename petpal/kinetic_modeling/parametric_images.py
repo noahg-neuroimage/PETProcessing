@@ -20,11 +20,12 @@ import numba
 from petpal.kinetic_modeling.fit_tac_with_rtms import (get_rtm_kwargs,
                                                        get_rtm_method,
                                                        get_rtm_output_size)
-from petpal.utils.time_activity_curve import TimeActivityCurveFromFile
+from petpal.utils.time_activity_curve import TimeActivityCurve
 from petpal.utils.image_io import safe_load_4dpet_nifti
 from . import graphical_analysis
 from ..input_function.blood_input import read_plasma_glucose_concentration
-from ..utils.image_io import safe_load_tac, safe_copy_meta, validate_two_images_same_dimensions
+from ..utils.image_io import safe_copy_meta, validate_two_images_same_dimensions
+from ..utils.time_activity_curve import safe_load_tac
 
 
 @numba.njit()
@@ -251,7 +252,7 @@ class ReferenceTissueParametricImage:
             output_filename_prefix (str): Prefix for output files saved after analysis.
             method (str): RTM method to run. Default 'mrtm2'.
         """
-        self.reference_tac = TimeActivityCurveFromFile(tac_path=reference_tac_path)
+        self.reference_tac = TimeActivityCurve.from_tsv(filename=reference_tac_path)
         self.pet_image = safe_load_4dpet_nifti(pet_image_path)
         self.mask_image = safe_load_4dpet_nifti(mask_image_path)
 
@@ -344,8 +345,8 @@ class ReferenceTissueParametricImage:
         """
         pet_np = self.pet_image.get_fdata()
         mask_np = self.mask_image.get_fdata()
-        tac_times_in_minutes = self.reference_tac.tac_times_in_minutes
-        ref_tac_vals = self.reference_tac.tac_vals
+        tac_times_in_minutes = self.reference_tac.times
+        ref_tac_vals = self.reference_tac.activity
         method = self.method
         rtm_method = get_rtm_method(method)
         analysis_kwargs = get_rtm_kwargs(method=rtm_method,
@@ -761,6 +762,10 @@ class GraphicalAnalysisParametricImage:
             pTAC_vals=p_tac_vals,
             tTAC_img=nifty_pet4d_img.get_fdata() * image_scale,
             t_thresh_in_mins=t_thresh_in_mins, method_name=method_name)
+
+    def __call__(self, method_name, t_thresh_in_mins, image_scale):
+        self.run_analysis(method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, image_scale=image_scale)
+        self.save_analysis()
 
     def save_parametric_images(self):
         """

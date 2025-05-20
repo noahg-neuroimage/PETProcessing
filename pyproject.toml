@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "petpal"
-version = "0.0.2"
+version = "0.3.2"
 description = "PET-PAL (Positron Emission Tomography Processing and Analysis Library)"
 authors = [
-    {name = "Furqan Dar"},
+    {name = "Furqan Dar", email = "dar@wustl.edu"},
     {name = "Bradley Judge"},
     {name = "Noah Goldman", email = "noahg@wustl.edu"},
     {name = "Kenan Oestreich", email = "kenan.oestreich@wustl.edu"}
@@ -25,11 +25,14 @@ dependencies = [
     "SimpleITK",
     "matplotlib",
     "sphinx",
+    "sphinx-autoapi",
+    "sphinx-design",
     "pydata-sphinx-theme",
     "bids_validator",
     "seaborn",
     "networkx",
-    "scikit-learn"
+    "scikit-learn",
+    "lmfit"
 ]
 readme = "README.md"
 classifiers = [  # These are added to PyPI package when published; Used for searching
@@ -45,7 +48,6 @@ classifiers = [  # These are added to PyPI package when published; Used for sear
 
 [project.scripts]
     petpal-preproc = "petpal.cli.cli_preproc:main"
-    petpal-preproc-2 = "petpal.cli.cli_preproc_2:main"
     petpal-bids = "petpal.cli.cli_bids:main"
     petpal-tac-interpolate = "petpal.cli.cli_tac_interpolation:main"
     petpal-graph-plot = "petpal.cli.cli_graphical_plots:main"
@@ -57,6 +59,7 @@ classifiers = [  # These are added to PyPI package when published; Used for sear
     petpal-brier-fdg-pipeline = "petpal.cli.cli_brier_fdg_processing:main"
     petpal-pib-proc = "petpal.cli.cli_pib_processing:main"
     petpal-pvc = "petpal.cli.cli_pvc:main"
+    petpal-plot-tacs = "petpal.cli.cli_plot_tacs:main"
 
 [project.urls]
-    Repository = "https://github.com/FurqanDar/PETProcessing.git"
+    Repository = "https://github.com/FurqanDar/PETPAL.git"

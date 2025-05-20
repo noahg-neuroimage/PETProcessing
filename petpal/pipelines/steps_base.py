@@ -30,7 +30,13 @@ class StepsAPI:
     and perform inference of output files based on input data and given parameters.
 
     """
-    
+
+    def __init__(self, skip_step: bool = False):
+        self.skip_step = skip_step
+
+    def execute(self, *args, **kwargs):
+        raise NotImplementedError
+
     def set_input_as_output_from(self, *sending_steps):
         """
         Sets the input of the current step as the output from a list of steps.
@@ -72,6 +78,11 @@ class StepsAPI:
         """
         raise NotImplementedError
 
+    def __call__(self, *args, **kwargs):
+        if not self.skip_step:
+            self.execute(*args, **kwargs)
+
+
 
 class FunctionBasedStep(StepsAPI):
     """
@@ -99,6 +110,7 @@ class FunctionBasedStep(StepsAPI):
             **kwargs: Keyword arguments to be passed to the function.
             
         """
+        StepsAPI.__init__(self, skip_step=False)
         self.name = name
         self.function = function
         self._func_name = function.__name__
@@ -118,8 +130,9 @@ class FunctionBasedStep(StepsAPI):
         func_params = self.func_sig.parameters
         arg_names = list(func_params)
         for arg_name in arg_names[len(self.args):]:
-            if arg_name not in self.kwargs and arg_name != 'kwargs':
-                unset_args_dict[arg_name] = func_params[arg_name].default
+            if arg_name not in self.kwargs:
+                if (func_params[arg_name].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD):
+                    unset_args_dict[arg_name] = func_params[arg_name].default
         return unset_args_dict
     
     def get_empty_default_kwargs(self) -> list:
@@ -277,6 +290,7 @@ class ObjectBasedStep(StepsAPI):
             init_kwargs (dict): Keyword arguments for initializing the class.
             call_kwargs (dict): Keyword arguments for invoking the class.
         """
+        StepsAPI.__init__(self, skip_step=False)
         self.name: str = name
         self.class_type: type = class_type
         self.init_kwargs: ArgsDict = ArgsDict(init_kwargs)
@@ -320,7 +334,8 @@ class ObjectBasedStep(StepsAPI):
         unset_args_dict = ArgsDict()
         for arg_name, arg_val in sig.parameters.items():
             if arg_name not in kwargs and arg_name != 'self':
-                unset_args_dict[arg_name] = arg_val.default
+                if arg_val.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
+                    unset_args_dict[arg_name] = arg_val.default
         return unset_args_dict
     
     def get_empty_default_kwargs(self, sig: inspect.Signature, set_kwargs: dict) -> list:
