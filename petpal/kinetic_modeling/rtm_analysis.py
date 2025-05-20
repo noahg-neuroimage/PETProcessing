@@ -49,7 +49,7 @@ class RTMAnalysis:
         .. code-block:: python
 
             import numpy as np
-            from petpal.kinetic_modeling.reference_tissue_models as pet_rtms
+            from petpal.kinetic_modeling.rtm_analysis as pet_rtms
 
             file_rtm = pet_rtms.RTMAnalysis(ref_tac_path="ref_tac.txt",
                                             roi_tac_path="roi_tac.txt",
