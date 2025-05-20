@@ -15,7 +15,7 @@ from .reference_tissue_models import (fit_frtm2_to_tac,
                                      fit_srtm2_to_tac_with_bounds,
                                      fit_srtm_to_tac,
                                      fit_srtm_to_tac_with_bounds)
-
+from ..utils.time_activity_curve import TimeActivityCurve
 
 def get_rtm_method(method: str, bounds=None):
     r"""Function for obtaining the appropriate reference tissue model.
@@ -224,9 +224,8 @@ class FitTACWithRTMs:
 
     """
     def __init__(self,
-                 tac_times_in_minutes: np.ndarray,
-                 target_tac_vals: np.ndarray,
-                 reference_tac_vals: np.ndarray,
+                 target_tac: TimeActivityCurve,
+                 reference_tac: TimeActivityCurve,
                  method: str = 'mrtm',
                  bounds: Union[None, np.ndarray] = None,
                  t_thresh_in_mins: float = None,
@@ -255,9 +254,8 @@ class FitTACWithRTMs:
             AssertionError: If rate constant k2_prime is non-positive.
         """
 
-        self.tac_times_in_minutes: np.ndarray = tac_times_in_minutes
-        self.target_tac_vals: np.ndarray = target_tac_vals
-        self.reference_tac_vals: np.ndarray = reference_tac_vals
+        self.target_tac: TimeActivityCurve = target_tac
+        self.reference_tac: TimeActivityCurve = reference_tac
         self.method: str = method.lower()
         self.bounds: Union[None, np.ndarray] = bounds
         self.validate_bounds()
@@ -371,7 +369,7 @@ class FitTACWithRTMs:
 
         if 'mrtm' in method:
             nan_array = [np.array([np.nan]*output_size),
-                         np.array(len(self.tac_times_in_minutes)*[np.nan])]
+                         np.array(len(self.reference_tac)*[np.nan])]
 
         return nan_array
 
@@ -412,9 +410,9 @@ class FitTACWithRTMs:
                                     k2_prime=self.k2_prime,
                                     t_thresh_in_mins=self.t_thresh_in_mins)
         try:
-            self.fit_results = rtm_method(tac_times_in_minutes=self.tac_times_in_minutes,
-                                          tgt_tac_vals=self.target_tac_vals,
-                                          ref_tac_vals=self.reference_tac_vals,
+            self.fit_results = rtm_method(tac_times_in_minutes=self.reference_tac.times_in_mins,
+                                          tgt_tac_vals=self.target_tac.activity,
+                                          ref_tac_vals=self.reference_tac.activity,
                                           **rtm_kwargs)
         except ValueError:
             self.fit_results = self.get_failed_output_nan_array()
