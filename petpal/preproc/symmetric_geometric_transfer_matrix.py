@@ -2,10 +2,14 @@
 Module to run partial volume correction on a parametric PET image using the symmetric geometric
 transfer matrix (sGTM) method.
 """
+import os
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import ants
 
+from ..utils.scan_timing import ScanTimingInfo
+from ..utils.time_activity_curve import TimeActivityCurve
+from ..utils.bids_utils import gen_bids_like_filename
 
 class Sgtm:
     """
@@ -39,7 +43,7 @@ class Sgtm:
                                          fwhm=self.fwhm,
                                          zeroth_roi=self.zeroth_roi)
         if self.out_tsv_path:
-            self.save_results()
+            self.save_results(input_image_path=input_image_path, out_tac_dir=out_tsv_path)
 
     @staticmethod
     def run_sgtm(input_image: ants.ANTsImage,
@@ -135,9 +139,14 @@ class Sgtm:
 
         return unique_labels, t_corrected, condition_number
 
-    def save_results(self):
+    def save_results(self, input_image_path: str, out_tac_dir: str):
         """
         Saves the result of an sGTM calculation.
         """
-        sgtm_result_array = np.array([self.sgtm_result[0],self.sgtm_result[1]]).T
-        np.savetxt(self.out_tsv_path,sgtm_result_array,header='Region\tMean',fmt=['%.0f','%.2f'])
+        frame_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
+        labels, pvc_results, _cond_num = self.sgtm_result
+        tac_array = np.array([pvc_results[i][0] for i in range(len(pvc_results))]).T
+        for _, i in enumerate(labels):
+            pvc_tac = TimeActivityCurve(times=frame_timing.center_in_mins,
+                                        activity=tac_array[i,:])
+            pvc_tac.to_tsv(filename=out_tac_dir)
