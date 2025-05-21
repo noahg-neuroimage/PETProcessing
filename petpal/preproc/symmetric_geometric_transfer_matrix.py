@@ -9,7 +9,7 @@ import ants
 
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.time_activity_curve import TimeActivityCurve
-from ..utils.bids_utils import gen_bids_like_filename
+from ..utils.bids_utils import gen_bids_like_filename, parse_path_to_get_subject_and_session_id
 
 class Sgtm:
     """
@@ -144,9 +144,18 @@ class Sgtm:
         Saves the result of an sGTM calculation.
         """
         frame_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
+        sub_id, ses_id = parse_path_to_get_subject_and_session_id(path=input_image_path)
+
         labels, pvc_results, _cond_num = self.sgtm_result
         tac_array = np.array([pvc_results[i][0] for i in range(len(pvc_results))]).T
-        for _, i in enumerate(labels):
+
+        for label, i in enumerate(labels):
             pvc_tac = TimeActivityCurve(times=frame_timing.center_in_mins,
                                         activity=tac_array[i,:])
-            pvc_tac.to_tsv(filename=out_tac_dir)
+            tac_filename = gen_bids_like_filename(sub_id=sub_id,
+                                                  ses_id=ses_id,
+                                                  suffix='tac',
+                                                  seg=int(label),
+                                                  ext='.tsv')
+            out_tac_path = os.path.join(out_tac_dir, tac_filename)
+            pvc_tac.to_tsv(filename=out_tac_path)
