@@ -47,6 +47,55 @@ def calc_convolution_with_check(f: np.ndarray, g: np.ndarray, dt: float) -> np.n
     return vals[:len(f)] * dt
 
 
+@numba.njit(fastmath=True, cache=True)
+def discrete_convolution_with_exponential(func_times: np.ndarray, func_vals: np.ndarray, k1: float, k2: float):
+    r"""Computes the convolution of the given function with an exponential kernel.
+
+    Given the provided function :math:`u(t)`, sampled evenly with respect to time, we calculate
+    :math:`c(t) = k_{1} \exp(-k_{2} t) \otimes u(t)` where :math:`\otimes` represents
+    the convolution operator. This implementation is :math:`\mathcal{O}(N)` due to the
+    simple recurrence relationship arising from an exponential kernel. This implementation is based
+    heavily on the `KMAPLIB <https://github.com/ShareKM/KMAP-C/blob/caeb10b7bec1e841132f879856949f00a9624883/src/kmaplib_common.cpp#L43-L70>`_
+    implementation
+
+    .. important::
+        The function assumes that the times are evenly sampled. Answers will be incorrect if this is not the case.
+
+    Args:
+        func_vals (np.ndarray): Array containing function values for :math:`t\geq0`.
+            Assumed to be evenly sampled with respect to :math:`t`.
+        func_times (np.ndarray): Array containing time-points where :math:`t\geq0`.
+            Assumed to be evenly sampled with respect to :math:`t`.
+        k1 (float): Rate constant for transport from first tissue compartment.
+        k2 (float): Rate constant for transport from second tissue compartment.
+
+    Returns:
+        (np.ndarray): Array containing the convolution of an exponential function with the provided function.
+
+    See Also:
+        :func:`calc_convolution_with_check` for a more general convolution function
+    """
+    dt = func_times[1] - func_times[0]
+    num_times = len(func_times)
+    c_out = np.zeros(num_times)
+
+    prev = 0
+    if k2 <= 1e-8:
+        for i in range(0, num_times):
+            prev += func_vals[i]
+            c_out[i] = prev
+        return k1 * c_out * dt
+    else:
+        _k1 = k1 * dt
+        _k2 = k2 * dt
+        ek2 = np.exp(-_k2)
+        tmp = _k1 * (1.0 - ek2) / _k2
+        u_tmp = tmp * func_vals
+        for i in range(0, num_times):
+            prev = prev * ek2 + u_tmp[i]
+            c_out[i] = prev
+        return c_out
+
 @numba.njit()
 def response_function_1tcm_c1(t: np.ndarray, k1: float, k2: float) -> np.ndarray:
     r"""The response function for the 1TCM :math:`f(t)=k_1 e^{-k_{2}t}`
