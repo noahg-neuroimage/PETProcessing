@@ -239,7 +239,21 @@ def gen_tac_1tcm_cpet_from_tac(tac_times: np.ndarray,
                                k2: float,
                                vb: float = 0.0) -> np.ndarray:
     r"""Calculate the TTAC, given the input TAC, for a 1TCM as an explicit convolution.
-    
+
+    .. important::
+        This function assumes that the provided input TAC is sampled evenly with respect to time.
+
+    Computes the following:
+
+
+    .. math::
+
+        C_\mathrm{T} = C_{P}(t) \otimes k_{1}e^{-k_{2}t}
+
+
+    where :math:`C_\mathrm{T}` is the output TTAC, and :math:`C_{P}(t)` is the input/plasma TAC
+
+
     Args:
         tac_times (np.ndarray): Array containing time-points where :math:`t\geq0` and equal time-steps.
         tac_vals (np.ndarray): Array containing TAC activities.
