@@ -232,12 +232,12 @@ def response_function_serial_2tcm_c2(t: np.ndarray, k1: float, k2: float, k3: fl
     
     return (k1 * k3 / delta_a) * (np.exp(-alpha_1 * t) - np.exp(-alpha_2 * t))
 
-
-def generate_tac_1tcm_c1_from_tac(tac_times: np.ndarray,
-                                  tac_vals: np.ndarray,
-                                  k1: float,
-                                  k2: float,
-                                  vb: float = 0.0) -> np.ndarray:
+@numba.njit(cache=True, fastmath=True)
+def gen_tac_1tcm_cpet_from_tac(tac_times: np.ndarray,
+                               tac_vals: np.ndarray,
+                               k1: float,
+                               k2: float,
+                               vb: float = 0.0) -> np.ndarray:
     r"""Calculate the TTAC, given the input TAC, for a 1TCM as an explicit convolution.
     
     Args:
@@ -248,14 +248,9 @@ def generate_tac_1tcm_c1_from_tac(tac_times: np.ndarray,
 
     Returns:
         ((np.ndarray, np.ndarray)): Arrays containing the times and TTAC given the input TAC and parameters.
-        
-    See Also:
-        :func:`response_function_1tcm_c1` for more details about the 1TCM response function used for the convolution.
     """
     
-    _resp_vals = response_function_1tcm_c1(t=tac_times, k1=k1, k2=k2)
-    dt = tac_times[1] - tac_times[0]
-    c1 = calc_convolution_with_check(f=tac_vals, g=_resp_vals, dt=dt)
+    c1 = discrete_convolution_with_exponential(func_times=tac_times, func_vals=tac_vals, k1=k1, k2=k2)
     return np.asarray([tac_times, (1.0-vb)*c1 + vb*tac_vals])
 
 
