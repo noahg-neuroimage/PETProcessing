@@ -457,3 +457,91 @@ def generate_tac_serial_2tcm_cpet_from_tac(tac_times: np.ndarray,
     dt = tac_times[1] - tac_times[0]
     cpet = calc_convolution_with_check(f=tac_vals, g=_resp_vals, dt=dt)
     return np.asarray([tac_times, (1.0-vb)*cpet + vb*tac_vals])
+
+
+@numba.njit(fastmath=True, cache=True)
+def gen_tac_2tcm_cpet_from_tac(tac_times: np.ndarray,
+                               tac_vals: np.ndarray,
+                               k1: float,
+                               k2: float,
+                               k3: float,
+                               k4: float,
+                               vb: float = 0.0):
+    r"""Generates PET TAC values using the serial 2TCM.
+
+
+    Since this function uses :func:`discrete_convolution_with_exponential`, this function
+    is also JIT'ed, and is therefore faster than :func:`generate_tac_serial_2tcm_cpet_from_tac`.
+
+    .. important:
+        This function assumes that the provided input TAC is sampled evenly with respect to time.
+
+
+    We calculate
+
+    .. math::
+
+        C_\mathrm{T} = (1-v_{\mathrm{B}}) (C_{1} + C_{2}) + v_{\mathrm{B}} C_\mathrm{P}
+
+
+    where :math:`C_\mathrm{T}` is the output PET TAC, :math:`v_{\mathrm{B}}` is the blood volume,
+    :math:`C_{1}` and :math:`C_{2}` are the TACs for the first and second tissue compartments, and
+    :math:`C_\mathrm{P}` is the input/plasma TAC. Furthermore,
+
+    .. math::
+
+        \begin{align}
+        C_{1} &= \frac{k_{1}(k_{4} - \alpha_{2})}{\beta}C_{a} + \frac{k_{1}(\alpha_{1} - k_{4})}{\beta}C_{b}\\
+        C_{2} &= \frac{k_{1}k_{3}}{\beta}C_{a} - \frac{k_{1}k_{3}}{\beta}C_{b}
+        \end{align}
+
+    where
+
+    .. math::
+
+        \begin{align}
+        C_{a}&=C_\mathrm{P}(t) \otimes e^{-\alpha_{2}\times t}\\
+        C_{b}&=C_\mathrm{P}(t) \otimes e^{-\alpha_{1}\times t}\\
+        \beta&= \sqrt{x^{2}-4k_{2}k_{4}}\\
+        \alpha_{1}&=\frac{x-\beta}{2}\\
+        \alpha_{2}&=\frac{x+\beta}{2}\\
+        x&= k_{2}+k_{3}+k_{4}
+        \end{align}
+
+
+    Args:
+        tac_times (np.ndarray): Time points for the input TAC values.
+        tac_vals (np.ndarray): TAC values corresponding to the time points, assumed to be in minutes.
+        k1 (float): Rate constant for blood-to-first-tissue transport.
+        k2 (float): Rate constant for first-tissue-to-blood transport.
+        k3 (float): Rate constant for 1st compartment to 2nd compartment transport.
+        k4 (float): Rate constant for 2nt compartment to 1st compartment transport.
+        vb (float, optional): Vascular blood fraction. Defaults to 0.0.
+
+    Returns:
+        np.ndarray: Simulated PET TAC computed using the serial 2TCM.
+    """
+    k234 = k2 + k3 + k4
+    beta = np.sqrt(k234 * k234 - 4.0 * k2 * k4)
+    a1 = (k234 - beta) / 2.0
+    a2 = (k234 + beta) / 2.0
+
+    c_a1 = discrete_convolution_with_exponential(func_times=tac_times, func_vals=tac_vals, k1=1.0, k2=a1)
+    c_a2 = discrete_convolution_with_exponential(func_times=tac_times, func_vals=tac_vals, k1=1.0, k2=a2)
+
+    if beta <= 1.0e-8:
+        f1 = 0.0
+        f2 = 0.0
+        b1 = 0.0
+        b2 = 0.0
+    else:
+        f1 = k1 / beta * (k4 - a1)
+        f2 = k1 / beta * (a2 - k4)
+        b1 = k1 / beta * k3
+        b2 = -b1
+
+    c_1 = f1 * c_a1 + f2 * c_a2
+    c_2 = b1 * c_a1 + b2 * c_a2
+    c_pet = (1.0 - vb) * (c_1 + c_2) + vb * tac_vals
+
+    return [tac_times, c_pet]
