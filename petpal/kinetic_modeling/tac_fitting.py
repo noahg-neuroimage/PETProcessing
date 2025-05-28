@@ -38,7 +38,7 @@ def _get_fitting_params_for_tcm_func(f: Callable) -> list:
     
     * :func:`generate_tac_1tcm_c1_from_tac<petpal.tcms_as_convolutions.generate_tac_1tcm_c1_from_tac>`
     * :func:`generate_tac_2tcm_with_k4zero_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_2tcm_with_k4zero_cpet_from_tac>`
-    * :func:`generate_tac_serial_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_serial_2tcm_cpet_from_tac>`
+    * :func:`gen_tac_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.gen_tac_2tcm_cpet_from_tac>`
 
     Args:
         f (Callable): TCM function.
@@ -57,7 +57,7 @@ def _get_number_of_fit_params_for_tcm_func(f: Callable) -> int:
     
     * :func:`generate_tac_1tcm_c1_from_tac<petpal.tcms_as_convolutions.generate_tac_1tcm_c1_from_tac>`
     * :func:`generate_tac_2tcm_with_k4zero_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_2tcm_with_k4zero_cpet_from_tac>`
-    * :func:`generate_tac_serial_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_serial_2tcm_cpet_from_tac>`
+    * :func:`gen_tac_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.gen_tac_2tcm_cpet_from_tac>`
 
     Args:
         f (Callable): TCM function.
@@ -116,7 +116,7 @@ class TACFitter(object):
             import petpal.kinetic_modeling.tac_fitting as pet_fit
             import numpy as np
             
-            tcm_func = pet_tcm.generate_tac_serial_2tcm_cpet_from_tac
+            tcm_func = pet_tcm.gen_tac_2tcm_cpet_from_tac
             fit = pet_fit.TACFitter(pTAC=pTAC, tTAC=tTAC, tcm_func=tcm_func, resample_num=512)
             fit.run_fit()
             fit_params = fit.fit_results[0]
@@ -370,7 +370,7 @@ class TACFitter(object):
         
         * :func:`generate_tac_1tcm_c1_from_tac<petpal.tcms_as_convolutions.generate_tac_1tcm_c1_from_tac>`
         * :func:`generate_tac_2tcm_with_k4zero_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_2tcm_with_k4zero_cpet_from_tac>`
-        * :func:`generate_tac_serial_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_serial_2tcm_cpet_from_tac>`
+        * :func:`gen_tac_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.gen_tac_2tcm_cpet_from_tac>`
 
         The function extracts fitting parameter names and their count from the function signature and sets them in the
         current instance for later usage.
@@ -383,10 +383,10 @@ class TACFitter(object):
         """
         assert tcm_func in [pet_tcms.generate_tac_1tcm_c1_from_tac,
                             pet_tcms.generate_tac_2tcm_with_k4zero_cpet_from_tac,
-                            pet_tcms.generate_tac_serial_2tcm_cpet_from_tac], (
+                            pet_tcms.gen_tac_2tcm_cpet_from_tac], (
             "`tcm_func should be one of `pet_tcms.generate_tac_1tcm_c1_from_tac`, "
             "`pet_tcms.generate_tac_2tcm_with_k4zero_cpet_from_tac`, "
-            "`pet_tcms.generate_tac_serial_2tcm_cpet_from_tac`")
+            "`pet_tcms.gen_tac_2tcm_cpet_from_tac`")
         
         self.tcm_func = tcm_func
         self.fit_param_names = _get_fitting_params_for_tcm_func(self.tcm_func)
@@ -563,7 +563,7 @@ class TACFitterWithoutBloodVolume(TACFitter):
         
             * :func:`generate_tac_1tcm_c1_from_tac<petpal.tcms_as_convolutions.generate_tac_1tcm_c1_from_tac>`
             * :func:`generate_tac_2tcm_with_k4zero_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_2tcm_with_k4zero_cpet_from_tac>`
-            * :func:`generate_tac_serial_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_serial_2tcm_cpet_from_tac>`
+            * :func:`gen_tac_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.gen_tac_2tcm_cpet_from_tac>`
 
         Args:
             tcm_func (Callable): The chosen TCM function model.
@@ -574,10 +574,10 @@ class TACFitterWithoutBloodVolume(TACFitter):
         """
         assert tcm_func in [pet_tcms.generate_tac_1tcm_c1_from_tac,
                             pet_tcms.generate_tac_2tcm_with_k4zero_cpet_from_tac,
-                            pet_tcms.generate_tac_serial_2tcm_cpet_from_tac], (
+                            pet_tcms.gen_tac_2tcm_cpet_from_tac], (
             "`tcm_func should be one of `pet_tcms.generate_tac_1tcm_c1_from_tac`, "
             "`pet_tcms.generate_tac_2tcm_with_k4zero_cpet_from_tac`, "
-            "`pet_tcms.generate_tac_serial_2tcm_cpet_from_tac`")
+            "`pet_tcms.gen_tac_2tcm_cpet_from_tac`")
 
         self.tcm_func = tcm_func
         self.fit_param_names = _get_fitting_params_for_tcm_func(self.tcm_func)[:-1]
@@ -799,7 +799,7 @@ class TCMAnalysis(object):
         See Also:
             * :func:`generate_tac_1tcm_c1_from_tac<pet pal.tcms_as_convolutions.generate_tac_1tcm_c1_from_tac>`
             * :func:`generate_tac_2tcm_with_k4zero_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_2tcm_with_k4zero_cpet_from_tac>`
-            * :func:`generate_tac_serial_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.generate_tac_serial_2tcm_cpet_from_tac>`
+            * :func:`gen_tac_2tcm_cpet_from_tac<petpal.tcms_as_convolutions.gen_tac_2tcm_cpet_from_tac>`
             * :class:`TACFitter`
             * :class:`TACFitterWithoutBloodVolume`
         
@@ -807,7 +807,7 @@ class TCMAnalysis(object):
         tcm_funcs = {
                    '1tcm': pet_tcms.generate_tac_1tcm_c1_from_tac,
                    '2tcm-k4zero': pet_tcms.generate_tac_2tcm_with_k4zero_cpet_from_tac,
-                   'serial-2tcm': pet_tcms.generate_tac_serial_2tcm_cpet_from_tac
+                   'serial-2tcm': pet_tcms.gen_tac_2tcm_cpet_from_tac
                     }
 
         return tcm_funcs[compartment_model]

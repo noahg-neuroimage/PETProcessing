@@ -419,13 +419,13 @@ def generate_tac_serial_2tcm_c2_from_tac(tac_times: np.ndarray,
     return np.asarray([tac_times, c2])
 
 
-def generate_tac_serial_2tcm_cpet_from_tac(tac_times: np.ndarray,
-                                           tac_vals: np.ndarray,
-                                           k1: float,
-                                           k2: float,
-                                           k3: float,
-                                           k4: float,
-                                           vb: float = 0.0) -> np.ndarray:
+def gen_tac_2tcm_cpet_from_tac_old(tac_times: np.ndarray,
+                               tac_vals: np.ndarray,
+                               k1: float,
+                               k2: float,
+                               k3: float,
+                               k4: float,
+                               vb: float = 0.0) -> np.ndarray:
     r"""
     Calculate the PET-TTAC (sum of both compartments), given the input TAC, for a serial 2TCM as an explicit
     convolution.
@@ -469,7 +469,7 @@ def gen_tac_2tcm_cpet_from_tac(tac_times: np.ndarray,
                                vb: float = 0.0):
     r"""Generates PET TAC values using the serial 2TCM.
 
-
+    Computes the PET TAC, given the input TAC, using a serial Two Tissue Compartment Model (2TCM).
     Since this function uses :func:`discrete_convolution_with_exponential`, this function
     is also JIT'ed, and is therefore faster than :func:`generate_tac_serial_2tcm_cpet_from_tac`.
 
