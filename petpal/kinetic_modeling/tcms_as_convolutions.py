@@ -237,7 +237,7 @@ def gen_tac_1tcm_cpet_from_tac(tac_times: np.ndarray,
                                tac_vals: np.ndarray,
                                k1: float,
                                k2: float,
-                               vb: float = 0.0) -> np.ndarray:
+                               vb: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
     r"""Calculate the TTAC, given the input TAC, for a 1TCM as an explicit convolution.
 
     .. important::
@@ -265,7 +265,7 @@ def gen_tac_1tcm_cpet_from_tac(tac_times: np.ndarray,
     """
     
     c1 = discrete_convolution_with_exponential(func_times=tac_times, func_vals=tac_vals, k1=k1, k2=k2)
-    return np.asarray([tac_times, (1.0-vb)*c1 + vb*tac_vals])
+    return (tac_times, (1.0-vb)*c1 + vb*tac_vals)
 
 
 def generate_tac_2tcm_with_k4zero_c1_from_tac(tac_times: np.ndarray,
@@ -435,7 +435,7 @@ def gen_tac_2tcm_cpet_from_tac(tac_times: np.ndarray,
                                k2: float,
                                k3: float,
                                k4: float,
-                               vb: float = 0.0):
+                               vb: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
     r"""Generates PET TAC values using the serial 2TCM.
 
     Computes the PET TAC, given the input TAC, using a serial Two Tissue Compartment Model (2TCM).
@@ -513,4 +513,4 @@ def gen_tac_2tcm_cpet_from_tac(tac_times: np.ndarray,
     c_2 = b1 * c_a1 + b2 * c_a2
     c_pet = (1.0 - vb) * (c_1 + c_2) + vb * tac_vals
 
-    return [tac_times, c_pet]
+    return (tac_times, c_pet)
