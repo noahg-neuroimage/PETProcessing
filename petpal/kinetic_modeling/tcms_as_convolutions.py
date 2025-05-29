@@ -333,7 +333,7 @@ def generate_tac_2tcm_with_k4zero_cpet_from_tac(tac_times: np.ndarray,
                                                 k1: float,
                                                 k2: float,
                                                 k3: float,
-                                                vb: float = 0.0) -> np.ndarray:
+                                                vb: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
     r"""
     Calculate the PET-TTAC (sum of both compartments), given the input TAC, for a 2TCM (with :math:`k_{4}=0`) as an
     explicit convolution.
@@ -349,17 +349,10 @@ def generate_tac_2tcm_with_k4zero_cpet_from_tac(tac_times: np.ndarray,
         ((np.ndarray, np.ndarray)): Arrays containing the times and TTAC given the input TAC and parameters.
         
     See Also:
-        * :func:`response_function_2tcm_with_k4zero_c1` for more details about the 2TCM response function, of the first
-            compartment, used for the convolution.
-        * :func:`response_function_2tcm_with_k4zero_c2` for more details about the 2TCM response function, of the second
-            compartment, used for the convolution.
-        
+        * :func:`gen_tac_2tcm_cpet_from_tac` for more details about the 2TCM function.
+
     """
-    _resp_vals = response_function_2tcm_with_k4zero_c1(t=tac_times, k1=k1, k2=k2, k3=k3)
-    _resp_vals += response_function_2tcm_with_k4zero_c2(t=tac_times, k1=k1, k2=k2, k3=k3)
-    dt = tac_times[1] - tac_times[0]
-    cpet = calc_convolution_with_check(f=tac_vals, g=_resp_vals, dt=dt)
-    return np.asarray([tac_times, (1.0-vb)*cpet + vb*tac_vals])
+    return gen_tac_2tcm_cpet_from_tac(tac_times=tac_times, tac_vals=tac_vals, k1=k1, k2=k2, k3=k3, k4=0, vb=vb)
 
 
 def generate_tac_serial_2tcm_c1_from_tac(tac_times: np.ndarray,
