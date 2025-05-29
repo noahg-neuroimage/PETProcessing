@@ -328,12 +328,12 @@ def generate_tac_2tcm_with_k4zero_c2_from_tac(tac_times: np.ndarray,
     return np.asarray([tac_times, c2])
 
 
-def generate_tac_2tcm_with_k4zero_cpet_from_tac(tac_times: np.ndarray,
-                                                tac_vals: np.ndarray,
-                                                k1: float,
-                                                k2: float,
-                                                k3: float,
-                                                vb: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
+def gen_tac_2tcm_with_k4zero_cpet_from_tac(tac_times: np.ndarray,
+                                           tac_vals: np.ndarray,
+                                           k1: float,
+                                           k2: float,
+                                           k3: float,
+                                           vb: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
     r"""
     Calculate the PET-TTAC (sum of both compartments), given the input TAC, for a 2TCM (with :math:`k_{4}=0`) as an
     explicit convolution.
