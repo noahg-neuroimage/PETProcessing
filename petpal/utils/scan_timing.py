@@ -6,6 +6,20 @@ import numpy as np
 
 from .image_io import load_metadata_for_nifti_with_same_filename
 
+
+def frame_reference_time_calculation(frame_duration: float, half_life: float):
+    """
+    Calculate the FrameReferenceTime or decay weighted frame midpoint.
+
+    Based on
+    ```https://dicom.innolitics.com/ciods/positron-emission-tomography-image/pet-image/00541300```.
+    """
+    decay_constant = np.log(2) / half_life
+    numerator_term = decay_constant * frame_duration
+    denominator_term = 1 - np.exp(-decay_constant * numerator_term)
+    return 1 / decay_constant * np.log(numerator_term / denominator_term)
+
+
 @dataclass
 class ScanTimingInfo:
     """
