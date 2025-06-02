@@ -16,7 +16,7 @@ def frame_reference_time_calculation(frame_duration: float, half_life: float):
     """
     decay_constant = np.log(2) / half_life
     numerator_term = decay_constant * frame_duration
-    denominator_term = 1 - np.exp(-decay_constant * numerator_term)
+    denominator_term = 1 - np.exp(-numerator_term)
     return 1 / decay_constant * np.log(numerator_term / denominator_term)
 
 
