@@ -60,6 +60,17 @@ class Sgtm:
 
 
     @staticmethod
+    def unique_labels(segmentation_numpy, zeroth_roi):
+        """
+        Get unique ROIs for sGTM.
+        """
+        labels = np.unique(segmentation_numpy)
+        if not zeroth_roi:
+            labels = labels[labels != 0]
+        return labels
+
+
+    @staticmethod
     def run_sgtm(input_image: ants.ANTsImage,
                 segmentation_image: ants.ANTsImage,
                 fwhm: float | tuple[float, float, float],
@@ -133,10 +144,8 @@ class Sgtm:
         segmentation_numpy = segmentation_image.numpy()
         sigma = Sgtm.sigma(input_image=input_image, fwhm=fwhm)
 
-        unique_labels = np.unique(segmentation_numpy)
-        if not zeroth_roi:
-            unique_labels = unique_labels[unique_labels != 0]
-
+        unique_labels = Sgtm.unique_labels(segmentation_numpy=segmentation_numpy,
+                                           zeroth_roi=zeroth_roi)
 
         flattened_size = input_numpy.size
         voxel_by_roi_matrix = np.zeros((flattened_size, len(unique_labels)))
