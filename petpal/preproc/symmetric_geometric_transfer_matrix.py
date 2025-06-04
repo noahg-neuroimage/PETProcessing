@@ -149,7 +149,16 @@ class Sgtm:
 
         return unique_labels, t_corrected, condition_number
 
-    def save_results(self, input_image_path: str, out_tac_dir: str):
+
+    def save_results(self):
+        """
+        Saves the result of an sGTM calculation.
+        """
+        sgtm_result_array = np.array([self.sgtm_result[0],self.sgtm_result[1]]).T
+        np.savetxt(self.out_tsv_path,sgtm_result_array,header='Region\tMean',fmt=['%.0f','%.2f'])
+
+
+    def save_results_by_region(self, input_image_path: str, out_tac_dir: str):
         """
         Saves the result of an sGTM calculation.
         """
