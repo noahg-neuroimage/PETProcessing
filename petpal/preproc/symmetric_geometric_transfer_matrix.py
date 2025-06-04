@@ -161,8 +161,7 @@ class Sgtm:
         unique_labels = Sgtm.unique_labels(segmentation_numpy=segmentation_numpy,
                                            zeroth_roi=zeroth_roi)
 
-        flattened_size = input_numpy.size
-        voxel_by_roi_matrix = np.zeros((flattened_size, len(unique_labels)))
+        voxel_by_roi_matrix = np.zeros((input_numpy.size, len(unique_labels)))
 
         for i, label in enumerate(unique_labels):
             masked_roi = (segmentation_numpy == label).astype('float32')
