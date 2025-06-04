@@ -7,6 +7,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import ants
 
+from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.bids_utils import gen_bids_like_filename, parse_path_to_get_subject_and_session_id
@@ -82,11 +83,11 @@ class Sgtm:
 
 
     @staticmethod
-    def get_voxel_by_roi_matrix(input_numpy, unique_labels, segmentation_numpy, sigma):
+    def get_voxel_by_roi_matrix(unique_labels, segmentation_numpy, sigma):
         """
         Get the ``V`` matrix for sGTM.
         """
-        voxel_by_roi_matrix = np.zeros((input_numpy.size, len(unique_labels)))
+        voxel_by_roi_matrix = np.zeros((segmentation_numpy.size, len(unique_labels)))
 
         for i, label in enumerate(unique_labels):
             masked_roi = (segmentation_numpy == label).astype('float32')
@@ -173,8 +174,35 @@ class Sgtm:
         unique_labels = Sgtm.unique_labels(segmentation_numpy=segmentation_numpy,
                                            zeroth_roi=zeroth_roi)
 
-        voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(input_numpy=input_numpy,
-                                                           unique_labels=unique_labels,
+        voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
+                                                           segmentation_numpy=segmentation_numpy,
+                                                           sigma=sigma)
+
+        t_corrected, condition_number = Sgtm.solve_sgtm(voxel_by_roi_matrix=voxel_by_roi_matrix,
+                                                        input_numpy=input_numpy)
+
+        return unique_labels, t_corrected, condition_number
+
+
+    @staticmethod
+    def run_sgtm_4d(input_image: ants.ANTsImage,
+                    segmentation_image: ants.ANTsImage,
+                    fwhm: float | tuple[float, float, float],
+                    zeroth_roi: bool = False) -> tuple[np.ndarray, np.ndarray, float]:
+        """
+        Run sgtm on 4d
+        """
+        if not check_physical_space_for_ants_image_pair(input_image.shape,
+                                                        segmentation_image.shape):
+            raise AssertionError("PET and ROI images must be the same dimensions")
+        input_numpy = input_image.numpy()
+        segmentation_numpy = segmentation_image.numpy()
+        sigma = Sgtm.sigma(input_image=input_image, fwhm=fwhm)
+
+        unique_labels = Sgtm.unique_labels(segmentation_numpy=segmentation_numpy,
+                                           zeroth_roi=zeroth_roi)
+
+        voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
                                                            segmentation_numpy=segmentation_numpy,
                                                            sigma=sigma)
 
