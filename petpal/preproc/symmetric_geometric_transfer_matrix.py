@@ -82,6 +82,21 @@ class Sgtm:
 
 
     @staticmethod
+    def get_voxel_by_roi_matrix(input_numpy, unique_labels, segmentation_numpy, sigma):
+        """
+        Get the ``V`` matrix for sGTM.
+        """
+        voxel_by_roi_matrix = np.zeros((input_numpy.size, len(unique_labels)))
+
+        for i, label in enumerate(unique_labels):
+            masked_roi = (segmentation_numpy == label).astype('float32')
+            blurred_roi = gaussian_filter(masked_roi, sigma=sigma)
+            voxel_by_roi_matrix[:, i] = blurred_roi.ravel()
+
+        return voxel_by_roi_matrix
+
+
+    @staticmethod
     def run_sgtm(input_image: ants.ANTsImage,
                  segmentation_image: ants.ANTsImage,
                  fwhm: float | tuple[float, float, float],
@@ -158,12 +173,10 @@ class Sgtm:
         unique_labels = Sgtm.unique_labels(segmentation_numpy=segmentation_numpy,
                                            zeroth_roi=zeroth_roi)
 
-        voxel_by_roi_matrix = np.zeros((input_numpy.size, len(unique_labels)))
-
-        for i, label in enumerate(unique_labels):
-            masked_roi = (segmentation_numpy == label).astype('float32')
-            blurred_roi = gaussian_filter(masked_roi, sigma=sigma)
-            voxel_by_roi_matrix[:, i] = blurred_roi.ravel()
+        voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(input_numpy=input_numpy,
+                                                           unique_labels=unique_labels,
+                                                           segmentation_numpy=segmentation_numpy,
+                                                           sigma=sigma)
 
         t_corrected, condition_number = Sgtm.solve_sgtm(voxel_by_roi_matrix=voxel_by_roi_matrix,
                                                         input_numpy=input_numpy)
