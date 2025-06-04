@@ -127,7 +127,8 @@ class Sgtm:
             This provides the estimated activity concentrations corrected for partial volume
             effects in each ROI.
         """
-        assert input_image.shape == segmentation_image.shape, "PET and ROI images must be the same dimensions"
+        if input_image.shape != segmentation_image.shape:
+            raise AssertionError("PET and ROI images must be the same dimensions")
         input_numpy = input_image.numpy()
         segmentation_numpy = segmentation_image.numpy()
         sigma = Sgtm.sigma(input_image=input_image, fwhm=fwhm)
