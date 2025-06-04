@@ -72,9 +72,9 @@ class Sgtm:
 
     @staticmethod
     def run_sgtm(input_image: ants.ANTsImage,
-                segmentation_image: ants.ANTsImage,
-                fwhm: float | tuple[float, float, float],
-                zeroth_roi: bool = False) -> tuple[np.ndarray, np.ndarray, float]:
+                 segmentation_image: ants.ANTsImage,
+                 fwhm: float | tuple[float, float, float],
+                 zeroth_roi: bool = False) -> tuple[np.ndarray, np.ndarray, float]:
         r"""
         Apply Symmetric Geometric Transfer Matrix (SGTM) method for Partial Volume Correction 
         (PVC) to PET images based on ROI labels.
