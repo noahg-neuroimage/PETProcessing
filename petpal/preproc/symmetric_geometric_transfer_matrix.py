@@ -206,10 +206,13 @@ class Sgtm:
                                                            segmentation_numpy=segmentation_numpy,
                                                            sigma=sigma)
 
-        t_corrected, condition_number = Sgtm.solve_sgtm(voxel_by_roi_matrix=voxel_by_roi_matrix,
-                                                        input_numpy=input_numpy)
+        frame_results = []
+        for i in range(input_image.size[-1]):
+            t_corrected, _cond_num = Sgtm.solve_sgtm(voxel_by_roi_matrix=voxel_by_roi_matrix,
+                                                     input_numpy=input_numpy[:,:,:,i])
+            frame_results += [t_corrected]
 
-        return unique_labels, t_corrected, condition_number
+        return frame_results
 
 
     def save_results(self, out_tsv_path: str):
