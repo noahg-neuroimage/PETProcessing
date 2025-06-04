@@ -45,6 +45,20 @@ class Sgtm:
         if self.out_tsv_path:
             self.save_results(input_image_path=input_image_path, out_tac_dir=out_tsv_path)
 
+
+    @staticmethod
+    def sigma(input_image, fwhm):
+        """
+        Blurring kernal sigma for sGTM based on the input FWHM.
+        """
+        resolution = input_image.spacing
+        if isinstance(fwhm, float):
+            sigma = [(fwhm / 2.355) / res for res in resolution]
+        else:
+            sigma = [(fwhm_i / 2.355) / res_i for fwhm_i, res_i in zip(fwhm, resolution)]
+        return sigma
+
+
     @staticmethod
     def run_sgtm(input_image: ants.ANTsImage,
                 segmentation_image: ants.ANTsImage,
@@ -112,11 +126,7 @@ class Sgtm:
         assert input_image.shape == segmentation_image.shape, "PET and ROI images must be the same dimensions"
         input_numpy = input_image.numpy()
         segmentation_numpy = segmentation_image.numpy()
-        resolution = input_image.spacing
-        if isinstance(fwhm, float):
-            sigma = [(fwhm / 2.355) / res for res in resolution]
-        else:
-            sigma = [(fwhm_i / 2.355) / res_i for fwhm_i, res_i in zip(fwhm, resolution)]
+        sigma = Sgtm.sigma(input_image=input_image, fwhm=fwhm)
 
         unique_labels = np.unique(segmentation_numpy)
         if not zeroth_roi:
