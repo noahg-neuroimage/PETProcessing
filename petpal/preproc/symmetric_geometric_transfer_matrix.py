@@ -84,10 +84,12 @@ class Sgtm:
             Tuple[np.ndarray, np.ndarray, float]:
                 - np.ndarray: Array of unique ROI labels.
                 - np.ndarray: Corrected PET values after applying PVC.
-                - float: Condition number of the omega matrix, indicating the numerical stability of the inversion.
+                - float: Condition number of the omega matrix, indicating the numerical stability
+                    of the inversion.
 
         Raises:
-            AssertionError: If `input_image` and `segmentation_image` do not have the same dimensions.
+            AssertionError: If `input_image` and `segmentation_image` do not have the same
+                dimensions.
 
         Examples:
             .. code-block:: python
@@ -104,9 +106,10 @@ class Sgtm:
             
                 \Omega = V^T V
 
-            where :math:`V` is the matrix obtained by applying Gaussian filtering to each ROI, converting each ROI into a
-            vector. The element :math:`\Omega_{ij}` of the matrix :math:`\Omega` is the dot product of vectors
-            corresponding to the i-th and j-th ROIs, representing the spatial overlap between these ROIs after blurring.
+            where :math:`V` is the matrix obtained by applying Gaussian filtering to each ROI,
+            converting each ROI into a vector. The element :math:`\Omega_{ij}` of the matrix
+            :math:`\Omega` is the dot product of vectors corresponding to the i-th and j-th ROIs,
+            representing the spatial overlap between these ROIs after blurring.
 
             The vector :math:`t` is calculated as:
 
@@ -114,14 +117,15 @@ class Sgtm:
             
                 t = V^T p
 
-            where :math:`p` is the vectorized PET image. The corrected values, :math:`t_{corrected}`, are then obtained
-            by solving the linear system:
+            where :math:`p` is the vectorized PET image. The corrected values,
+            :math:`t_{corrected}`, are then obtained by solving the linear system:
 
             .. math::
             
                 \Omega t_{corrected} = t
 
-            This provides the estimated activity concentrations corrected for partial volume effects in each ROI.
+            This provides the estimated activity concentrations corrected for partial volume
+            effects in each ROI.
         """
         assert input_image.shape == segmentation_image.shape, "PET and ROI images must be the same dimensions"
         input_numpy = input_image.numpy()
