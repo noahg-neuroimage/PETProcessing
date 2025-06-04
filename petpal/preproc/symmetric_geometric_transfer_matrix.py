@@ -43,7 +43,7 @@ class Sgtm:
                                          fwhm=self.fwhm,
                                          zeroth_roi=self.zeroth_roi)
         if self.out_tsv_path:
-            self.save_results(input_image_path=input_image_path, out_tac_dir=out_tsv_path)
+            self.save_results()
 
 
     @staticmethod
