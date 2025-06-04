@@ -71,6 +71,20 @@ class Sgtm:
 
 
     @staticmethod
+    def solve_sgtm(voxel_by_roi_matrix, input_numpy):
+        """
+        Set up and solve linear equation for sGTM.
+        """
+        omega = voxel_by_roi_matrix.T @ voxel_by_roi_matrix
+
+        t_vector = voxel_by_roi_matrix.T @ input_numpy.ravel()
+        t_corrected = np.linalg.solve(omega, t_vector)
+        condition_number = np.linalg.cond(omega)
+
+        return t_corrected, condition_number
+
+
+    @staticmethod
     def run_sgtm(input_image: ants.ANTsImage,
                  segmentation_image: ants.ANTsImage,
                  fwhm: float | tuple[float, float, float],
@@ -155,11 +169,8 @@ class Sgtm:
             blurred_roi = gaussian_filter(masked_roi, sigma=sigma)
             voxel_by_roi_matrix[:, i] = blurred_roi.ravel()
 
-        omega = voxel_by_roi_matrix.T @ voxel_by_roi_matrix
-
-        t_vector = voxel_by_roi_matrix.T @ input_numpy.ravel()
-        t_corrected = np.linalg.solve(omega, t_vector)
-        condition_number = np.linalg.cond(omega)
+        t_corrected, condition_number = Sgtm.solve_sgtm(voxel_by_roi_matrix=voxel_by_roi_matrix,
+                                                        input_numpy=input_numpy)
 
         return unique_labels, t_corrected, condition_number
 
