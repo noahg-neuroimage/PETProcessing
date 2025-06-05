@@ -96,11 +96,10 @@ class Sgtm:
         return voxel_by_roi_matrix
 
 
-    @staticmethod
-    def run_sgtm(input_image: ants.ANTsImage,
+    def run_sgtm(self,
+                 input_image: ants.ANTsImage,
                  segmentation_image: ants.ANTsImage,
-                 fwhm: float | tuple[float, float, float],
-                 zeroth_roi: bool = False) -> tuple[np.ndarray, np.ndarray, float]:
+                 fwhm: float | tuple[float, float, float]) -> tuple[np.ndarray, np.ndarray, float]:
         r"""
         Apply Symmetric Geometric Transfer Matrix (SGTM) method for Partial Volume Correction 
         (PVC) to PET images based on ROI labels.
@@ -170,8 +169,7 @@ class Sgtm:
         segmentation_numpy = segmentation_image.numpy()
         sigma = Sgtm.sigma(input_image=segmentation_image, fwhm=fwhm)
 
-        unique_labels = Sgtm.unique_labels(segmentation_numpy=segmentation_numpy,
-                                           zeroth_roi=zeroth_roi)
+        unique_labels = self.unique_labels()
 
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
                                                            segmentation_numpy=segmentation_numpy,
@@ -183,11 +181,10 @@ class Sgtm:
         return unique_labels, t_corrected, condition_number
 
 
-    @staticmethod
-    def run_sgtm_4d(input_image: ants.ANTsImage,
+    def run_sgtm_4d(self,
+                    input_image: ants.ANTsImage,
                     segmentation_image: ants.ANTsImage,
-                    fwhm: float | tuple[float, float, float],
-                    zeroth_roi: bool = False) -> tuple[np.ndarray, np.ndarray, float]:
+                    fwhm: float | tuple[float, float, float]) -> tuple[np.ndarray, np.ndarray, float]:
         """
         Run sgtm on 4d
         """
@@ -198,8 +195,7 @@ class Sgtm:
         segmentation_numpy = segmentation_image.numpy()
         sigma = Sgtm.sigma(input_image=input_image, fwhm=fwhm)
 
-        unique_labels = Sgtm.unique_labels(segmentation_numpy=segmentation_numpy,
-                                           zeroth_roi=zeroth_roi)
+        unique_labels = self.unique_labels()
 
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
                                                            segmentation_numpy=segmentation_numpy,
@@ -222,17 +218,20 @@ class Sgtm:
         np.savetxt(out_tsv_path,sgtm_result_array,header='Region\tMean',fmt=['%.0f','%.2f'])
 
 
-    def save_results_by_region(self, input_image_path: str, out_tac_dir: str):
+    def save_results_by_region(self,
+                               input_image_path: str,
+                               sgtm_result: np.ndarray,
+                               out_tac_dir: str):
         """
         Saves the result of an sGTM calculation.
         """
         frame_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
         sub_id, ses_id = parse_path_to_get_subject_and_session_id(path=input_image_path)
 
-        labels, pvc_results, _cond_num = self.sgtm_result
-        tac_array = np.array([pvc_results[i][0] for i in range(len(pvc_results))]).T
 
-        for label, i in enumerate(labels):
+        tac_array = np.array([sgtm_result[i] for i in range(len(sgtm_result))]).T
+
+        for label, i in enumerate(self.unique_labels):
             pvc_tac = TimeActivityCurve(times=frame_timing.center_in_mins,
                                         activity=tac_array[i,:])
             tac_filename = gen_bids_like_filename(sub_id=sub_id,
