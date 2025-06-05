@@ -39,22 +39,20 @@ class Sgtm:
         self.fwhm = fwhm
         self.zeroth_roi = zeroth_roi
         self.sgtm_result = self.run_sgtm(input_image=self.input_image,
-                                         segmentation_image=self.segmentation_image,
-                                         fwhm=self.fwhm,
-                                         zeroth_roi=self.zeroth_roi)
+                                         segmentation_image=self.segmentation_image)
 
 
 
-    @staticmethod
-    def sigma(input_image, fwhm):
+    @property
+    def sigma(self):
         """
         Blurring kernal sigma for sGTM based on the input FWHM.
         """
-        resolution = input_image.spacing
-        if isinstance(fwhm, float):
-            sigma = [(fwhm / 2.355) / res for res in resolution]
+        resolution = self.segmentation_image.spacing
+        if isinstance(self.fwhm, float):
+            sigma = [(self.fwhm / 2.355) / res for res in resolution]
         else:
-            sigma = [(fwhm_i / 2.355) / res_i for fwhm_i, res_i in zip(fwhm, resolution)]
+            sigma = [(fwhm_i / 2.355) / res_i for fwhm_i, res_i in zip(self.fwhm, resolution)]
         return sigma
 
 
@@ -98,8 +96,7 @@ class Sgtm:
 
     def run_sgtm(self,
                  input_image: ants.ANTsImage,
-                 segmentation_image: ants.ANTsImage,
-                 fwhm: float | tuple[float, float, float]) -> tuple[np.ndarray, np.ndarray, float]:
+                 segmentation_image: ants.ANTsImage) -> tuple[np.ndarray, np.ndarray, float]:
         r"""
         Apply Symmetric Geometric Transfer Matrix (SGTM) method for Partial Volume Correction 
         (PVC) to PET images based on ROI labels.
@@ -167,7 +164,7 @@ class Sgtm:
             raise AssertionError("PET and ROI images must be the same dimensions")
         input_numpy = input_image.numpy()
         segmentation_numpy = segmentation_image.numpy()
-        sigma = Sgtm.sigma(input_image=segmentation_image, fwhm=fwhm)
+        sigma = self.sigma()
 
         unique_labels = self.unique_labels()
 
@@ -183,8 +180,7 @@ class Sgtm:
 
     def run_sgtm_4d(self,
                     input_image: ants.ANTsImage,
-                    segmentation_image: ants.ANTsImage,
-                    fwhm: float | tuple[float, float, float]) -> tuple[np.ndarray, np.ndarray, float]:
+                    segmentation_image: ants.ANTsImage) -> tuple[np.ndarray, np.ndarray, float]:
         """
         Run sgtm on 4d
         """
@@ -193,7 +189,7 @@ class Sgtm:
             raise AssertionError("PET and ROI images must be the same dimensions")
         input_numpy = input_image.numpy()
         segmentation_numpy = segmentation_image.numpy()
-        sigma = Sgtm.sigma(input_image=input_image, fwhm=fwhm)
+        sigma = self.sigma()
 
         unique_labels = self.unique_labels()
 
