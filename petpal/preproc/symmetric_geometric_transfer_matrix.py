@@ -11,6 +11,7 @@ from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.bids_utils import gen_bids_like_filename, parse_path_to_get_subject_and_session_id
+from ..preproc.segmentation_tools import unique_segmentation_labels
 
 class Sgtm:
     """
@@ -57,15 +58,13 @@ class Sgtm:
         return sigma
 
 
-    @staticmethod
-    def unique_labels(segmentation_numpy, zeroth_roi):
+    @property
+    def unique_labels(self):
         """
         Get unique ROIs for sGTM.
         """
-        labels = np.unique(segmentation_numpy)
-        if not zeroth_roi:
-            labels = labels[labels != 0]
-        return labels
+        return unique_segmentation_labels(segmentation_img=self.segmentation_image,
+                                          zeroth_roi=self.zeroth_roi)
 
 
     @staticmethod
