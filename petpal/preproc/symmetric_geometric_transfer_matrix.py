@@ -164,13 +164,12 @@ class Sgtm:
             raise AssertionError("PET and ROI images must be the same dimensions")
         input_numpy = input_image.numpy()
         segmentation_numpy = segmentation_image.numpy()
-        sigma = self.sigma()
 
-        unique_labels = self.unique_labels()
+        unique_labels = self.unique_labels
 
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
                                                            segmentation_numpy=segmentation_numpy,
-                                                           sigma=sigma)
+                                                           sigma=self.sigma)
 
         t_corrected, condition_number = Sgtm.solve_sgtm(voxel_by_roi_matrix=voxel_by_roi_matrix,
                                                         input_numpy=input_numpy)
@@ -189,13 +188,12 @@ class Sgtm:
             raise AssertionError("PET and ROI images must be the same dimensions")
         input_numpy = input_image.numpy()
         segmentation_numpy = segmentation_image.numpy()
-        sigma = self.sigma()
 
-        unique_labels = self.unique_labels()
+        unique_labels = self.unique_labels
 
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
                                                            segmentation_numpy=segmentation_numpy,
-                                                           sigma=sigma)
+                                                           sigma=self.sigma)
 
         frame_results = []
         for i in range(input_numpy.shape[-1]):
