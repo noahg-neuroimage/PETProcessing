@@ -192,8 +192,8 @@ class Sgtm:
         """
         Run sgtm on 4d
         """
-        if not check_physical_space_for_ants_image_pair(input_image.shape,
-                                                        segmentation_image.shape):
+        if not check_physical_space_for_ants_image_pair(input_image,
+                                                        segmentation_image):
             raise AssertionError("PET and ROI images must be the same dimensions")
         input_numpy = input_image.numpy()
         segmentation_numpy = segmentation_image.numpy()
