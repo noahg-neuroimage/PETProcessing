@@ -236,7 +236,7 @@ class Sgtm:
 
         tac_array = np.array([sgtm_result[i] for i in range(len(sgtm_result))]).T
 
-        for label, i in enumerate(self.unique_labels):
+        for i, label in enumerate(self.unique_labels):
             pvc_tac = TimeActivityCurve(times=frame_timing.center_in_mins,
                                         activity=tac_array[i,:])
             tac_filename = gen_bids_like_filename(sub_id=sub_id,
