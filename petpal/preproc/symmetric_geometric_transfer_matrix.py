@@ -38,9 +38,6 @@ class Sgtm:
         self.segmentation_image = ants.image_read(segmentation_image_path)
         self.fwhm = fwhm
         self.zeroth_roi = zeroth_roi
-        self.sgtm_result = self.run_sgtm(input_image=self.input_image,
-                                         segmentation_image=self.segmentation_image)
-
 
 
     @property
