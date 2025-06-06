@@ -564,7 +564,7 @@ def unique_segmentation_labels(segmentation_img: ants.core.ANTsImage | np.ndarra
     if isinstance(segmentation_img, ants.core.ANTsImage):
         segmentation_img = segmentation_img.numpy()
     labels = np.unique(segmentation_img)
-    labels = labels.astype(np.int8)
+    labels = labels.astype(np.uint32)
     if not zeroth_roi:
         labels = labels[labels != 0]
     return labels
