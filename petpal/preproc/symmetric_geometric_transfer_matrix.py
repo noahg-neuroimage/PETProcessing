@@ -189,7 +189,7 @@ class Sgtm:
 
     def run_sgtm_4d(self,
                     input_image: ants.core.ANTsImage,
-                    segmentation_image: ants.core.ANTsImage) -> tuple[np.ndarray, np.ndarray, float]:
+                    segmentation_image: ants.core.ANTsImage) -> list[np.ndarray]:
         """
         Run sgtm on 4d
         """
