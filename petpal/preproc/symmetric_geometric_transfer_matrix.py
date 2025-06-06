@@ -178,15 +178,15 @@ class Sgtm:
 
 
     def run_sgtm_4d(self,
-                    input_image: ants.ANTsImage,
-                    segmentation_image: ants.ANTsImage) -> tuple[np.ndarray, np.ndarray, float]:
+                    input_image: ants.core.ANTsImage,
+                    segmentation_image: ants.core.ANTsImage) -> tuple[np.ndarray, np.ndarray, float]:
         """
         Run sgtm on 4d
         """
         if not check_physical_space_for_ants_image_pair(input_image,
                                                         segmentation_image):
             raise AssertionError("PET and ROI images must be the same dimensions")
-        input_numpy = input_image.numpy()
+        pet_frame_list = input_image.ndimage_to_list()
         segmentation_numpy = segmentation_image.numpy()
 
         unique_labels = self.unique_labels
@@ -196,9 +196,10 @@ class Sgtm:
                                                            sigma=self.sigma)
 
         frame_results = []
-        for i in range(input_numpy.shape[-1]):
+        for frame in pet_frame_list:
+            input_numpy = frame.numpy()
             t_corrected, _cond_num = Sgtm.solve_sgtm(voxel_by_roi_matrix=voxel_by_roi_matrix,
-                                                     input_numpy=input_numpy[:,:,:,i])
+                                                     input_numpy=input_numpy)
             frame_results += [t_corrected]
 
         return frame_results
