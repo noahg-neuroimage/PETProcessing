@@ -100,7 +100,7 @@ class Sgtm:
             blurred_roi = gaussian_filter(masked_roi, sigma=sigma)
             voxel_by_roi_matrix[:, i] = blurred_roi.ravel()
 
-        return voxel_by_roi_matrix
+        return voxel_by_roi_matrix.astype(np.float32)
 
 
     def run_sgtm(self,
