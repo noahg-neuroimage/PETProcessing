@@ -66,12 +66,21 @@ class Sgtm:
 
 
     @staticmethod
-    def solve_sgtm(voxel_by_roi_matrix, input_numpy):
+    def get_omega_matrix(voxel_by_roi_matrix: np.ndarray) -> np.ndarray:
+        """
+        Get the Omega matrix for sGTM. See :meth:`run_sgtm` for details.
+        """
+        omega = voxel_by_roi_matrix.T @ voxel_by_roi_matrix
+        return omega
+
+
+    @staticmethod
+    def solve_sgtm(omega: np.ndarray,
+                   voxel_by_roi_matrix: np.ndarray,
+                   input_numpy: np.ndarray) -> tuple:
         """
         Set up and solve linear equation for sGTM.
         """
-        omega = voxel_by_roi_matrix.T @ voxel_by_roi_matrix
-
         t_vector = voxel_by_roi_matrix.T @ input_numpy.ravel()
         t_corrected = np.linalg.solve(omega, t_vector)
         condition_number = np.linalg.cond(omega)
@@ -170,8 +179,9 @@ class Sgtm:
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
                                                            segmentation_numpy=segmentation_numpy,
                                                            sigma=self.sigma)
-
-        t_corrected, condition_number = Sgtm.solve_sgtm(voxel_by_roi_matrix=voxel_by_roi_matrix,
+        omega = Sgtm.get_omega_matrix(voxel_by_roi_matrix=voxel_by_roi_matrix)
+        t_corrected, condition_number = Sgtm.solve_sgtm(omega=omega,
+                                                        voxel_by_roi_matrix=voxel_by_roi_matrix,
                                                         input_numpy=input_numpy)
 
         return unique_labels, t_corrected, condition_number
@@ -194,11 +204,13 @@ class Sgtm:
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
                                                            segmentation_numpy=segmentation_numpy,
                                                            sigma=self.sigma)
+        omega = Sgtm.get_omega_matrix(voxel_by_roi_matrix=voxel_by_roi_matrix)
 
         frame_results = []
         for frame in pet_frame_list:
             input_numpy = frame.numpy()
-            t_corrected, _cond_num = Sgtm.solve_sgtm(voxel_by_roi_matrix=voxel_by_roi_matrix,
+            t_corrected, _cond_num = Sgtm.solve_sgtm(omega=omega,
+                                                     voxel_by_roi_matrix=voxel_by_roi_matrix,
                                                      input_numpy=input_numpy)
             frame_results += [t_corrected]
 
