@@ -45,6 +45,11 @@ class Sgtm:
     def sigma(self):
         """
         Blurring kernal sigma for sGTM based on the input FWHM.
+
+        Returns:
+            sigma (list[float]): List of sigma blurring radii for Gaussian kernel. Each sigma value
+                corresponds to an axis: x, y, and z. Values are determined based on the FWHM input
+                to the object and the voxel dimension in the input image.
         """
         resolution = self.segmentation_image.spacing
         if isinstance(self.fwhm, float):
@@ -58,6 +63,10 @@ class Sgtm:
     def unique_labels(self):
         """
         Get unique ROIs for sGTM.
+
+        Returns:
+            unique_segmentation_labels (np.ndarray): Array containing unique integer values found
+                in the discrete segmentation image assigned to object.
         """
         return unique_segmentation_labels(segmentation_img=self.segmentation_image,
                                           zeroth_roi=self.zeroth_roi)
@@ -65,8 +74,14 @@ class Sgtm:
 
     @staticmethod
     def get_omega_matrix(voxel_by_roi_matrix: np.ndarray) -> np.ndarray:
-        """
-        Get the Omega matrix for sGTM. See :meth:`run_sgtm` for details.
+        r"""Get the Omega matrix for sGTM. See :meth:`run_sgtm` for details.
+
+        Args:
+            voxel_by_roi_matrix (np.ndarray): The ``V`` matrix described in :meth:`run_sgtm`
+                obtained by applying a Gaussian filter to each ROI.
+
+        Returns:
+            omega (np.ndarray): ``\Omega`` matrix as described in :meth:`run_sgtm`.
         """
         omega = voxel_by_roi_matrix.T @ voxel_by_roi_matrix
         return omega
@@ -87,9 +102,17 @@ class Sgtm:
 
 
     @staticmethod
-    def get_voxel_by_roi_matrix(unique_labels, segmentation_numpy, sigma):
+    def get_voxel_by_roi_matrix(unique_labels: np.ndarray,
+                                segmentation_numpy: np.ndarray,
+                                sigma: list[float]):
         """
-        Get the ``V`` matrix for sGTM.
+        Get the ``V`` matrix for sGTM by blurring each ROI and converting into vectors. See
+        :meth:`run_sgtm` for more details.
+
+        Args:
+            unique_labels (np.ndarray): Array containing unique values in the discrete segmentation
+                image.
+            segmentation_numpy (np.ndarray())
         """
         voxel_by_roi_matrix = np.zeros((segmentation_numpy.size, len(unique_labels)))
 
