@@ -255,7 +255,10 @@ class Sgtm:
         Saves the result of an sGTM calculation.
         """
         sgtm_result_array = np.array([self.sgtm_result[0],self.sgtm_result[1]]).T
-        np.savetxt(out_tsv_path,sgtm_result_array,header='Region\tMean',fmt=['%.0f','%.2f'])
+        np.savetxt(out_tsv_path,sgtm_result_array,
+                   header='Region\tMean',
+                   fmt=['%.0f','%.2f'],
+                   comments='')
 
 
     def save_results_by_region(self,
