@@ -112,7 +112,12 @@ class Sgtm:
         Args:
             unique_labels (np.ndarray): Array containing unique values in the discrete segmentation
                 image.
-            segmentation_arr (np.ndarray)
+            segmentation_arr (np.ndarray): Array containing discrete segmentation image converted
+                to a numpy array.
+            sigma (list[float]): List of sigma blurring radii on x, y, z axes respectively.
+
+        Returns:
+            voxel_by_roi_matrix (np.ndarray): The blurred ROI matrix for sGTM.
         """
         voxel_by_roi_matrix = np.zeros((segmentation_arr.size, len(unique_labels)))
 
@@ -211,8 +216,15 @@ class Sgtm:
     def run_sgtm_4d(self,
                     input_image: ants.core.ANTsImage,
                     segmentation_image: ants.core.ANTsImage) -> list[np.ndarray]:
-        """
-        Run sgtm on 4d
+        """Calculated partial volume corrected TACs on a 4D image by running sGTM on each frame in
+        the 4D image.
+        
+        This results in a time series of average activity for each region specified in the
+        segmentation image. This can then be used for kinetic modeling.
+
+        Returns:
+            frame_results (list[np.ndarray]): Average activity in each region calculated with sGTM
+                for each frame.
         """
         if not check_physical_space_for_ants_image_pair(input_image,
                                                         segmentation_image):
