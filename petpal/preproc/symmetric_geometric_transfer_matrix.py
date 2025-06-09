@@ -103,7 +103,7 @@ class Sgtm:
 
     @staticmethod
     def get_voxel_by_roi_matrix(unique_labels: np.ndarray,
-                                segmentation_numpy: np.ndarray,
+                                segmentation_arr: np.ndarray,
                                 sigma: list[float]):
         """
         Get the ``V`` matrix for sGTM by blurring each ROI and converting into vectors. See
@@ -112,12 +112,12 @@ class Sgtm:
         Args:
             unique_labels (np.ndarray): Array containing unique values in the discrete segmentation
                 image.
-            segmentation_numpy (np.ndarray())
+            segmentation_arr (np.ndarray)
         """
-        voxel_by_roi_matrix = np.zeros((segmentation_numpy.size, len(unique_labels)))
+        voxel_by_roi_matrix = np.zeros((segmentation_arr.size, len(unique_labels)))
 
         for i, label in enumerate(unique_labels):
-            masked_roi = (segmentation_numpy == label).astype('float32')
+            masked_roi = (segmentation_arr == label).astype('float32')
             blurred_roi = gaussian_filter(masked_roi, sigma=sigma)
             voxel_by_roi_matrix[:, i] = blurred_roi.ravel()
 
@@ -193,12 +193,12 @@ class Sgtm:
         if input_image.shape != segmentation_image.shape:
             raise AssertionError("PET and ROI images must be the same dimensions")
         input_numpy = input_image.numpy()
-        segmentation_numpy = segmentation_image.numpy()
+        segmentation_arr = segmentation_image.numpy()
 
         unique_labels = self.unique_labels
 
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
-                                                           segmentation_numpy=segmentation_numpy,
+                                                           segmentation_arr=segmentation_arr,
                                                            sigma=self.sigma)
         omega = Sgtm.get_omega_matrix(voxel_by_roi_matrix=voxel_by_roi_matrix)
         t_corrected, condition_number = Sgtm.solve_sgtm(omega=omega,
@@ -218,12 +218,12 @@ class Sgtm:
                                                         segmentation_image):
             raise AssertionError("PET and ROI images must be the same dimensions")
         pet_frame_list = input_image.ndimage_to_list()
-        segmentation_numpy = segmentation_image.numpy()
+        segmentation_arr = segmentation_image.numpy()
 
         unique_labels = self.unique_labels
 
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
-                                                           segmentation_numpy=segmentation_numpy,
+                                                           segmentation_arr=segmentation_arr,
                                                            sigma=self.sigma)
         omega = Sgtm.get_omega_matrix(voxel_by_roi_matrix=voxel_by_roi_matrix)
 
