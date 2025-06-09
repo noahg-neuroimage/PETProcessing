@@ -129,9 +129,7 @@ class Sgtm:
         return voxel_by_roi_matrix.astype(np.float32)
 
 
-    def run_sgtm(self,
-                 input_image: ants.ANTsImage,
-                 segmentation_image: ants.ANTsImage) -> tuple[np.ndarray, np.ndarray, float]:
+    def run_sgtm(self) -> tuple[np.ndarray, np.ndarray, float]:
         r"""
         Apply Symmetric Geometric Transfer Matrix (SGTM) method for Partial Volume Correction 
         (PVC) to PET images based on ROI labels.
@@ -195,10 +193,10 @@ class Sgtm:
             This provides the estimated activity concentrations corrected for partial volume
             effects in each ROI.
         """
-        if input_image.shape != segmentation_image.shape:
+        if self.input_image.shape != self.segmentation_image.shape:
             raise AssertionError("PET and ROI images must be the same dimensions")
-        input_numpy = input_image.numpy()
-        segmentation_arr = segmentation_image.numpy()
+        input_numpy = self.input_image.numpy()
+        segmentation_arr = self.segmentation_image.numpy()
 
         unique_labels = self.unique_labels
 
@@ -213,9 +211,7 @@ class Sgtm:
         return unique_labels, t_corrected, condition_number
 
 
-    def run_sgtm_4d(self,
-                    input_image: ants.core.ANTsImage,
-                    segmentation_image: ants.core.ANTsImage) -> list[np.ndarray]:
+    def run_sgtm_4d(self) -> list[np.ndarray]:
         """Calculated partial volume corrected TACs on a 4D image by running sGTM on each frame in
         the 4D image.
         
@@ -226,11 +222,11 @@ class Sgtm:
             frame_results (list[np.ndarray]): Average activity in each region calculated with sGTM
                 for each frame.
         """
-        if not check_physical_space_for_ants_image_pair(input_image,
-                                                        segmentation_image):
+        if not check_physical_space_for_ants_image_pair(self.input_image,
+                                                        self.segmentation_image):
             raise AssertionError("PET and ROI images must be the same dimensions")
-        pet_frame_list = input_image.ndimage_to_list()
-        segmentation_arr = segmentation_image.numpy()
+        pet_frame_list = self.input_image.ndimage_to_list()
+        segmentation_arr = self.segmentation_image.numpy()
 
         unique_labels = self.unique_labels
 
@@ -288,9 +284,11 @@ class Sgtm:
     def __call__(self, out_tsv_path, *args, **kwds):
 
         if self.input_image.dimension==3:
-            self.sgtm_result = self.run_sgtm(input_image=self.input_image,segmentation_image=self.segmentation_image)
+            self.sgtm_result = self.run_sgtm()
             self.save_results(out_tsv_path=out_tsv_path)
 
         elif self.input_image.dimension==4:
-            sgtm_result = self.run_sgtm_4d(input_image=self.input_image,segmentation_image=self.segmentation_image)
-            self.save_results_by_region(input_image_path=self.input_image,sgtm_result=sgtm_result,out_tac_dir=out_tsv_path)
+            sgtm_result = self.run_sgtm_4d()
+            self.save_results_by_region(input_image_path=self.input_image,
+                                        sgtm_result=sgtm_result,
+                                        out_tac_dir=out_tsv_path)
