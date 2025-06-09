@@ -284,3 +284,13 @@ class Sgtm:
                                                   ext='.tsv')
             out_tac_path = os.path.join(out_tac_dir, tac_filename)
             pvc_tac.to_tsv(filename=out_tac_path)
+
+    def __call__(self, out_tsv_path, *args, **kwds):
+
+        if self.input_image.dimension==3:
+            self.sgtm_result = self.run_sgtm(input_image=self.input_image,segmentation_image=self.segmentation_image)
+            self.save_results(out_tsv_path=out_tsv_path)
+
+        elif self.input_image.dimension==4:
+            sgtm_result = self.run_sgtm_4d(input_image=self.input_image,segmentation_image=self.segmentation_image)
+            self.save_results_by_region(input_image_path=self.input_image,sgtm_result=sgtm_result,out_tac_dir=out_tsv_path)
