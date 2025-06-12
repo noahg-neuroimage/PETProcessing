@@ -9,7 +9,7 @@ Example:
 
 def main():
     parser = argparse.ArgumentParser(prog='petpal-pib-proc',
-                                     description='Command line interface for running VAT processing.',
+                                     description='Command line interface for running PIB processing.',
                                      epilog=_PIB_EXAMPLE_, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--sub',required=True,help='Subject or participant identifier')
     parser.add_argument('--ses',required=True,help='Session identifier')
