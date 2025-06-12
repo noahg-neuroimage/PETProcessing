@@ -83,7 +83,7 @@ class Sgtm:
                 to the object and the voxel dimension in the input image.
         """
         resolution = self.segmentation_image.spacing
-        if isinstance(self.fwhm, float):
+        if isinstance(self.fwhm, (float, int)):
             sigma = [(self.fwhm / 2.355) / res for res in resolution]
         else:
             sigma = [(fwhm_i / 2.355) / res_i for fwhm_i, res_i in zip(self.fwhm, resolution)]
