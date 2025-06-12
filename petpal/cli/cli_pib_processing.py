@@ -20,7 +20,7 @@ def main():
     seg_path = f'/example/path/to/Data/PiB_BIDS/derivatives/freesurfer/sub-{sub_id}/ses-{ses_id}/aparc+aseg.nii.gz'
     anat_path = f'/example/path/to/Data/PiB_BIDS/sub-{sub_id}/ses-{ses_id}/anat/sub-{sub_id}_ses-{ses_id}_T1w.nii.gz'
     bids_dir = '/example/path/to/Data/PiB_BIDS'
-    dseg_file = '/example/path/to/Data/PiB_BIDS/derivatives/freesurfer/dseg.tsv'
+    dseg_file = '/data/brier/DARF/PPM/PETProcessing/shared/dseg.tsv'
 
     PiB_Pipeline = petpal.pipelines.pipelines.BIDS_Pipeline(sub_id=sub_id,
                                                             ses_id=ses_id,
