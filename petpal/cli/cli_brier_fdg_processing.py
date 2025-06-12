@@ -1,5 +1,4 @@
 import argparse
-from ..preproc import preproc
 import os
 from ..input_function.blood_input import resample_blood_data_on_scanner_times
 from ..kinetic_modeling.parametric_images import GraphicalAnalysisParametricImage, generate_cmrglc_parametric_image_from_ki_image
