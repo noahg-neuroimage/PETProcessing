@@ -89,22 +89,11 @@ def petpvc_cli_run(args):
 def sgtm_cli_run(args):
     """
     Apply the SGTM method for Partial Volume Correction.
-    Args:
-        pet_img (nib.Nifti1Image): The 3D PET image.
-        roi_img (nib.Nifti1Image): The 3D Segmentation image.
-        fwhm (float or Tuple): Full Width at Half Maximum for Gaussian blurring.
-    Returns:
-        Tuple[np.ndarray, np.ndarray, float]: Labels, corrected PET values, and condition number of the omega matrix.
     """
     sgtm_obj = Sgtm(input_image_path=args.input_image,
                     segmentation_image_path=args.segmentation_image,
-                    fwhm=args.fwhm,
-                    out_tsv_path=args.output_path)
-    if args.verbose:
-        print("Labels:", sgtm_obj.sgtm_result[0])
-        print("Corrected values:", sgtm_obj.sgtm_result[1])
-        print("Condition number:", sgtm_obj.sgtm_result[2])
-
+                    fwhm=args.fwhm)
+    sgtm_obj(output_path=args.output_path)
 
 def main():
     """
