@@ -291,7 +291,12 @@ class Sgtm:
 
 
     def __call__(self, out_tsv_path):
-
+        """
+        Run sGTM and save results.
+        
+        Applies :meth:`run_sgtm` for 3D images and :meth:`run_sgtm_4d`
+        for 4D images.
+        """
         if self.input_image.dimension==3:
             sgtm_result = self.run_sgtm()
             self.save_results(sgtm_result=sgtm_result, out_tsv_path=out_tsv_path)
