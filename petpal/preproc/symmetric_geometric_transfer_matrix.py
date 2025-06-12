@@ -267,6 +267,10 @@ class Sgtm:
                                out_tac_dir: str):
         """
         Saves the result of an sGTM calculation.
+
+        Args:
+            sgtm_result (np.ndarray): Array of results from :meth:`run_sgtm_4d`
+            out_tac_dir (str): Path to folder where regional TACs will be saved.
         """
         input_image_path = self.input_image_path
         frame_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
