@@ -10,7 +10,7 @@ The user MUST provide the following:
     * Session ID (--ses): Session index, following BIDS. Same as above.
         * Note that if you're bids directory doesn't have session folder, you'll need to create them.
 
-This script uses one instance of the class :class:`petpal.preproc.preproc.PreProc` to
+This script uses one instance of the class  to
 run all processing from motion-correction to SUVR generation
 
 Assumptions regarding input data:
@@ -74,13 +74,13 @@ def _parse_command_line_args() -> argparse.Namespace:
     return args
 
 
-def process_single_subject_session(preproc_instance: petpal.preproc.preproc.PreProc,
+def process_single_subject_session(preproc_instance: False,
                                    skip_motion_correct: bool = False,
                                    skip_register: bool = False,
                                    skip_tacs: bool = False,
                                    skip_suvr: bool = False, ) -> None:
     """
-    Processes one subject-session pair using an instance of the :class:`petpal.preproc.preproc.PreProc` class.
+    Processes one subject-session pair using an instance of the  class.
 
     Processing follows these steps:
         1. Motion Correct PET
@@ -177,7 +177,7 @@ def main():
     # TODO: Make a shared global dict with Half-Lives of common Radiotracers
     half_life = 1221.66  # C-11 Half-Life According to NIST
 
-    subject = petpal.preproc.preproc.PreProc(output_directory=outdir,
+    subject = object(output_directory=outdir,
                                              output_filename_prefix=subject_id)
 
     # Update props with everything necessary.
