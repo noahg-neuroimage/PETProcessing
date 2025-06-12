@@ -33,6 +33,37 @@ class Sgtm:
                 blurring kernel for each dimension.
             zeroth_roi (bool): If False, ignores the zero label in calculations, often used to 
                 exclude background or non-ROI regions.
+
+
+        Example:
+
+            .. code-block:: python
+
+                import numpy as np
+                from petpal.preproc.symmetric_geometric_transfer_matrix import Sgtm
+
+                # Get 3D imaging and set FWHM parameter
+                input_3d_image_path = "sub-001_ses-01_space-mpr_desc-SUV_pet.nii.gz"
+                segmentation_image_path = "sub-001_ses-01_space-mpr_seg.nii.gz"
+                fwhm = (5.,5.,5.)
+
+                # initiate Sgtm class, run analysis, and save to an output TSV file.
+                sgtm_analysis = Sgtm(input_image_path=input_3d_image_path,
+                                     segmentation_image_path=segmentation_image_path,
+                                     fwhm=fwhm,
+                                     zeroth_roi = False)
+                sgtm_analysis(output_path="sub-001_ses-01_pvc-sGTM_desc-SUV_pet.tsv")
+
+                # Do the same with a time series 4D image. This results in a TAC for each region in
+                # the segmentation file, that has been partial volume corrected with the sGTM
+                # method.
+                input_4d_image_path = "sub-001_ses-01_space-mpr_pet.nii.gz"
+                sgtm_4d_analysis = Sgtm(input_image_path=input_4d_image_path,
+                                        segmentation_image_path=segmentation_image_path,
+                                        fwhm=fwhm,
+                                        zeroth_roi = False)
+                sgtm_4d_analysis(output_path="sub-001_ses-01_pvc-sGTM_tacs")
+
         """
         self.input_image_path = input_image_path
         self.input_image = ants.image_read(input_image_path)
