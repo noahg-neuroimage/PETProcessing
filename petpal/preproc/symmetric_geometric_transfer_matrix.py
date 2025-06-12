@@ -34,6 +34,7 @@ class Sgtm:
             zeroth_roi (bool): If False, ignores the zero label in calculations, often used to 
                 exclude background or non-ROI regions.
         """
+        self.input_image_path = input_image_path
         self.input_image = ants.image_read(input_image_path)
         self.segmentation_image = ants.image_read(segmentation_image_path)
         self.fwhm = fwhm
@@ -262,15 +263,14 @@ class Sgtm:
 
 
     def save_results_by_region(self,
-                               input_image_path: str,
                                sgtm_result: np.ndarray,
                                out_tac_dir: str):
         """
         Saves the result of an sGTM calculation.
         """
+        input_image_path = self.input_image_path
         frame_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
         sub_id, ses_id = parse_path_to_get_subject_and_session_id(path=input_image_path)
-
 
         tac_array = np.array([sgtm_result[i] for i in range(len(sgtm_result))]).T
 
@@ -285,7 +285,8 @@ class Sgtm:
             out_tac_path = os.path.join(out_tac_dir, tac_filename)
             pvc_tac.to_tsv(filename=out_tac_path)
 
-    def __call__(self, out_tsv_path, *args, **kwds):
+
+    def __call__(self, out_tsv_path):
 
         if self.input_image.dimension==3:
             sgtm_result = self.run_sgtm()
@@ -293,6 +294,5 @@ class Sgtm:
 
         elif self.input_image.dimension==4:
             sgtm_result = self.run_sgtm_4d()
-            self.save_results_by_region(input_image_path=self.input_image,
-                                        sgtm_result=sgtm_result,
+            self.save_results_by_region(sgtm_result=sgtm_result,
                                         out_tac_dir=out_tsv_path)
