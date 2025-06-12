@@ -1,9 +1,22 @@
+import argparse
 import petpal
 
+_PIB_EXAMPLE_ = (r"""
+Example:
+    - Run a PIB scan through SUVR pipeline:
+      petpal-pib-proc
+""")
 
 def main():
-    sub_id = '001'
-    ses_id = '001'
+    parser = argparse.ArgumentParser(prog='petpal-pib-proc',
+                                     description='Command line interface for running VAT processing.',
+                                     epilog=_PIB_EXAMPLE_, formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--sub',required=True,help='Subject or participant identifier')
+    parser.add_argument('--ses',required=True,help='Session identifier')
+    args = parser.parse_args()
+
+    sub_id = args.sub
+    ses_id = args.ses
     seg_path = f'/example/path/to/Data/PiB_BIDS/derivatives/freesurfer/sub-{sub_id}/ses-{ses_id}/aparc+aseg.nii.gz'
     anat_path = f'/example/path/to/Data/PiB_BIDS/sub-{sub_id}/ses-{ses_id}/anat/sub-{sub_id}_ses-{ses_id}_T1w.nii.gz'
     bids_dir = '/example/path/to/Data/PiB_BIDS'
