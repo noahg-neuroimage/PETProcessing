@@ -272,6 +272,7 @@ class Sgtm:
             sgtm_result (np.ndarray): Array of results from :meth:`run_sgtm_4d`
             out_tac_dir (str): Path to folder where regional TACs will be saved.
         """
+        os.makedirs(out_tac_dir, exist_ok=True)
         input_image_path = self.input_image_path
         frame_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
         sub_id, ses_id = parse_path_to_get_subject_and_session_id(path=input_image_path)
