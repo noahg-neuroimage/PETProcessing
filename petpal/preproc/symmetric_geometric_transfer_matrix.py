@@ -249,6 +249,10 @@ class Sgtm:
     def save_results(sgtm_result: tuple, out_tsv_path: str):
         """
         Saves the result of an sGTM calculation.
+
+        Args:
+            sgtm_result (tuple): Output of :meth:`run_sgtm`
+            out_tsv_path (str): File path to which results are saved.
         """
         sgtm_result_array = np.array([sgtm_result[0],sgtm_result[1]]).T
         np.savetxt(out_tsv_path,sgtm_result_array,
