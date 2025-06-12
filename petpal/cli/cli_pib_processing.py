@@ -17,9 +17,9 @@ def main():
 
     sub_id = args.sub
     ses_id = args.ses
-    seg_path = f'/example/path/to/Data/PiB_BIDS/derivatives/freesurfer/sub-{sub_id}/ses-{ses_id}/aparc+aseg.nii.gz'
-    anat_path = f'/example/path/to/Data/PiB_BIDS/sub-{sub_id}/ses-{ses_id}/anat/sub-{sub_id}_ses-{ses_id}_T1w.nii.gz'
-    bids_dir = '/example/path/to/Data/PiB_BIDS'
+    seg_path = f'../derivatives/freesurfer/sub-{sub_id}/ses-{ses_id}/aparc+aseg.nii.gz'
+    anat_path = f'../sub-{sub_id}/ses-{ses_id}/anat/sub-{sub_id}_ses-{ses_id}_T1w.nii.gz'
+    bids_dir = '..'
     dseg_file = '/data/brier/DARF/PPM/PETProcessing/shared/dseg.tsv'
 
     PiB_Pipeline = petpal.pipelines.pipelines.BIDS_Pipeline(sub_id=sub_id,
