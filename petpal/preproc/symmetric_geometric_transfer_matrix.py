@@ -290,18 +290,22 @@ class Sgtm:
             pvc_tac.to_tsv(filename=out_tac_path)
 
 
-    def __call__(self, out_tsv_path):
+    def __call__(self, output_path: str):
         """
         Run sGTM and save results.
         
         Applies :meth:`run_sgtm` for 3D images and :meth:`run_sgtm_4d`
         for 4D images.
+
+        Args:
+            output_path (str): Path to save sGTM results. For 3D images, this is a .tsv file. For
+                4D images, this is a directory. 
         """
         if self.input_image.dimension==3:
             sgtm_result = self.run_sgtm()
-            self.save_results(sgtm_result=sgtm_result, out_tsv_path=out_tsv_path)
+            self.save_results(sgtm_result=sgtm_result, out_tsv_path=output_path)
 
         elif self.input_image.dimension==4:
             sgtm_result = self.run_sgtm_4d()
             self.save_results_by_region(sgtm_result=sgtm_result,
-                                        out_tac_dir=out_tsv_path)
+                                        out_tac_dir=output_path)
