@@ -38,7 +38,6 @@ class Sgtm:
         self.segmentation_image = ants.image_read(segmentation_image_path)
         self.fwhm = fwhm
         self.zeroth_roi = zeroth_roi
-        self.sgtm_result = [None,None]
 
 
     @property
@@ -246,11 +245,12 @@ class Sgtm:
         return np.asarray(frame_results)
 
 
-    def save_results(self, out_tsv_path: str):
+    @staticmethod
+    def save_results(sgtm_result: tuple, out_tsv_path: str):
         """
         Saves the result of an sGTM calculation.
         """
-        sgtm_result_array = np.array([self.sgtm_result[0],self.sgtm_result[1]]).T
+        sgtm_result_array = np.array([sgtm_result[0],sgtm_result[1]]).T
         np.savetxt(out_tsv_path,sgtm_result_array,
                    header='Region\tMean',
                    fmt=['%.0f','%.2f'],
@@ -284,8 +284,8 @@ class Sgtm:
     def __call__(self, out_tsv_path, *args, **kwds):
 
         if self.input_image.dimension==3:
-            self.sgtm_result = self.run_sgtm()
-            self.save_results(out_tsv_path=out_tsv_path)
+            sgtm_result = self.run_sgtm()
+            self.save_results(sgtm_result=sgtm_result, out_tsv_path=out_tsv_path)
 
         elif self.input_image.dimension==4:
             sgtm_result = self.run_sgtm_4d()
