@@ -1,5 +1,4 @@
 import argparse
-from ..preproc import preproc
 import os
 from ..input_function.blood_input import resample_blood_data_on_scanner_times
 from ..kinetic_modeling.parametric_images import GraphicalAnalysisParametricImage, generate_cmrglc_parametric_image_from_ki_image
@@ -135,7 +134,6 @@ def fdg_protocol_with_arterial(sub_id: str,
         'Verbose': verbose,
         }
     
-    sub_preproc = preproc.PreProc(output_directory=out_dir_preproc, output_filename_prefix=sub_ses_prefix)
     preproc_props['FilePathWSSInput'] = sub_preproc.generate_outfile_path(method_short='threshcropped',
                                                                           modality=out_mod)
     preproc_props['FilePathMocoInp'] = preproc_props['FilePathWSSInput']
