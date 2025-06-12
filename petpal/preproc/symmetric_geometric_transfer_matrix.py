@@ -211,7 +211,7 @@ class Sgtm:
         return unique_labels, t_corrected, condition_number
 
 
-    def run_sgtm_4d(self) -> list[np.ndarray]:
+    def run_sgtm_4d(self) -> np.ndarray:
         """Calculated partial volume corrected TACs on a 4D image by running sGTM on each frame in
         the 4D image.
         
@@ -243,7 +243,7 @@ class Sgtm:
                                                      input_numpy=input_numpy)
             frame_results += [t_corrected]
 
-        return frame_results
+        return np.asarray(frame_results)
 
 
     def save_results(self, out_tsv_path: str):
