@@ -4,7 +4,7 @@ import petpal
 _PIB_EXAMPLE_ = (r"""
 Example:
     - Run a PIB scan through SUVR pipeline:
-      petpal-pib-proc
+      petpal-pib-proc --sub sub-001 --ses ses-01
 """)
 
 def main():
