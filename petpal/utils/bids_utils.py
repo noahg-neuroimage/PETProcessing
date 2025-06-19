@@ -7,8 +7,11 @@ filepaths for efficient retrieval, and supporting various neuroimaging file type
 import os
 import pathlib
 import json
+import math
 
 from bids_validator import BIDSValidator
+from .image_io import safe_load_meta
+from .constants import HALF_LIVES
 
 
 def add_description_to_bids_path(filepath: str,
@@ -205,15 +208,29 @@ class BIDS_Metadata_Mender:
     filepath: str
 
     def __init__(self, json_filepath: str):
-        with open(json_filepath, mode='r') as json_file:
-            self.filepath = json_filepath
-            self.metadata = json.load(json_file)
-
-    def add_half_life(self):
-        pass
+        self.metadata = safe_load_meta(input_metadata_file=json_filepath)
+        self.filepath = json_filepath
 
     def add_decay_factors(self):
-        pass
+        """Computes decay factors and adds them to metadata as 'DecayCorrectionFactor'."""
+        metadata = self.metadata
+        if 'FrameReferenceTime' not in metadata: 
+            self.add_frame_reference_times()
+            metadata = self.metadata
+        if 'TracerRadionuclide' in metadata: 
+            half_life = float(HALF_LIVES[metadata['TracerRadionuclide'].lower().replace("-", "")])
+        elif 'RadionuclideHalfLife' in metadata: 
+            half_life = float(metadata['RadionuclideHalfLife'])
+        else:
+            raise KeyError('Metadata does not contain either of the following keys required for calculating' \
+            ' "FrameReferenceTime":\n "TracerRadionuclide" (required by BIDS) or "RadionuclideHalfLife".')
+
+        decay_factors = [math.exp((math.log(2)/half_life)*t) for t in metadata['FrameReferenceTime']]
+        metadata['DecayCorrectionFactor'] = decay_factors
+        metadata.pop('DecayFactor', None)
+
+        self.metadata = metadata
+
 
     def add_image_decay_corrected(self):
         pass
