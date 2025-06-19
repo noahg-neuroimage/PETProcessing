@@ -6,6 +6,7 @@ filepaths for efficient retrieval, and supporting various neuroimaging file type
 """
 import os
 import pathlib
+import json
 
 from bids_validator import BIDSValidator
 
@@ -196,3 +197,34 @@ def gen_bids_like_filepath(sub_id: str, ses_id: str, bids_dir:str ='../',
     filename = gen_bids_like_filename(sub_id=sub_id, ses_id=ses_id, suffix=suffix, ext=ext, **extra_desc)
     filedir  = gen_bids_like_dir_path(sub_id=sub_id, ses_id=ses_id, sup_dir=bids_dir, modality=modality)
     return os.path.join(filedir, filename)
+
+class BIDS_Metadata_Mender:
+    """Class for repairing and filling in the gaps of BIDS metadata based on existing fields."""
+
+    metadata: dict
+    filepath: str
+
+    def __init__(self, json_filepath: str):
+        with open(json_filepath, mode='r') as json_file:
+            self.filepath = json_filepath
+            self.metadata = json.load(json_file)
+
+    def add_half_life(self):
+        pass
+
+    def add_decay_factors(self):
+        pass
+
+    def add_image_decay_corrected(self):
+        pass
+
+    def add_frame_reference_times(self):
+        pass
+
+    def add_frame_times_start(self):
+        pass
+
+    def to_file(self):
+        pass
+
+    
