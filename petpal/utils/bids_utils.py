@@ -223,20 +223,28 @@ class BIDS_Metadata_Mender:
             half_life = float(metadata['RadionuclideHalfLife'])
         else:
             raise KeyError('Metadata does not contain either of the following keys required for calculating' \
-            ' "FrameReferenceTime":\n "TracerRadionuclide" (required by BIDS) or "RadionuclideHalfLife".')
+            ' "DecayCorrectionFactor":\n "TracerRadionuclide" (required by BIDS) or "RadionuclideHalfLife".')
 
         decay_factors = [math.exp((math.log(2)/half_life)*t) for t in metadata['FrameReferenceTime']]
         metadata['DecayCorrectionFactor'] = decay_factors
         metadata.pop('DecayFactor', None)
+        metadata['ImageDecayCorrected'] = 'True'
 
         self.metadata = metadata
-
-
-    def add_image_decay_corrected(self):
-        pass
+        
 
     def add_frame_reference_times(self):
-        pass
+        """Fill in frame reference times if frame starts and durations are present."""
+        metadata = self.metadata
+        required_keys = {'FrameDuration', 'FrameTimesStart'}
+
+        if not required_keys.issubset(metadata.keys()):
+            raise KeyError('Metadata does not contain at least one of the following keys required for filling "FrameReferenceTime":' \
+            ' "FrameDuration" and "FrameTimesStart".')
+        
+
+
+
 
     def add_frame_times_start(self):
         pass
