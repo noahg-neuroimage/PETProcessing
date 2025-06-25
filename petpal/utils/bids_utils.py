@@ -211,20 +211,31 @@ class BIDS_Metadata_Mender:
         self.metadata = safe_load_meta(input_metadata_file=json_filepath)
         self.filepath = json_filepath
 
+
+    def add_half_life(self):
+        """Add "RadionuclideHalfLife" key to metadata."""
+        metadata = self.metadata
+        if 'TracerRadionuclide' in metadata: 
+            metadata['RadionuclideHalfLife'] = float(HALF_LIVES[metadata['TracerRadionuclide'].lower().replace("-", "")])
+        else:
+            raise KeyError('Metadata does not contain the following keys required for determining' \
+            ' "RadionuclideHalfLife":\n "TracerRadionuclide" (required by BIDS).')
+        
+
     def add_decay_factors(self):
         """Computes decay factors and adds them to metadata as 'DecayCorrectionFactor'."""
         metadata = self.metadata
         if 'FrameReferenceTime' not in metadata: 
             self.add_frame_reference_times()
             metadata = self.metadata
-        if 'TracerRadionuclide' in metadata: 
-            half_life = float(HALF_LIVES[metadata['TracerRadionuclide'].lower().replace("-", "")])
-        elif 'RadionuclideHalfLife' in metadata: 
-            half_life = float(metadata['RadionuclideHalfLife'])
+        if 'RadionuclideHalfLife' not in metadata:
+            self.add_half_life()
+            metadata = self.metadata
         else:
             raise KeyError('Metadata does not contain either of the following keys required for calculating' \
             ' "DecayCorrectionFactor":\n "TracerRadionuclide" (required by BIDS) or "RadionuclideHalfLife".')
 
+        half_life = metadata['RadionuclideHalfLife']
         decay_factors = [math.exp((math.log(2)/half_life)*t) for t in metadata['FrameReferenceTime']]
         metadata['DecayCorrectionFactor'] = decay_factors
         metadata.pop('DecayFactor', None)
@@ -242,9 +253,6 @@ class BIDS_Metadata_Mender:
             raise KeyError('Metadata does not contain at least one of the following keys required for filling "FrameReferenceTime":' \
             ' "FrameDuration" and "FrameTimesStart".')
         
-
-
-
 
     def add_frame_times_start(self):
         pass
