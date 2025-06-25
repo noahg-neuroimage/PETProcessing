@@ -212,39 +212,34 @@ class BIDS_Metadata_Mender:
         self.filepath = json_filepath
 
 
-    def add_half_life(self):
+    def __call__(self, decay_correction : bool = False):
+        if 'TracerRadionuclide' in self.metadata:
+            self._add_half_life()
+        if {'RadionuclideHalfLife', 'FrameDuration', 'FrameTimesStart'}.issubset(self.metadata):
+            self._add_frame_reference_times()
+        if decay_correction and {'RadionuclideHalfLife', 'FrameReferenceTime'}.issubset(self.metadata):
+            self._add_decay_factors()
+
+
+    def _add_half_life(self):
         """Add "RadionuclideHalfLife" key to metadata."""
         metadata = self.metadata
-        if 'TracerRadionuclide' in metadata: 
-            metadata['RadionuclideHalfLife'] = float(HALF_LIVES[metadata['TracerRadionuclide'].lower().replace("-", "")])
-        else:
-            raise KeyError('Metadata does not contain the following keys required for determining' \
-            ' "RadionuclideHalfLife":\n "TracerRadionuclide" (required by BIDS).')
-        
+        metadata['RadionuclideHalfLife'] = float(HALF_LIVES[metadata['TracerRadionuclide'].lower().replace("-", "")])
+        self.metadata = metadata
 
-    def add_decay_factors(self):
-        """Computes decay factors and adds them to metadata as 'DecayCorrectionFactor'."""
+
+    def _add_decay_factors(self):
+        """Computes decay factors and adds 'DecayCorrectionFactor' to metadata."""
         metadata = self.metadata
-        if 'FrameReferenceTime' not in metadata: 
-            self.add_frame_reference_times()
-            metadata = self.metadata
-        if 'RadionuclideHalfLife' not in metadata:
-            self.add_half_life()
-            metadata = self.metadata
-        else:
-            raise KeyError('Metadata does not contain either of the following keys required for calculating' \
-            ' "DecayCorrectionFactor":\n "TracerRadionuclide" (required by BIDS) or "RadionuclideHalfLife".')
-
         half_life = metadata['RadionuclideHalfLife']
         decay_factors = [math.exp((math.log(2)/half_life)*t) for t in metadata['FrameReferenceTime']]
         metadata['DecayCorrectionFactor'] = decay_factors
         metadata.pop('DecayFactor', None)
         metadata['ImageDecayCorrected'] = 'True'
-
         self.metadata = metadata
         
 
-    def add_frame_reference_times(self):
+    def _add_frame_reference_times(self):
         """Fill in frame reference times from frame starts and durations."""
         metadata = self.metadata
         required_keys = {'FrameDuration', 'FrameTimesStart'}
@@ -254,17 +249,24 @@ class BIDS_Metadata_Mender:
             ' "FrameDuration" and "FrameTimesStart".')
         
         if 'RadionuclideHalfLife' not in metadata:
-            self.add_half_life()
+            self._add_half_life()
             metadata = self.metadata
 
         half_life = metadata['RadionuclideHalfLife']
         decay_constant = math.log(2)/half_life
-        
+        compute_frame_avg_time = lambda duration: math.log((decay_constant*duration)/(1-math.exp(-decay_constant*duration)))/decay_constant
+        frame_starts = metadata['FrameTimesStart']
+        frame_durations = metadata['FrameDuration']
+        frame_reference_times = [start+compute_frame_avg_time(duration) for start, duration in zip(frame_starts, frame_durations)]
+        metadata['FrameReferenceTime'] = frame_reference_times
+        self.metadata = metadata
 
-    def add_frame_times_start(self):
-        pass
 
-    def to_file(self):
-        pass
+    def to_file(self, filepath : str | None = None):
+        """Write metadata dictionary to a .json file; defaults to overwriting initial file"""
+        if filepath is None: 
+            filepath = self.filepath
+        with open(filepath, 'w') as file:
+            json.dump(self.metadata, file)
 
     
