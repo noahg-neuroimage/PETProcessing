@@ -245,13 +245,20 @@ class BIDS_Metadata_Mender:
         
 
     def add_frame_reference_times(self):
-        """Fill in frame reference times if frame starts and durations are present."""
+        """Fill in frame reference times from frame starts and durations."""
         metadata = self.metadata
         required_keys = {'FrameDuration', 'FrameTimesStart'}
 
         if not required_keys.issubset(metadata.keys()):
             raise KeyError('Metadata does not contain at least one of the following keys required for filling "FrameReferenceTime":' \
             ' "FrameDuration" and "FrameTimesStart".')
+        
+        if 'RadionuclideHalfLife' not in metadata:
+            self.add_half_life()
+            metadata = self.metadata
+
+        half_life = metadata['RadionuclideHalfLife']
+        decay_constant = math.log(2)/half_life
         
 
     def add_frame_times_start(self):
