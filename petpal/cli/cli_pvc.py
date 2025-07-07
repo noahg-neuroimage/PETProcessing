@@ -58,11 +58,10 @@ def main():
 
     args = parser.parse_args()
 
-    if args.method.lower() == "sgtm":
-        sgtm_cli_run(input_image_path=args.input_image,
-                     segmentation_image_path=args.segmentation_image,
-                     fwhm=args.fwhm,
-                     output_path=args.output_path)
+    sgtm_cli_run(input_image_path=args.input_image,
+                 segmentation_image_path=args.segmentation_image,
+                 fwhm=args.fwhm,
+                 output_path=args.output_path)
 
 if __name__ == "__main__":
     main()
