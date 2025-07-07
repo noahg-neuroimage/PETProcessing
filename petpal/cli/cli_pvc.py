@@ -25,14 +25,17 @@ import argparse
 from ..preproc.symmetric_geometric_transfer_matrix import Sgtm
 
 
-def sgtm_cli_run(args):
+def sgtm_cli_run(input_image_path: str,
+                 segmentation_image_path: str,
+                 fwhm: float | tuple[float, float, float],
+                 output_path: str):
     """
     Apply the SGTM method for Partial Volume Correction.
     """
-    sgtm_obj = Sgtm(input_image_path=args.input_image,
-                    segmentation_image_path=args.segmentation_image,
-                    fwhm=args.fwhm)
-    sgtm_obj(output_path=args.output_path)
+    sgtm_obj = Sgtm(input_image_path=input_image_path,
+                    segmentation_image_path=segmentation_image_path,
+                    fwhm=fwhm)
+    sgtm_obj(output_path=output_path)
 
 def main():
     """
@@ -58,7 +61,10 @@ def main():
     args = parser.parse_args()
 
     if args.method.lower() == "sgtm":
-        sgtm_cli_run(args=args)
+        sgtm_cli_run(input_image_path=args.input_image,
+                     segmentation_image_path=args.segmentation_image,
+                     fwhm=args.fwhm,
+                     output_path=args.output_path)
 
 if __name__ == "__main__":
     main()
