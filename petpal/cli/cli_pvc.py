@@ -43,25 +43,38 @@ def main():
     """
     parser = argparse.ArgumentParser(prog="PVC CLI",
                                      description="Apply Partial Volume Correction (PVC) to PET"
-                                                 " images using sGTM.",
+                                                 " images using sGTM. Works on 3D or 4D PET. 3D "
+                                                 "result is the corrected uptake in each region, "
+                                                 "4D result is the corrected TAC for each region.",
                                      epilog="Example of usage: pet-cli-pvc --pet-path"
                                             " /path/to/pet_image.nii --roi-path "
                                             "/path/to/roi_image.nii --fwhm 8.0")
-    parser.add_argument("-i","--input-image", required=True, help="Path to the PET image file.")
-    parser.add_argument("-s","--segmentation_image", required=True,
+    parser.add_argument("-i",
+                        "--input-image",
+                        required=True,
+                        help="Path to the PET image file. Can be 3D or 4D.")
+    parser.add_argument("-s",
+                        "--segmentation_image",
+                        required=True,
                         help="Path to the Segmentation image file.")
-    parser.add_argument("-f","--fwhm", required=True, type=float,
+    parser.add_argument("-f",
+                        "--fwhm",
+                        required=True,
+                        type=float,
                         help="Full Width at Half Maximum for Gaussian blurring (Tuple or single "
                              "float) in mm.")
-    parser.add_argument("-o","--output-path",
-                        help="Path to the output image file.")
+    parser.add_argument("-o",
+                        "--output",
+                        required=True,
+                        help="Path to PVC result. If input image is 3D, writes to a TSV file. If "
+                             "input image is 4D, writes to a directory.")
 
     args = parser.parse_args()
 
     sgtm_cli_run(input_image_path=args.input_image,
                  segmentation_image_path=args.segmentation_image,
                  fwhm=args.fwhm,
-                 output_path=args.output_path)
+                 output_path=args.output)
 
 if __name__ == "__main__":
     main()
