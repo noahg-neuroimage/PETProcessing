@@ -20,70 +20,9 @@ See Also:
     :mod:`SGTM <pet_cli.symmetric_geometric_transfer_matrix>` - module for performing symmetric Geometric Transfer Matrix PVC.
     :mod:`PETPVC <pet_cli.partial_volume_corrections>` - wrapper for PETPVC package.
 """
-
-import os
 import argparse
 
-import docker
-import docker.errors
-
-from ..preproc.partial_volume_corrections import PetPvc
 from ..preproc.symmetric_geometric_transfer_matrix import Sgtm
-
-
-def sanitize_path(path: str) -> str:
-    """
-    Sanitize the given path for Docker command usage by converting it to POSIX format.
-    Args:
-        path (str): The file path to sanitize.
-    Returns:
-        str: The sanitized POSIX path.
-    """
-    return path.replace(os.sep, '/')
-
-
-def petpvc_cli_run(args):
-    """
-    Apply the PETPVC method for Partial Volume Correction.
-    Args:
-        pet_img (nib.Nifti1Image): The 3D PET image.
-        roi_img (nib.Nifti1Image): The 3D Segmentation image.
-        fwhm (float or Tuple): Full Width at Half Maximum for Gaussian blurring.
-        output_path (str): The path where the output image will be saved.
-        debug (bool, optional): Enable debug mode for detailed logs.
-        verbose (bool, optional): Print additional information.
-    """
-    if not args.output_path:
-        raise ValueError("The --output-path argument is required for the PETPVC method.")
-
-    input_image = sanitize_path(args.input_image)
-    output_path = sanitize_path(args.output_path)
-    segmentation_image = sanitize_path(args.segmentation_image) if args.segmentation_image else None
-
-    if args.verbose:
-        print(f"PET Path: {input_image}")
-        print(f"Segmentation Path: {args.segmentation_image}")
-        print(f"Output Path: {output_path}")
-        if segmentation_image:
-            print(f"Mask Path: {segmentation_image}")
-        print(f"FWHM: {args.fwhm}")
-        print(f"Method: {args.method}")
-
-    petpvc_handler = PetPvc()
-
-    try:
-        petpvc_handler.run_petpvc(
-            pet_4d_filepath=input_image,
-            output_filepath=output_path,
-            pvc_method=args.method,
-            psf_dimensions=args.fwhm,
-            mask_filepath=segmentation_image,
-            verbose=args.verbose,
-            debug=args.debug
-        )
-    except docker.errors.ContainerError as e:
-        print(f"ContainerError: {e}")
-        print("Command failed inside the Docker container. Check the above error message for details.")
 
 
 def sgtm_cli_run(args):
@@ -120,8 +59,6 @@ def main():
 
     if args.method.lower() == "sgtm":
         sgtm_cli_run(args=args)
-    else:
-        petpvc_cli_run(args=args)
 
 if __name__ == "__main__":
     main()
