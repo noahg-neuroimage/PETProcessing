@@ -20,6 +20,7 @@ class TacWeight:
         """
         self.weight_method = weight_method
         self.time_activity_curve = time_activity_curve
+        self.weights = None
 
     def weight_tac_simple(self,
                           tac_durations_in_minutes: np.ndarray,
@@ -86,3 +87,11 @@ class TacWeight:
         tac_weights_where_zero = np.where(tac_weights==0)
         tac_sigma[tac_weights_where_zero] = np.inf
         return tac_sigma
+
+
+    def get_weights(self):
+        """Calculate TAC weights and set them to weights attribute. 
+        
+        Method not yet developed.
+        """
+        self.weights = None
