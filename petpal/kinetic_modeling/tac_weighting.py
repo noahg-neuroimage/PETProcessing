@@ -1,9 +1,7 @@
-"""
-Tools for calculating weights for application to kinetic models.
-"""
-
-
+"""Tools for calculating weights for application to kinetic models."""
 import numpy as np
+
+from ..utils.time_activity_curve import TimeActivityCurve
 
 
 def weight_tac_simple(tac_durations_in_minutes: np.ndarray,
@@ -69,3 +67,20 @@ def convert_weights_to_sigma(tac_weights: np.ndarray) -> np.ndarray:
     tac_weights_where_zero = np.where(tac_weights==0)
     tac_sigma[tac_weights_where_zero] = np.inf
     return tac_sigma
+
+class TacWeight:
+    """Determine weighting scheme for Time Activity Curves. Includes options for constant,
+    calculated, or preset weighting.    
+    """
+    def __init__(self,
+                 weight_method: str,
+                 time_activity_curve: TimeActivityCurve):
+        """Initialize TacWeight with provided arguments.
+
+        Args:
+            weight_method (str): Weighting method to apply during kinetic modeling.
+            time_activity_curve (TimeActivityCurve): The time activity curve on which weights are
+                applied.
+        """
+        self.weight_method = weight_method
+        self.time_activity_curve = time_activity_curve
