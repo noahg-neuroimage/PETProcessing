@@ -99,12 +99,15 @@ class TacWeight:
         return tac_sigma
 
 
-    def get_weights(self):
-        """Calculate TAC weights and set them to weights attribute. 
-        
-        Method not yet developed.
+    def set_weights(self):
+        """Set TAC weights to weights attribute.
         """
-        self.weights = None
+        weights = None
+        if self.weight_method=='constant':
+            weights = self.weight_tac_constant()
+
+
+        self.weights = weights
 
 
     def weight_tac_constant(self):
@@ -112,4 +115,12 @@ class TacWeight:
         Get constant weights for the TAC.
         """
         weights = np.ones_like(self.time_activity_curve.activity)
+        return weights
+
+
+    def weight_tac_provided(self):
+        """
+        Get user provided weights for the TAC.
+        """
+        weights = self.time_activity_curve.uncertainty
         return weights
