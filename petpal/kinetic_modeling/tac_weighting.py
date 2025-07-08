@@ -105,3 +105,11 @@ class TacWeight:
         Method not yet developed.
         """
         self.weights = None
+
+
+    def weight_tac_constant(self):
+        """
+        Get constant weights for the TAC.
+        """
+        weights = np.ones_like(self.time_activity_curve.activity)
+        return weights
