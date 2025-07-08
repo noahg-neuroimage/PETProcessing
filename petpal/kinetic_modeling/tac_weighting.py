@@ -35,9 +35,8 @@ class TacWeight:
     def weight_tac_simple(self,
                           tac_durations_in_minutes: np.ndarray,
                           tac_vals: np.ndarray) -> np.ndarray:
-        """
-        Weight a Time Activity Curve (TAC) based on variance. This function applies the simple frame
-        time length to activity ratio found in
+        """Weight a Time Activity Curve (TAC) based on variance. This function applies the simple
+        frame time length to activity ratio found in
         http://www.turkupetcentre.net/petanalysis/model_weighting.html.
 
         Args:
@@ -58,11 +57,10 @@ class TacWeight:
                          tac_vals: np.ndarray,
                          tac_times_in_minutes: np.ndarray,
                          half_life_in_minutes: np.ndarray) -> np.ndarray:
-        """
-        Weight a Time Activity Curve (TAC) based on variance. This function applies the simple frame
-        time length to activity ratio found in
-        http://www.turkupetcentre.net/petanalysis/model_weighting.html with an extra factor for decay
-        correction.
+        """Weight a Time Activity Curve (TAC) based on variance. This function applies the simple
+        frame time length to activity ratio found in
+        http://www.turkupetcentre.net/petanalysis/model_weighting.html with an extra factor for
+        decay correction.
 
         Args:
             tac_durations_in_minutes (np.ndarray): Duration of each frame in the TAC in minutes.
@@ -81,8 +79,7 @@ class TacWeight:
 
 
     def convert_weights_to_sigma(self, tac_weights: np.ndarray) -> np.ndarray:
-        r"""
-        Convert TAC weights to sigma (standard deviation) values. Calculated as
+        r"""Convert TAC weights to sigma (standard deviation) values. Calculated as
         :math:`\sigma=w^{-1/2}`. Returns zero as the sigma value if the weight at that time point is
         zero.
 
@@ -106,21 +103,18 @@ class TacWeight:
         if self.weight_method=='constant':
             weights = self.weight_tac_constant()
 
-
         self.weights = weights
 
 
     def weight_tac_constant(self):
-        """
-        Get constant weights for the TAC.
+        """Get constant weights for the TAC.
         """
         weights = np.ones_like(self.time_activity_curve.activity)
         return weights
 
 
     def weight_tac_provided(self):
-        """
-        Get user provided weights for the TAC.
+        """Get user provided weights for the TAC.
         """
         weights = self.time_activity_curve.uncertainty
         return weights
