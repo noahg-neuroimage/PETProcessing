@@ -22,6 +22,16 @@ class TacWeight:
         self.time_activity_curve = time_activity_curve
         self.weights = None
 
+        self.validate_weight_method()
+
+    def validate_weight_method(self):
+        """Validate the weight_method input parameter is one of: constant, calculated, or provided.
+        """
+        if self.weight_method not in ['constant','calculated','provided']:
+            raise ValueError("weight_method must be one of: 'constant','calculated','provided'."
+                            f"Got {self.weight_method}.")
+
+
     def weight_tac_simple(self,
                           tac_durations_in_minutes: np.ndarray,
                           tac_vals: np.ndarray) -> np.ndarray:
