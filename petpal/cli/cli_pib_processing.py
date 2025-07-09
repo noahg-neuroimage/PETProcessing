@@ -17,6 +17,7 @@ def main():
                                      epilog=_PIB_EXAMPLE_, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--sub',required=True,help='Subject or participant identifier. Note that this should not include "sub-", but only the value, i.e."--sub 001"')
     parser.add_argument('--ses',required=True,help='Session identifier. Note that this should not include "ses-", but only the value, i.e. "--ses 01"')
+    parser.add_argument('--pet-path',required=True,help='Path to 4D pet image')
     parser.add_argument('--anat-path',required=True,help='Path to anatomical image')
     parser.add_argument('--seg-path',required=True,help='Path to segmentation image')
     parser.add_argument('--seg-table-path',required=True,help='Path to segmentation table file (see /shared/dseg.tsv in petpal for an example)')
@@ -29,6 +30,7 @@ def main():
 
     sub_id = args.sub
     ses_id = args.ses
+    pet_path = args.pet_path
     seg_path = args.seg_path
     anat_path = args.anat_path
     bids_dir = args.bids_root
