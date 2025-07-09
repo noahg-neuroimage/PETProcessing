@@ -4,31 +4,35 @@ import petpal
 _PIB_EXAMPLE_ = (r"""
 Example:
     - Run a PIB scan through SUVR pipeline:
-      petpal-pib-proc --sub sub-001 --ses ses-01
+      petpal-pib-proc --sub 001 --ses 01 
 """)
 
 def main():
     parser = argparse.ArgumentParser(prog='petpal-pib-proc',
                                      description='Command line interface for running PIB processing.',
                                      epilog=_PIB_EXAMPLE_, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--sub',required=True,help='Subject or participant identifier')
-    parser.add_argument('--ses',required=True,help='Session identifier')
+    parser.add_argument('--sub',required=True,help='Subject or participant identifier. Note that this should not include "sub-", but only the value, i.e."--sub 001"')
+    parser.add_argument('--ses',required=True,help='Session identifier. Note that this should not include "ses-", but only the value, i.e. "--ses 01"')
+    parser.add_argument('--anat-path',required=True)
+    parser.add_argument('--seg-path',required=True)
+    parser.add_argument('--seg-table-path',required=True)
+    parser.add_argument('--bids-root',required=False)
     args = parser.parse_args()
 
     sub_id = args.sub
     ses_id = args.ses
-    seg_path = f'../derivatives/freesurfer/sub-{sub_id}/ses-{ses_id}/aparc+aseg.nii.gz'
-    anat_path = f'../sub-{sub_id}/ses-{ses_id}/anat/sub-{sub_id}_ses-{ses_id}_T1w.nii.gz'
-    bids_dir = '..'
-    dseg_file = 'dseg.tsv'
+    seg_path = args.seg_path
+    anat_path = args.anat_path
+    bids_dir = '.' if args.bids_root is None else args.bids_root
+    seg_table_path = args.seg_table_path
 
     PiB_Pipeline = petpal.pipelines.pipelines.BIDS_Pipeline(sub_id=sub_id,
                                                             ses_id=ses_id,
-                                                            pipeline_name='PiB_Pipeline',
+                                                            pipeline_name='petpal-pib-cli',
                                                             raw_anat_img_path=anat_path,
                                                             segmentation_img_path=seg_path,
                                                             bids_root_dir=bids_dir,
-                                                            segmentation_label_table_path=dseg_file)
+                                                            segmentation_label_table_path=seg_table_path)
 
 
     preproc_container = petpal.pipelines.steps_containers.StepsContainer(name='preproc')
