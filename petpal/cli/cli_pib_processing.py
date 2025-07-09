@@ -16,7 +16,11 @@ def main():
     parser.add_argument('--anat-path',required=True)
     parser.add_argument('--seg-path',required=True)
     parser.add_argument('--seg-table-path',required=True)
+    parser.add_argument('--ref-region-label',required=True)
+    parser.add_argument('--suvr-start',required=False)
+    parser.add_argument('--suvr-end',required=False)
     parser.add_argument('--bids-root',required=False)
+    
     args = parser.parse_args()
 
     sub_id = args.sub
@@ -25,6 +29,9 @@ def main():
     anat_path = args.anat_path
     bids_dir = '.' if args.bids_root is None else args.bids_root
     seg_table_path = args.seg_table_path
+    suvr_start = args.suvr_start
+    suvr_end = args.suvr_end
+    ref_region_label = args.ref_region_label
 
     PiB_Pipeline = petpal.pipelines.pipelines.BIDS_Pipeline(sub_id=sub_id,
                                                             ses_id=ses_id,
@@ -49,8 +56,8 @@ def main():
                                             input_image_path='',
                                             output_image_path='',
                                             half_life=petpal.utils.constants.HALF_LIVES['c11'],
-                                            start_time=1800,
-                                            end_time=3600)
+                                            start_time=suvr_start,
+                                            end_time=suvr_end)
 
     # Add steps to preproc container
     preproc_container.add_step(step=thresh_crop_step)
@@ -66,7 +73,7 @@ def main():
                                                                 function=petpal.preproc.image_operations_4d.suvr,
                                                                 input_image_path='',
                                                                 output_image_path='',
-                                                                ref_region=8,
+                                                                ref_region=ref_region_label,
                                                                 segmentation_image_path=seg_path,
                                                                 verbose=False)
 
