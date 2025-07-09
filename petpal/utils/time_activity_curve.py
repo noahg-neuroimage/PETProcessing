@@ -177,7 +177,7 @@ class TimeActivityCurve:
         self.activity[self.activity < 0] = 0
         return self
 
-    def evenly_resampled_tac(self, num_samples: int = 4096) -> 'TimeActivityCurve':
+    def evenly_resampled_tac(self, num_samples: int = 8192) -> 'TimeActivityCurve':
         r"""
         Generates a time-activity curve (TAC) resampled at evenly spaced time points.
 
@@ -387,8 +387,10 @@ class TimeActivityCurve:
         assert dt != 0, "dt must be strictly larger than 0."
         if shift_in_mins < 0:
             return TimeActivityCurve.right_shifted_tac(tac=self, shift_in_mins=-shift_in_mins, dt=dt)
-        else:
+        elif shift_in_mins > 0:
             return TimeActivityCurve.left_shifted_tac(tac=self, shift_in_mins=shift_in_mins, dt=dt)
+        else:
+            return TimeActivityCurve(*self.tac_werr)
 
     @staticmethod
     def left_shifted_tac(tac: 'TimeActivityCurve',
