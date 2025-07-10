@@ -131,8 +131,6 @@ class TacWeight:
     @property
     def calculated_weights(self):
         """Get calculated weights for the TAC.
-
-        weights = self.weight_tac_decay()
         """
         weights = self.weight_tac_decay(tac_durations_in_minutes=self.scan_timing.duration_in_mins,
                                         tac_vals=self.time_activity_curve.activity,
