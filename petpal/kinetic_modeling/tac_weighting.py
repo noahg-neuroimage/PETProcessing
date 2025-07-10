@@ -27,6 +27,7 @@ class TacWeight:
 
         self.validate_weight_method()
 
+
     def validate_weight_method(self):
         """Validate the weight_method input parameter is one of: constant, calculated, or provided.
         """
@@ -114,16 +115,27 @@ class TacWeight:
         weights = self.time_activity_curve.uncertainty
         return weights
 
+
+    @property
+    def half_life(self):
+        """The half life in seconds of the radiotracer used in the analysis."""
+        return get_half_life_from_nifti(image_path=self.input_image_path)
+
+
+    @property
+    def scan_timing(self):
+        """The scan timing for the input image used in the analysis."""
+        return ScanTimingInfo.from_nifti(image_path=self.input_image_path)
+
+
     @property
     def calculated_weights(self):
         """Get calculated weights for the TAC.
 
         weights = self.weight_tac_decay()
         """
-        half_life = get_half_life_from_nifti(image_path=self.input_image_path)
-        scan_timing = ScanTimingInfo.from_nifti(image_path=self.input_image_path)
-        weights = self.weight_tac_decay(tac_durations_in_minutes=scan_timing.duration_in_mins,
+        weights = self.weight_tac_decay(tac_durations_in_minutes=self.scan_timing.duration_in_mins,
                                         tac_vals=self.time_activity_curve.activity,
-                                        tac_times_in_minutes=scan_timing.center_in_mins,
-                                        half_life=half_life)
+                                        tac_times_in_minutes=self.scan_timing.center_in_mins,
+                                        half_life=self.half_life)
         return weights
