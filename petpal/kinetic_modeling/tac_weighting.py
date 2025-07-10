@@ -10,7 +10,6 @@ class TacWeight:
     calculated, or preset weighting.    
     """
     def __init__(self,
-                 weight_method: str,
                  time_activity_curve: TimeActivityCurve,
                  input_image_path: str=None):
         """Initialize TacWeight with provided arguments.
@@ -20,20 +19,8 @@ class TacWeight:
             time_activity_curve (TimeActivityCurve): The time activity curve on which weights are
                 applied.
         """
-        self.weight_method = weight_method
         self.time_activity_curve = time_activity_curve
         self.input_image_path = input_image_path
-        self.weights = None
-
-        self.validate_weight_method()
-
-
-    def validate_weight_method(self):
-        """Validate the weight_method input parameter is one of: constant, calculated, or provided.
-        """
-        if self.weight_method not in ['constant','calculated','provided']:
-            raise ValueError("weight_method must be one of: 'constant','calculated','provided'."
-                            f"Got {self.weight_method}.")
 
 
     def weight_tac_simple(self,
@@ -130,10 +117,34 @@ class TacWeight:
 
     @property
     def calculated_weights(self):
-        """Get calculated weights for the TAC.
+        """The calculated weights for the TAC.
         """
         weights = self.weight_tac_decay(tac_durations_in_minutes=self.scan_timing.duration_in_mins,
                                         tac_vals=self.time_activity_curve.activity,
                                         tac_times_in_minutes=self.scan_timing.center_in_mins,
                                         half_life=self.half_life)
         return weights
+
+
+    def __call__(self, weight_method: str) -> np.ndarray:
+        """Get the TAC weights corresponding to the identified method.
+        
+        Args:
+            weight_methood (str): TAC weight type to apply to the model.
+
+        Returns:
+            weights (np.ndarray): The weight applied to each time frame in the model.
+
+        Raises:
+            ValueError: If `weight_method` is not one of: 'constant', 'calculated', or 'provided'.
+        """
+        match weight_method:
+            case 'constant':
+                return self.constant_weights
+            case 'provided':
+                return self.provided_weights
+            case 'calculated':
+                return self.calculated_weights
+            case _:
+                raise ValueError("weight_method must be one of: 'constant','calculated', "
+                                f"'provided'. Got {weight_method}.")
