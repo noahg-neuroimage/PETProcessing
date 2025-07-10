@@ -73,7 +73,7 @@ class Sgtm:
 
 
     @property
-    def sigma(self):
+    def sigma(self) -> list[float]:
         """
         Blurring kernal sigma for sGTM based on the input FWHM.
 
@@ -91,7 +91,7 @@ class Sgtm:
 
 
     @property
-    def unique_labels(self):
+    def unique_labels(self) -> np.ndarray:
         """
         Get unique ROIs for sGTM.
 
@@ -124,6 +124,12 @@ class Sgtm:
                    input_numpy: np.ndarray) -> tuple:
         """
         Set up and solve linear equation for sGTM.
+
+        Args:
+            omega (np.ndarray): The Omega matrix for sGTM. See :meth:`run_sgtm` for details.
+            voxel_by_roi_matrix (np.ndarray): The ``V`` matrix for sGTM. See :meth:`run_sgtm`
+                for more details.
+            input_numpy (np.ndarray): The input 3D PET image converted to numpy array.
         """
         t_vector = voxel_by_roi_matrix.T @ input_numpy.ravel()
         t_corrected = np.linalg.solve(omega, t_vector)
@@ -135,7 +141,7 @@ class Sgtm:
     @staticmethod
     def get_voxel_by_roi_matrix(unique_labels: np.ndarray,
                                 segmentation_arr: np.ndarray,
-                                sigma: list[float]):
+                                sigma: list[float]) -> np.ndarray:
         """
         Get the ``V`` matrix for sGTM by blurring each ROI and converting into vectors. See
         :meth:`run_sgtm` for more details.
@@ -168,15 +174,6 @@ class Sgtm:
         This method involves using a matrix-based approach to adjust the PET signal intensities for
         the effects of partial volume averaging.
 
-        Args:
-            input_image (nib.Nifti1Image): The 3D PET image Nifti1 object.
-            segmentation_image (nib.Nifti1Image): The 3D ROI image, Nifti1 object, must have the
-                same dimensions as `input_image`.
-            fwhm (float | tuple[float, float, float]): Full width at half maximum of the Gaussian 
-                blurring kernel for each dimension.
-            zeroth_roi (bool): If False, ignores the zero label in calculations, often used to 
-                exclude background or non-ROI regions.
-
         Returns:
             Tuple[np.ndarray, np.ndarray, float]:
                 - np.ndarray: Array of unique ROI labels.
@@ -185,16 +182,8 @@ class Sgtm:
                     of the inversion.
 
         Raises:
-            AssertionError: If `input_image` and `segmentation_image` do not have the same
-                dimensions.
-
-        Examples:
-            .. code-block:: python
-
-                input_image = nib.load('path_to_pet_image.nii')
-                segmentation_image = nib.load('path_to_roi_image.nii')
-                fwhm = (8.0, 8.0, 8.0)  # or fwhm = 8.0
-                labels, corrected_values, cond_number = sgtm(input_image, segmentation_image, fwhm)
+            AssertionError: If `self.input_image` and `self.segmentation_image` do not have the
+                same dimensions.
 
         Notes:
             The SGTM method uses the matrix :math:`\Omega` (omega), defined as:
