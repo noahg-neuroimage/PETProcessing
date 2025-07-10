@@ -59,7 +59,7 @@ class TacWeight:
                          tac_durations_in_minutes: np.ndarray,
                          tac_vals: np.ndarray,
                          tac_times_in_minutes: np.ndarray,
-                         half_life_in_minutes: np.ndarray) -> np.ndarray:
+                         half_life: float) -> np.ndarray:
         """Weight a Time Activity Curve (TAC) based on variance. This function applies the simple
         frame time length to activity ratio found in
         http://www.turkupetcentre.net/petanalysis/model_weighting.html with an extra factor for
@@ -69,12 +69,12 @@ class TacWeight:
             tac_durations_in_minutes (np.ndarray): Duration of each frame in the TAC in minutes.
             tac_vals (np.ndarray): Activity values for each frame in the TAC.
             tac_times_in_minutes (np.ndarray): Frame times for the TAC in minutes.
-            half_life_in_minutes (np.ndarray): Half life of the radioisotope in minutes.
+            half_life (np.ndarray): Half life of the radioisotope in seconds.
 
         Returns:
             tac_weights (np.ndarray): Weights to be applied to the TAC during fitting process.
         """
-        decay_factor = np.exp(-np.log(2) / half_life_in_minutes * tac_times_in_minutes)
+        decay_factor = np.exp(-np.log(2) / (half_life / 60) * tac_times_in_minutes)
         tac_weights = tac_durations_in_minutes * decay_factor / tac_vals
         tac_vals_where_zero = np.where(tac_vals==0)
         tac_weights[tac_vals_where_zero] = 0
@@ -125,5 +125,5 @@ class TacWeight:
         weights = self.weight_tac_decay(tac_durations_in_minutes=scan_timing.duration_in_mins,
                                         tac_vals=self.time_activity_curve.activity,
                                         tac_times_in_minutes=scan_timing.center_in_mins,
-                                        half_life_in_minutes=half_life)
+                                        half_life=half_life)
         return weights
