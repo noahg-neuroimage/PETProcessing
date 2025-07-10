@@ -2,7 +2,8 @@
 import numpy as np
 
 from ..utils.time_activity_curve import TimeActivityCurve
-
+from ..utils.image_io import get_half_life_from_nifti
+from ..utils.scan_timing import ScanTimingInfo
 
 class TacWeight:
     """Determine weighting scheme for Time Activity Curves. Includes options for constant,
@@ -10,7 +11,8 @@ class TacWeight:
     """
     def __init__(self,
                  weight_method: str,
-                 time_activity_curve: TimeActivityCurve):
+                 time_activity_curve: TimeActivityCurve,
+                 input_image_path: str=None):
         """Initialize TacWeight with provided arguments.
 
         Args:
@@ -20,6 +22,7 @@ class TacWeight:
         """
         self.weight_method = weight_method
         self.time_activity_curve = time_activity_curve
+        self.input_image_path = input_image_path
         self.weights = None
 
         self.validate_weight_method()
@@ -117,5 +120,10 @@ class TacWeight:
 
         weights = self.weight_tac_decay()
         """
-        weights = None
+        half_life = get_half_life_from_nifti(image_path=self.input_image_path)
+        scan_timing = ScanTimingInfo.from_nifti(image_path=self.input_image_path)
+        weights = self.weight_tac_decay(tac_durations_in_minutes=scan_timing.duration_in_mins,
+                                        tac_vals=self.time_activity_curve.activity,
+                                        tac_times_in_minutes=scan_timing.center_in_mins,
+                                        half_life_in_minutes=half_life)
         return weights
