@@ -87,6 +87,24 @@ class TacWeight:
         return tac_sigma
 
 
+    def convert_sigma_to_weights(self, tac_uncertainty: np.ndarray) -> np.ndarray:
+        r"""Convert TAC sigma (standard deviation) to weights. Calculated as
+        :math:`w=\sigma^{-2}`. Returns zero as the sigma value if the sigma at that time point is
+        inf.
+
+        Args:
+            tac_weights (np.ndarray): Weights calculated using :meth:`weight_tac_simple` or
+            `weight_tac_decay`.
+
+        Returns:
+            tac_sigma (np.ndarray): Array of sigmas calculated from the weights.
+        """
+        tac_weight = np.power(tac_uncertainty,-2)
+        tac_sigma_where_inf = np.where(tac_uncertainty==np.inf)
+        tac_weight[tac_sigma_where_inf] = 0
+        return tac_weight
+
+
     @property
     def constant_weights(self):
         """Get constant weights for the TAC.
@@ -99,7 +117,8 @@ class TacWeight:
     def provided_weights(self):
         """Get user provided weights for the TAC.
         """
-        weights = self.time_activity_curve.uncertainty
+        sigma = self.time_activity_curve.uncertainty
+        weights = self.convert_sigma_to_weights(tac_uncertainty=sigma)
         return weights
 
 
