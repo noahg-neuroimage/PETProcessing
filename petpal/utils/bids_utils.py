@@ -8,6 +8,7 @@ import os
 import pathlib
 import json
 import math
+from itertools import accumulate
 
 from bids_validator import BIDSValidator
 from .image_io import safe_load_meta
@@ -213,12 +214,19 @@ class BIDS_Metadata_Mender:
 
 
     def __call__(self, decay_correction : bool = False):
+        updated_keys = []
+        if 'FrameDuration' in self.metadata:
+            self._add_frame_times_start()
+            updated_keys.append('FrameTimesStart')
         if 'TracerRadionuclide' in self.metadata:
             self._add_half_life()
+            updated_keys.append('RadionuclideHalfLife')
         if {'RadionuclideHalfLife', 'FrameDuration', 'FrameTimesStart'}.issubset(self.metadata):
             self._add_frame_reference_times()
+            updated_keys.append('FrameReferenceTime')
         if decay_correction and {'RadionuclideHalfLife', 'FrameReferenceTime'}.issubset(self.metadata):
             self._add_decay_factors()
+            updated_keys.append('DecayCorrectionFactor')
 
 
     def _add_half_life(self):
@@ -238,6 +246,19 @@ class BIDS_Metadata_Mender:
         metadata['ImageDecayCorrected'] = 'True'
         self.metadata = metadata
         
+
+    def _add_frame_times_start(self):
+        """Fill in frame starts from frame durations, assuming first frame starts at 0."""
+        metadata = self.metadata
+        if 'FrameDuration' not in metadata:
+            raise KeyError('Metadata does not contain the key "FrameDuration", which is required to filling "FrameTimesStart.')
+
+        frame_durations = metadata['FrameDuration']
+        frame_starts = [0]
+        frame_starts = frame_starts + list(accumulate(frame_durations[:-1]))
+        metadata['FrameTimesStart'] = frame_starts
+        self.metadata = metadata
+
 
     def _add_frame_reference_times(self):
         """Fill in frame reference times from frame starts and durations."""
