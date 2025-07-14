@@ -213,7 +213,7 @@ class BIDS_Metadata_Mender:
         self.filepath = json_filepath
 
 
-    def __call__(self, decay_correction : bool = False):
+    def __call__(self, decay_correction : bool = False, output_filepath : str | None = None):
         updated_keys = []
         if 'FrameDuration' in self.metadata:
             self._add_frame_times_start()
@@ -227,6 +227,8 @@ class BIDS_Metadata_Mender:
         if decay_correction and {'RadionuclideHalfLife', 'FrameReferenceTime'}.issubset(self.metadata):
             self._add_decay_factors()
             updated_keys.append('DecayCorrectionFactor')
+        self.to_file(output_filepath)
+        print(f'The following keys were updated and written to {output_filepath}: {updated_keys}')
 
 
     def _add_half_life(self):
