@@ -207,13 +207,15 @@ class BIDS_Metadata_Mender:
 
     metadata: dict
     filepath: str
+    decay_correction: bool
 
-    def __init__(self, json_filepath: str):
+    def __init__(self, json_filepath: str, decay_correction: bool = False):
         self.metadata = safe_load_meta(input_metadata_file=json_filepath)
         self.filepath = json_filepath
+        self.decay_correction = decay_correction
 
 
-    def __call__(self, decay_correction : bool = False, output_filepath : str | None = None):
+    def __call__(self, output_filepath : str | None = None):
         updated_keys = []
         if 'FrameDuration' in self.metadata:
             self._add_frame_times_start()
@@ -224,7 +226,7 @@ class BIDS_Metadata_Mender:
         if {'RadionuclideHalfLife', 'FrameDuration', 'FrameTimesStart'}.issubset(self.metadata):
             self._add_frame_reference_times()
             updated_keys.append('FrameReferenceTime')
-        if decay_correction and {'RadionuclideHalfLife', 'FrameReferenceTime'}.issubset(self.metadata):
+        if self.decay_correction and {'RadionuclideHalfLife', 'FrameReferenceTime'}.issubset(self.metadata):
             self._add_decay_factors()
             updated_keys.append('DecayCorrectionFactor')
         self.to_file(output_filepath)
@@ -285,7 +287,7 @@ class BIDS_Metadata_Mender:
         self.metadata = metadata
 
 
-    def to_file(self, filepath : str | None = None):
+    def _to_file(self, filepath : str | None = None):
         """Write metadata dictionary to a .json file; defaults to overwriting initial file"""
         if filepath is None: 
             filepath = self.filepath
