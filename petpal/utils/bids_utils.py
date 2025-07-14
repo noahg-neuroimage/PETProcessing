@@ -233,7 +233,10 @@ class BIDS_Metadata_Mender:
             updated_keys.append('FrameReferenceTime')
         if self.decay_correction and {'RadionuclideHalfLife', 'FrameReferenceTime'}.issubset(self.metadata):
             self._add_decay_factors()
-            updated_keys.append('DecayCorrectionFactor')
+            updated_keys += updated_keys + ['DecayCorrectionFactor','ImageDecayCorrected']
+        else: 
+            self._add_empty_decay_factors()
+            updated_keys += updated_keys + ['DecayCorrectionFactor','ImageDecayCorrected']
         print(f'The following keys were updated: {updated_keys}')
 
 
@@ -243,6 +246,16 @@ class BIDS_Metadata_Mender:
         metadata['RadionuclideHalfLife'] = float(HALF_LIVES[metadata['TracerRadionuclide'].lower().replace("-", "")])
         self.metadata = metadata
 
+
+    def _add_empty_decay_factors(self):
+        """Adds a list of ones for decay factors and sets 'ImageDecayCorrected' to False."""
+        metadata = self.metadata
+        frame_durations = metadata['FrameDuration']
+        decay_factors = [1 for i in frame_durations]
+        metadata['DecayCorrectionFactor'] = decay_factors
+        metadata['ImageDecayCorrected'] = 'False'
+        self.metadata = metadata
+        
 
     def _add_decay_factors(self):
         """Computes decay factors and adds 'DecayCorrectionFactor' to metadata."""
@@ -296,6 +309,7 @@ class BIDS_Metadata_Mender:
         if filepath is None: 
             filepath = self.filepath
         with open(filepath, 'w') as file:
-            json.dump(self.metadata, file)
+            json.dump(self.metadata, file, indent=4)
+        print(f'Data written to {filepath}')
 
     
