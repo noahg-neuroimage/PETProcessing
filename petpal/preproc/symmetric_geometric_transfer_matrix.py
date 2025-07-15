@@ -167,7 +167,7 @@ class Sgtm:
         return voxel_by_roi_matrix.astype(np.float32)
 
 
-    def run_sgtm(self) -> tuple[np.ndarray, np.ndarray, float]:
+    def run_sgtm_3d(self) -> tuple[np.ndarray, np.ndarray, float]:
         r"""
         Apply Symmetric Geometric Transfer Matrix (SGTM) method for Partial Volume Correction 
         (PVC) to PET images based on ROI labels.
@@ -267,10 +267,12 @@ class Sgtm:
         return np.asarray(frame_results)
 
 
-    @staticmethod
-    def save_results(sgtm_result: tuple, out_tsv_path: str):
+    def save_results_3d(self, sgtm_result: tuple, out_tsv_path: str):
         """
         Saves the result of an sGTM calculation.
+
+        Result is saved as one value for each of the unique regions found in the segmentation
+        image.
 
         Args:
             sgtm_result (tuple): Output of :meth:`run_sgtm`
@@ -283,11 +285,13 @@ class Sgtm:
                    comments='')
 
 
-    def save_results_by_region(self,
-                               sgtm_result: np.ndarray,
-                               out_tac_dir: str):
+    def save_results_4d_tacs(self,
+                             sgtm_result: np.ndarray,
+                             out_tac_dir: str):
         """
-        Saves the result of an sGTM calculation.
+        Saves the result of an sGTM calculation on a 4D PET series.
+
+        Result is saved as a TAC for each of the unique regions found in the segmentation image.
 
         Args:
             sgtm_result (np.ndarray): Array of results from :meth:`run_sgtm_4d`
@@ -320,7 +324,7 @@ class Sgtm:
         Determine whether input image is 3D or 4D and run the correct sGTM method.
         """
         if self.input_image.dimension==3:
-            self.sgtm_result = self.run_sgtm()
+            self.sgtm_result = self.run_sgtm_3d()
 
         elif self.input_image.dimension==4:
             self.sgtm_result = self.run_sgtm_4d()
@@ -335,9 +339,9 @@ class Sgtm:
                 4D images, this is a directory. 
         """
         if self.input_image.dimension==3:
-            self.save_results(sgtm_result=self.sgtm_result, out_tsv_path=output_path)
+            self.save_results_3d(sgtm_result=self.sgtm_result, out_tsv_path=output_path)
         elif self.input_image.dimension==4:
-            self.save_results_by_region(sgtm_result=self.sgtm_result, out_tac_dir=output_path)
+            self.save_results_4d_tacs(sgtm_result=self.sgtm_result, out_tac_dir=output_path)
 
 
     def __call__(self, output_path: str):
