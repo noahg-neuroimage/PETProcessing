@@ -70,6 +70,7 @@ class Sgtm:
         self.segmentation_image = ants.image_read(segmentation_image_path)
         self.fwhm = fwhm
         self.zeroth_roi = zeroth_roi
+        self.sgtm_result = None
 
 
     @property
@@ -314,6 +315,17 @@ class Sgtm:
             pvc_tac.to_tsv(filename=out_tac_path)
 
 
+    def run(self):
+        """
+        Determine whether input image is 3D or 4D and run the correct sGTM method.
+        """
+        if self.input_image.dimension==3:
+            self.sgtm_result = self.run_sgtm()
+
+        elif self.input_image.dimension==4:
+            self.sgtm_result = self.run_sgtm_4d()
+
+
     def __call__(self, output_path: str):
         """
         Run sGTM and save results.
@@ -325,11 +337,8 @@ class Sgtm:
             output_path (str): Path to save sGTM results. For 3D images, this is a .tsv file. For
                 4D images, this is a directory. 
         """
-        if self.input_image.dimension==3:
-            sgtm_result = self.run_sgtm()
-            self.save_results(sgtm_result=sgtm_result, out_tsv_path=output_path)
+        self.run()
+        self.save_results(sgtm_result=sgtm_result, out_tsv_path=output_path)
 
-        elif self.input_image.dimension==4:
-            sgtm_result = self.run_sgtm_4d()
-            self.save_results_by_region(sgtm_result=sgtm_result,
-                                        out_tac_dir=output_path)
+        self.save_results_by_region(sgtm_result=sgtm_result,
+                                    out_tac_dir=output_path)
