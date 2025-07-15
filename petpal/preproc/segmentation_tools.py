@@ -562,8 +562,10 @@ def unique_segmentation_labels(segmentation_img: ants.core.ANTsImage | np.ndarra
         labels (np.ndarray): Array of unique integers in the segmentation image.
     """
     if isinstance(segmentation_img, ants.core.ANTsImage):
-        segmentation_img = segmentation_img.numpy()
-    labels = np.unique(segmentation_img)
+        segmentation_arr = segmentation_img.numpy()
+    else:
+        segmentation_arr = segmentation_img
+    labels = np.unique(segmentation_arr)
     labels = labels.astype(np.uint32)
     if not zeroth_roi:
         labels = labels[labels != 0]
