@@ -137,10 +137,25 @@ class TacWeight:
         return ScanTimingInfo.from_nifti(image_path=self.input_image_path)
 
 
+    def validate_scan_timing(self):
+        """Validate the input image successfully retrieved scan_timing property for calculating
+        TAC weights.
+        
+        Raises:
+            TypeError: When property self.scan_timing returns a TypeError on attempt to access."""
+        try:
+            self.scan_timing
+        except TypeError as exc:
+            raise TypeError("Could not read scan timing from input image. Make sure to provide "
+                            "input_image_path when using calculated weights. input_image_path "
+                            f"currently set to: {self.input_image_path}.") from exc
+
+
     @property
     def calculated_weights(self):
         """The calculated weights for the TAC.
         """
+        self.validate_scan_timing()
         weights = self.weight_tac_decay(tac_durations_in_minutes=self.scan_timing.duration_in_mins,
                                         tac_vals=self.time_activity_curve.activity,
                                         tac_times_in_minutes=self.scan_timing.center_in_mins,
