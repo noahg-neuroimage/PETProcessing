@@ -322,6 +322,10 @@ class Sgtm:
     def run(self):
         """
         Determine whether input image is 3D or 4D and run the correct sGTM method.
+
+        If input image is 3D, implied usage is getting the average sGTM value for each region in
+        the volume. If input image is 4D, implied usage is getting a time series average value for
+        each frame in image within each region.
         """
         if self.input_image.dimension==3:
             self.sgtm_result = self.run_sgtm_3d()
@@ -333,6 +337,10 @@ class Sgtm:
     def save(self, output_path):
         """
         Save sGTM results by writing the resulting array to one or more files.
+
+        If input image is 3D, saves the average sGTM value for each region in a TSV with one line
+        per region. If input image is 4D, saves time series average value for each frame within
+        each region as a TAC file.
 
         Args:
             output (str): Path to save sGTM results. For 3D images, this is a .tsv file. For
