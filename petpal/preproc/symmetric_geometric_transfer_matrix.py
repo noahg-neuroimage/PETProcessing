@@ -308,12 +308,12 @@ class Sgtm:
             pvc_tac = TimeActivityCurve(times=frame_timing.center_in_mins,
                                         activity=tac_array[i,:])
             if sub_id=='XXXX' or ses_id=='XX':
-                tac_filename = f'seg-{int(label)}_tac.tsv'
+                tac_filename = f'seg-{label}_tac.tsv'
             else:
                 tac_filename = gen_bids_like_filename(sub_id=sub_id,
                                                     ses_id=ses_id,
                                                     suffix='tac',
-                                                    seg=int(label),
+                                                    seg=label,
                                                     ext='.tsv')
             out_tac_path = os.path.join(out_tac_dir, tac_filename)
             pvc_tac.to_tsv(filename=out_tac_path)
