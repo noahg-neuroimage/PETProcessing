@@ -89,7 +89,8 @@ class TacWeight:
         return tac_sigma
 
 
-    def convert_sigma_to_weights(self, tac_uncertainty: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def convert_sigma_to_weights(tac_uncertainty: np.ndarray) -> np.ndarray:
         r"""Convert TAC sigma (standard deviation) to weights. Calculated as
         :math:`w=\sigma^{-2}`. Returns zero as the sigma value if the sigma at that time point is
         inf.
