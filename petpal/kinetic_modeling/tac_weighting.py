@@ -15,9 +15,11 @@ class TacWeight:
         """Initialize TacWeight with provided arguments.
 
         Args:
-            weight_method (str): Weighting method to apply during kinetic modeling.
             time_activity_curve (TimeActivityCurve): The time activity curve on which weights are
                 applied.
+            input_image_path (str): Path to the PET image used to create the TAC supplied to
+                object. Used only to retrieve scan timing and half life information for calculated
+                TAC weights. Default None.
         """
         self.time_activity_curve = time_activity_curve
         self.input_image_path = input_image_path
