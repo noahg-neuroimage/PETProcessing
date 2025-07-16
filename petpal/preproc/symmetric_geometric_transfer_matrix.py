@@ -302,7 +302,7 @@ class Sgtm:
         frame_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
         sub_id, ses_id = parse_path_to_get_subject_and_session_id(path=input_image_path)
 
-        tac_array = np.array([sgtm_result[i] for i in range(len(sgtm_result))]).T
+        tac_array = np.asarray(sgtm_result).T
 
         for i, label in enumerate(self.unique_labels):
             pvc_tac = TimeActivityCurve(times=frame_timing.center_in_mins,
