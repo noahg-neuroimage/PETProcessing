@@ -1,16 +1,8 @@
-from . import cli_graphical_plots
-from . import cli_graphical_analysis
-from . import cli_parametric_images
-from . import cli_reference_tissue_models
-from . import cli_tac_fitting
-from . import cli_tac_interpolation
-from . import cli_preproc
-from . import cli_plot_tacs
-
-def main():
-    print("PETPAL - Positron Emission Tomography Processing and Analysis Library)")
-
-
-if __name__ == "__main__":
-    main()
-    
+from .cli_graphical_plots import *
+from .cli_graphical_analysis import *
+from .cli_parametric_images import *
+from .cli_reference_tissue_models import *
+from .cli_tac_fitting import *
+from .cli_tac_interpolation import *
+from .cli_preproc import *
+from .cli_plot_tacs import *
