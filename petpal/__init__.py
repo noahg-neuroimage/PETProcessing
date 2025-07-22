@@ -1,3 +1,6 @@
+
+__version__ = '0.3.7'
+
 from . import kinetic_modeling
 from . import input_function
 from . import preproc
