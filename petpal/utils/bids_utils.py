@@ -8,10 +8,11 @@ import os
 import pathlib
 import json
 import math
+import shutil
 from itertools import accumulate
 
 from bids_validator import BIDSValidator
-from .image_io import safe_load_meta
+from .image_io import safe_load_meta, write_dict_to_json
 from .constants import HALF_LIVES
 
 
@@ -305,11 +306,10 @@ class BIDS_Metadata_Mender:
 
 
     def _to_file(self, filepath : str | None = None):
-        """Write metadata dictionary to a .json file; defaults to overwriting initial file"""
+        """Write metadata dictionary to a .json file; defaults to making a backup file *.bak before overwriting the initial .json."""
         if filepath is None: 
             filepath = self.filepath
-        with open(filepath, 'w') as file:
-            json.dump(self.metadata, file, indent=4)
-        print(f'Data written to {filepath}')
+            shutil.copyfile(src=filepath, dst=filepath+".bak")
+        write_dict_to_json(meta_data_dict=self.metadata, out_path=filepath)
 
     
