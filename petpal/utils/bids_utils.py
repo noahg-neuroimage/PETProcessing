@@ -233,10 +233,10 @@ class BIDS_Metadata_Mender:
             updated_keys.append('FrameReferenceTime')
         if self.decay_correction and {'RadionuclideHalfLife', 'FrameReferenceTime'}.issubset(self.metadata):
             self._add_decay_factors()
-            updated_keys += updated_keys + ['DecayCorrectionFactor','ImageDecayCorrected']
+            updated_keys += ['DecayCorrectionFactor','ImageDecayCorrected']
         else: 
             self._add_empty_decay_factors()
-            updated_keys += updated_keys + ['DecayCorrectionFactor','ImageDecayCorrected']
+            updated_keys += ['DecayCorrectionFactor','ImageDecayCorrected']
         print(f'The following keys were updated: {updated_keys}')
 
 
@@ -255,7 +255,7 @@ class BIDS_Metadata_Mender:
         metadata['DecayCorrectionFactor'] = decay_factors
         metadata['ImageDecayCorrected'] = 'False'
         self.metadata = metadata
-        
+
 
     def _add_decay_factors(self):
         """Computes decay factors and adds 'DecayCorrectionFactor' to metadata."""
