@@ -272,9 +272,6 @@ class BidsMetadataMender:
     def _add_frame_times_start(self):
         """Fill in frame starts from frame durations, assuming first frame starts at 0."""
         metadata = self.metadata
-        if 'FrameDuration' not in metadata:
-            raise KeyError('Metadata does not contain the key "FrameDuration", which is required to filling "FrameTimesStart.')
-
         frame_durations = metadata['FrameDuration']
         frame_starts = [0]
         frame_starts = frame_starts + list(accumulate(frame_durations[:-1]))
@@ -285,16 +282,6 @@ class BidsMetadataMender:
     def _add_frame_reference_times(self):
         """Fill in frame reference times from frame starts and durations."""
         metadata = self.metadata
-        required_keys = {'FrameDuration', 'FrameTimesStart'}
-
-        if not required_keys.issubset(metadata.keys()):
-            raise KeyError('Metadata does not contain at least one of the following keys required for filling "FrameReferenceTime":' \
-            ' "FrameDuration" and "FrameTimesStart".')
-        
-        if 'RadionuclideHalfLife' not in metadata:
-            self._add_half_life()
-            metadata = self.metadata
-
         half_life = metadata['RadionuclideHalfLife']
         decay_constant = math.log(2)/half_life
         compute_frame_avg_time = lambda duration: math.log((decay_constant*duration)/(1-math.exp(-decay_constant*duration)))/decay_constant
