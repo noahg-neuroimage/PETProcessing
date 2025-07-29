@@ -14,6 +14,7 @@ from itertools import accumulate
 from bids_validator import BIDSValidator
 from .image_io import safe_load_meta, write_dict_to_json
 from .constants import HALF_LIVES
+from ..preproc.decay_correction import calculate_frame_decay_factor
 
 
 def add_description_to_bids_path(filepath: str,
@@ -217,11 +218,11 @@ class BidsMetadataMender:
 
 
     def __call__(self, output_filepath : str | None = None):
-        self._run()
+        self._add_missing_keys()
         self._to_file(output_filepath)
         
 
-    def _run(self):
+    def _add_missing_keys(self):
         updated_keys = []
         if 'FrameDuration' in self.metadata:
             self._add_frame_times_start()
@@ -262,7 +263,7 @@ class BidsMetadataMender:
         """Computes decay factors and adds 'DecayCorrectionFactor' to metadata."""
         metadata = self.metadata
         half_life = metadata['RadionuclideHalfLife']
-        decay_factors = [math.exp((math.log(2)/half_life)*t) for t in metadata['FrameReferenceTime']]
+        decay_factors = [calculate_frame_decay_factor(frame_reference_time=t, half_life=half_life) for t in metadata['FrameReferenceTime']]
         metadata['DecayCorrectionFactor'] = decay_factors
         metadata.pop('DecayFactor', None)
         metadata['ImageDecayCorrected'] = 'True'
