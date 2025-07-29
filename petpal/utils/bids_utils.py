@@ -15,6 +15,7 @@ from bids_validator import BIDSValidator
 from .image_io import safe_load_meta, write_dict_to_json
 from .constants import HALF_LIVES
 from ..preproc.decay_correction import calculate_frame_decay_factor
+from .scan_timing import calculate_frame_reference_time
 
 
 def add_description_to_bids_path(filepath: str,
@@ -284,11 +285,9 @@ class BidsMetadataMender:
         """Fill in frame reference times from frame starts and durations."""
         metadata = self.metadata
         half_life = metadata['RadionuclideHalfLife']
-        decay_constant = math.log(2)/half_life
-        compute_frame_avg_time = lambda duration: math.log((decay_constant*duration)/(1-math.exp(-decay_constant*duration)))/decay_constant
         frame_starts = metadata['FrameTimesStart']
         frame_durations = metadata['FrameDuration']
-        frame_reference_times = [start+compute_frame_avg_time(duration) for start, duration in zip(frame_starts, frame_durations)]
+        frame_reference_times = [calculate_frame_reference_time(frame_duration=duration,frame_start=start,half_life=half_life) for start, duration in zip(frame_starts, frame_durations)]
         metadata['FrameReferenceTime'] = frame_reference_times
         self.metadata = metadata
 
