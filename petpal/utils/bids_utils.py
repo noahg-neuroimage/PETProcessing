@@ -246,7 +246,9 @@ class BidsMetadataMender:
     def _add_half_life(self):
         """Add "RadionuclideHalfLife" key to metadata."""
         metadata = self.metadata
-        metadata['RadionuclideHalfLife'] = float(HALF_LIVES[metadata['TracerRadionuclide'].lower().replace("-", "")])
+        radionuclide = metadata['TracerRadionuclide'].lower().replace("-", "")
+        half_life = float(HALF_LIVES[radionuclide])
+        metadata['RadionuclideHalfLife'] = half_life
         self.metadata = metadata
 
 
