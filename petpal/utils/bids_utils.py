@@ -203,7 +203,7 @@ def gen_bids_like_filepath(sub_id: str, ses_id: str, bids_dir:str ='../',
     filedir  = gen_bids_like_dir_path(sub_id=sub_id, ses_id=ses_id, sup_dir=bids_dir, modality=modality)
     return os.path.join(filedir, filename)
 
-class BIDS_Metadata_Mender:
+class BidsMetadataMender:
     """Class for repairing and filling in the gaps of BIDS metadata based on existing fields."""
 
     metadata: dict
