@@ -45,11 +45,7 @@ class TacWeight:
         return tac_weights
 
 
-    def weight_tac_decay(self,
-                         tac_durations_in_minutes: np.ndarray,
-                         tac_vals: np.ndarray,
-                         tac_times_in_minutes: np.ndarray,
-                         half_life: float) -> np.ndarray:
+    def weight_tac_decay(self) -> np.ndarray:
         """Weight a Time Activity Curve (TAC) based on variance. This function applies the simple
         frame time length to activity ratio found in
         http://www.turkupetcentre.net/petanalysis/model_weighting.html with an extra factor for
@@ -64,6 +60,8 @@ class TacWeight:
         Returns:
             tac_weights (np.ndarray): Weights to be applied to the TAC during fitting process.
         """
+        half_life = get_half_life_from_nifti(image_path=self.input_image_path)
+
         decay_factor = np.exp(-np.log(2) / (half_life / 60) * tac_times_in_minutes)
         tac_weights = tac_durations_in_minutes * decay_factor / tac_vals
         tac_vals_where_zero = np.where(tac_vals==0)
