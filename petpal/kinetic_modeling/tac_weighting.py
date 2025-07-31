@@ -1,5 +1,6 @@
 """Tools for calculating weights for application to kinetic models."""
 import numpy as np
+import ants
 
 from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.image_io import get_half_life_from_nifti
@@ -62,10 +63,15 @@ class TacWeight:
             tac_weights (np.ndarray): Weights to be applied to the TAC during fitting process.
         """
         half_life = get_half_life_from_nifti(image_path=self.input_image_path)
+        tac_times = self.scan_timing.center_in_mins
+        tac_durations = self.scan_timing.duration_in_mins
 
-        decay_factor = np.exp(-np.log(2) / (half_life / 60) * tac_times_in_minutes)
-        tac_weights = tac_durations_in_minutes * decay_factor / tac_vals
-        tac_vals_where_zero = np.where(tac_vals==0)
+        input_img = ants.image_read(filename=self.input_image_path)
+        img_vals = input_img.sum(axis=(0,1,2))
+
+        decay_factor = np.exp(-np.log(2) / (half_life / 60) * tac_times)
+        tac_weights = tac_durations * decay_factor / img_vals
+        tac_vals_where_zero = np.where(img_vals==0)
         tac_weights[tac_vals_where_zero] = 0
         return tac_weights
 
