@@ -130,12 +130,6 @@ class TacWeight:
         return weights
 
 
-    @property
-    def half_life(self):
-        """The half life in seconds of the radiotracer used in the analysis."""
-        return get_half_life_from_nifti(image_path=self.input_image_path)
-
-
     def validate_scan_timing(self):
         """Validate the input image successfully retrieved scan_timing property for calculating
         TAC weights.
@@ -155,10 +149,7 @@ class TacWeight:
         """The calculated weights for the TAC.
         """
         self.validate_scan_timing()
-        weights = self.weight_tac_decay(tac_durations_in_minutes=self.scan_timing.duration_in_mins,
-                                        tac_vals=self.time_activity_curve.activity,
-                                        tac_times_in_minutes=self.scan_timing.center_in_mins,
-                                        half_life=self.half_life)
+        weights = self.weight_tac_decay()
         return weights
 
 
