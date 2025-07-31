@@ -23,6 +23,7 @@ class TacWeight:
         """
         self.time_activity_curve = time_activity_curve
         self.input_image_path = input_image_path
+        self.scan_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
 
 
     def weight_tac_simple(self,
@@ -127,12 +128,6 @@ class TacWeight:
     def half_life(self):
         """The half life in seconds of the radiotracer used in the analysis."""
         return get_half_life_from_nifti(image_path=self.input_image_path)
-
-
-    @property
-    def scan_timing(self):
-        """The scan timing for the input image used in the analysis."""
-        return ScanTimingInfo.from_nifti(image_path=self.input_image_path)
 
 
     def validate_scan_timing(self):
