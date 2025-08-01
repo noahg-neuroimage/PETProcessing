@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "petpal"
-version = "0.3.5"
+version = "0.3.7"
 description = "PET-PAL (Positron Emission Tomography Processing and Analysis Library)"
 authors = [
     {name = "Furqan Dar", email = "dar@wustl.edu"},
@@ -56,7 +56,6 @@ classifiers = [  # These are added to PyPI package when published; Used for sear
     petpal-tcm-fit = "petpal.cli.cli_tac_fitting:main"
     petpal-rtms = "petpal.cli.cli_reference_tissue_models:main"
     petpal-vat-proc = "petpal.cli.cli_vat_processing:main"
-    petpal-brier-fdg-pipeline = "petpal.cli.cli_brier_fdg_processing:main"
     petpal-pib-proc = "petpal.cli.cli_pib_processing:main"
     petpal-pvc = "petpal.cli.cli_pvc:main"
     petpal-plot-tacs = "petpal.cli.cli_plot_tacs:main"
