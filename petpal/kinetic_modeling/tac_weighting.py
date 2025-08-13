@@ -6,7 +6,8 @@ from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.image_io import get_half_life_from_nifti
 from ..utils.scan_timing import ScanTimingInfo
 
-class TacWeight:
+
+class ModelUncertainty:
     """Determine weighting scheme for Time Activity Curves. Includes options for constant,
     calculated, or preset weighting.    
     """
