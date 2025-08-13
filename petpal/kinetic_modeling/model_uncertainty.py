@@ -28,9 +28,9 @@ class ModelUncertainty:
         self.scan_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
 
 
-    def weight_tac_simple(self,
-                          tac_durations_in_minutes: np.ndarray,
-                          tac_vals: np.ndarray) -> np.ndarray:
+    def poisson_duration_error(self,
+                               tac_durations_in_minutes: np.ndarray,
+                               tac_vals: np.ndarray) -> np.ndarray:
         """Weight a Time Activity Curve (TAC) based on variance. This function applies the simple
         frame time length to activity ratio found in
         http://www.turkupetcentre.net/petanalysis/model_weighting.html.
@@ -42,10 +42,12 @@ class ModelUncertainty:
         Returns:
             tac_weights (np.ndarray): Weights to be applied to the TAC during fitting process.
         """
-        tac_weights = tac_durations_in_minutes/tac_vals
+        uncertainty = np.empty_like(tac_vals)
+        count_rate = tac_vals/tac_durations_in_minutes
+        uncertainty = np.power(count_rate, 2)
         tac_vals_where_zero = np.where(tac_vals==0)
-        tac_weights[tac_vals_where_zero] = 0
-        return tac_weights
+        uncertainty[tac_vals_where_zero] = 0
+        return uncertainty
 
 
     def weight_tac_decay(self) -> np.ndarray:
