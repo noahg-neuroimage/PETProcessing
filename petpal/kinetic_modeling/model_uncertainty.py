@@ -40,7 +40,8 @@ class ModelUncertainty:
 
         Currently placeholder function.
         """
-        return None
+        raise NotImplementedError('Calculated uncertainty model for PET not yet implemented. Use '
+                                  'constant uncertainty instead.')
 
 
     def __call__(self, uncertainty_method: str) -> np.ndarray:
