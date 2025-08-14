@@ -146,17 +146,19 @@ def write_tacs(input_image_path: str,
     regions_abrev = label_map['abbreviation']
     regions_map = label_map['mapping']
 
-    tac_extraction_func = extract_roi_voxel_tacs_from_image_using_mask
     pet_numpy = nibabel.load(input_image_path).get_fdata()
     seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
 
     for i, _maps in enumerate(label_map['mapping']):
-        extracted_tac, uncertainty = tac_extraction_func(input_img=pet_numpy,
-                                            segmentation_img=seg_numpy,
-                                            region=int(regions_map[i]))
+        region_mask = combine_regions_as_mask(segmentation_img=seg_numpy,
+                                              label=int(regions_map[i]))
+        pet_masked_region = apply_mask_4d(input_arr=pet_numpy,
+                                          mask_arr=region_mask)
+        extracted_tac = pet_masked_region.mean((0,1,2))
+        tac_uncertainty = pet_masked_region.std((0,1,2))
         region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
                                             activity=extracted_tac,
-                                            uncertainty=uncertainty)
+                                            uncertainty=tac_uncertainty)
         header_text = f'{time_frame_keyword}\t{regions_abrev[i]}_mean_activity'
         if out_tac_prefix:
             out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
