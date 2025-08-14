@@ -4,7 +4,6 @@ Regional TAC extraction
 import re
 import os
 import pathlib
-import nibabel
 import numpy as np
 import ants
 
@@ -160,7 +159,8 @@ def write_tacs(input_image_path: str,
                                             activity=extracted_tac,
                                             uncertainty=tac_uncertainty)
         if out_tac_prefix:
-            out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
+            out_tac_path = os.path.join(out_tac_dir,
+                                        f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
         else:
             out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
         region_tac_file.to_tsv(filename=out_tac_path)
