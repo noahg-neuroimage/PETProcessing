@@ -1,4 +1,4 @@
-"""Tools for calculating weights for application to kinetic models."""
+"""Tools for calculating uncertainty for application to kinetic models."""
 import numpy as np
 
 from ..utils.time_activity_curve import TimeActivityCurve
@@ -10,36 +10,33 @@ class ModelUncertainty:
     """
     def __init__(self,
                  time_activity_curve: TimeActivityCurve):
-        """Initialize TacWeight with provided arguments.
+        """Initialize ModelUncertainty with provided arguments.
 
         Args:
-            time_activity_curve (TimeActivityCurve): The time activity curve on which weights are
-                applied.
-            input_image_path (str): Path to the PET image used to create the TAC supplied to
-                object. Used only to retrieve scan timing and half life information for calculated
-                TAC weights. Default None.
+            time_activity_curve (TimeActivityCurve): The time activity curve on which uncertainty
+                are applied.
         """
         self.time_activity_curve = time_activity_curve
 
 
     @property
-    def constant_weights(self):
-        """Get constant weights for the TAC.
+    def constant_uncertainty(self):
+        """Get constant uncertainty for the model.
         """
-        weights = np.ones_like(self.time_activity_curve.activity)
-        return weights
+        uncertainty = np.ones_like(self.time_activity_curve.activity)
+        return uncertainty
 
 
     @property
-    def provided_weights(self):
-        """Get user provided weights for the TAC.
-        """ 
+    def provided_uncertainty(self):
+        """Get user provided uncertainty for the model.
+        """
         return self.time_activity_curve.uncertainty
 
 
     @property
-    def calculated_weights(self):
-        """The calculated weights for the TAC.
+    def calculated_uncertainty(self):
+        """The calculated uncertainty for the model.
 
         Currently placeholder function.
         """
@@ -47,24 +44,24 @@ class ModelUncertainty:
 
 
     def __call__(self, weight_method: str) -> np.ndarray:
-        """Get the TAC weights corresponding to the identified method.
+        """Get the model uncertainty corresponding to the identified method.
         
         Args:
-            weight_methood (str): TAC weight type to apply to the model.
+            weight_methood (str): model weight type to apply to the model.
 
         Returns:
-            weights (np.ndarray): The weight applied to each time frame in the model.
+            uncertainty (np.ndarray): The weight applied to each time frame in the model.
 
         Raises:
             ValueError: If `weight_method` is not one of: 'constant', 'calculated', or 'provided'.
         """
         match weight_method:
             case 'constant':
-                return self.constant_weights
+                return self.constant_uncertainty
             case 'provided':
-                return self.provided_weights
+                return self.provided_uncertainty
             case 'calculated':
-                return self.calculated_weights
+                return self.calculated_uncertainty
             case _:
                 raise ValueError("weight_method must be one of: 'constant','calculated', "
                                 f"'provided'. Got {weight_method}.")
