@@ -20,7 +20,7 @@ class ModelUncertainty:
 
 
     @property
-    def constant_uncertainty(self):
+    def constant_uncertainty(self) -> np.ndarray:
         """Get constant uncertainty for the model.
         """
         uncertainty = np.ones_like(self.time_activity_curve.activity)
@@ -28,7 +28,7 @@ class ModelUncertainty:
 
 
     @property
-    def tac_uncertainty(self):
+    def tac_uncertainty(self) -> np.ndarray:
         """Get uncertainty stored in the TAC itself for the model.
         """
         return self.time_activity_curve.uncertainty
