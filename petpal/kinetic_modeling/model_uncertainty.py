@@ -44,11 +44,12 @@ class ModelUncertainty:
                                   'constant uncertainty instead.')
 
 
-    def __call__(self, uncertainty_method: str) -> np.ndarray:
+    def __call__(self, uncertainty_method: str='constant') -> np.ndarray:
         """Get the model uncertainty corresponding to the identified method.
         
         Args:
-            uncertainty_methood (str): model uncertainty type to apply to the model.
+            uncertainty_methood (str): model uncertainty type to apply to the model. Default
+                'constant'.
 
         Returns:
             uncertainty (np.ndarray): The uncertainty applied to each time frame in the model.
@@ -57,7 +58,7 @@ class ModelUncertainty:
             ValueError: If `uncertainty_method` is not one of: 'constant', 'calculated', or 
                 'provided'.
         """
-        match uncertainty_method:
+        match uncertainty_method.lower():
             case 'constant':
                 return self.constant_uncertainty
             case 'provided':
