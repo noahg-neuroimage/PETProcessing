@@ -146,8 +146,8 @@ def write_tacs(input_image_path: str,
     regions_abrev = label_map['abbreviation']
     regions_map = label_map['mapping']
 
-    pet_numpy = nibabel.load(input_image_path).get_fdata()
-    seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
+    pet_numpy = ants.image_read(input_image_path).numpy()
+    seg_numpy = ants.image_read(segmentation_image_path).numpy()
 
     for i, _maps in enumerate(label_map['mapping']):
         region_mask = combine_regions_as_mask(segmentation_img=seg_numpy,
