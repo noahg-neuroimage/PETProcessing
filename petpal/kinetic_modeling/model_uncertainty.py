@@ -30,8 +30,19 @@ class ModelUncertainty:
     @property
     def tac_uncertainty(self) -> np.ndarray:
         """Get uncertainty stored in the TAC itself for the model.
+
+        Raises:
+            ValueError: If the supplied TAC uncertainty has any NaN values.
+        
+        Returns:
+            uncertainty_from_tac (np.ndarray): Uncertainty stored in the supplied TAC.
         """
-        return self.time_activity_curve.uncertainty
+        uncertainty_from_tac = self.time_activity_curve.uncertainty
+        nan_locations = np.isnan(uncertainty_from_tac)
+        if np.any(nan_locations):
+            raise ValueError("Supplied TAC has NaN values in stored uncertianty array. Use a "
+                             "model of uncertainty other than 'tac'.")
+        return uncertainty_from_tac
 
 
     @property
