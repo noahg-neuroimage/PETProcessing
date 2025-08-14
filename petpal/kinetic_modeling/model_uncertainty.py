@@ -28,8 +28,8 @@ class ModelUncertainty:
 
 
     @property
-    def provided_uncertainty(self):
-        """Get user provided uncertainty for the model.
+    def tac_uncertainty(self):
+        """Get uncertainty stored in the TAC itself for the model.
         """
         return self.time_activity_curve.uncertainty
 
@@ -56,15 +56,15 @@ class ModelUncertainty:
 
         Raises:
             ValueError: If `uncertainty_method` is not one of: 'constant', 'calculated', or 
-                'provided'.
+                'tac'.
         """
         match uncertainty_method.lower():
             case 'constant':
                 return self.constant_uncertainty
-            case 'provided':
-                return self.provided_uncertainty
+            case 'tac':
+                return self.tac_uncertainty
             case 'calculated':
                 return self.calculated_uncertainty
             case _:
                 raise ValueError("uncertainty_method must be one of: 'constant','calculated', "
-                                f"'provided'. Got {uncertainty_method}.")
+                                f"'tac'. Got {uncertainty_method}.")
