@@ -123,6 +123,20 @@ def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImag
     return out_voxels
 
 
+def voxel_average_w_uncertainty(pet_voxels: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Spatially average voxels and get the standard deviation as well.
+    
+    Args:
+        pet_voxels (np.ndarray): 3D or 4D array of PET voxels.
+    
+    Returns:
+        average_w_uncertainty (tuple[np.ndarray, np.ndarray]): Average and standard deviation of
+            PET voxels."""
+    pet_average = pet_voxels.mean((0,1,2))
+    pet_uncertainty = pet_voxels.std((0,1,2))
+    return (pet_average, pet_uncertainty)
+
+
 def write_tacs(input_image_path: str,
                label_map_path: str,
                segmentation_image_path: str,
@@ -153,8 +167,7 @@ def write_tacs(input_image_path: str,
                                               label=int(regions_map[i]))
         pet_masked_region = apply_mask_4d(input_arr=pet_numpy,
                                           mask_arr=region_mask)
-        extracted_tac = pet_masked_region.mean((0,1,2))
-        tac_uncertainty = pet_masked_region.std((0,1,2))
+        extracted_tac, tac_uncertainty = voxel_average_w_uncertainty(pet_masked_region)
         region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
                                             activity=extracted_tac,
                                             uncertainty=tac_uncertainty)
@@ -190,8 +203,7 @@ def roi_tac(input_image_4d_path: str,
                                             label=region)
     pet_masked_region = apply_mask_4d(input_arr=pet_numpy,
                                         mask_arr=region_mask)
-    extracted_tac = pet_masked_region.mean((0,1,2))
-    tac_uncertainty = pet_masked_region.std((0,1,2))
+    extracted_tac, tac_uncertainty = voxel_average_w_uncertainty(pet_masked_region)
     region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
                                         activity=extracted_tac,
                                         uncertainty=tac_uncertainty)
