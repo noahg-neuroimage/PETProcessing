@@ -265,7 +265,7 @@ class WriteRegionalTacs:
         Special characters (? * - _) are removed and treated as word separaters. Different words are
         then capitalized at the first character, leaving other alphanumeric characters unchanged.
         """
-        split_str = re.split(r'[-_?*]', input_str)
+        split_str = re.split(r'[-_?*/]', input_str)
         capped_split_str = []
         capitalize_first = WriteRegionalTacs.capitalize_first_char_of_str
         for part in split_str:
