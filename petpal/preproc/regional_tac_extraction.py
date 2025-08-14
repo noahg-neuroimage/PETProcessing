@@ -124,16 +124,16 @@ def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImag
 
 
 def voxel_average_w_uncertainty(pet_voxels: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Spatially average voxels and get the standard deviation as well.
+    """Spatially average flattened PET voxels and get the standard deviation as well.
     
     Args:
-        pet_voxels (np.ndarray): 3D or 4D array of PET voxels.
+        pet_voxels (np.ndarray): 1D or 2D array of PET voxels.
     
     Returns:
         average_w_uncertainty (tuple[np.ndarray, np.ndarray]): Average and standard deviation of
             PET voxels."""
-    pet_average = pet_voxels.mean((0,1,2))
-    pet_uncertainty = pet_voxels.std((0,1,2))
+    pet_average = pet_voxels.mean((0))
+    pet_uncertainty = pet_voxels.std((0))
     return (pet_average, pet_uncertainty)
 
 
