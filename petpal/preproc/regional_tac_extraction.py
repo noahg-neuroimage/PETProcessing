@@ -262,7 +262,7 @@ class WriteRegionalTacs:
         """
         Take a string and return the string converted to camel case.
 
-        Special characters (? * - _ / \) are removed and treated as word separaters. Different
+        Special characters (? * - _ / \\) are removed and treated as word separaters. Different
         words are then capitalized at the first character, leaving other alphanumeric characters
         unchanged.
         """
