@@ -159,13 +159,11 @@ def write_tacs(input_image_path: str,
         region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
                                             activity=extracted_tac,
                                             uncertainty=tac_uncertainty)
-        header_text = f'{time_frame_keyword}\t{regions_abrev[i]}_mean_activity'
         if out_tac_prefix:
             out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
         else:
             out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
         region_tac_file.to_tsv(filename=out_tac_path)
-        np.savetxt(out_tac_path,region_tac_file.tac_werr,delimiter='\t',header=header_text,comments='')
 
 
 def roi_tac(input_image_4d_path: str,
