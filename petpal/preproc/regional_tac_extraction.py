@@ -184,8 +184,8 @@ def roi_tac(input_image_4d_path: str,
 
     pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_4d_path)
     tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
-    pet_numpy = nibabel.load(input_image_4d_path).get_fdata()
-    seg_numpy = nibabel.load(roi_image_path).get_fdata()
+    pet_numpy = ants.image_read(input_image_4d_path).numpy()
+    seg_numpy = ants.image_read(roi_image_path).numpy()
 
 
     extracted_tac = tac_extraction_func(input_img=pet_numpy,
