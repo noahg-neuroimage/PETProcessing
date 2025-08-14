@@ -1,10 +1,7 @@
 """Tools for calculating weights for application to kinetic models."""
 import numpy as np
-import ants
 
 from ..utils.time_activity_curve import TimeActivityCurve
-from ..utils.image_io import get_half_life_from_nifti
-from ..utils.scan_timing import ScanTimingInfo
 
 
 class ModelUncertainty:
@@ -12,8 +9,7 @@ class ModelUncertainty:
     calculated, or preset weighting.    
     """
     def __init__(self,
-                 time_activity_curve: TimeActivityCurve,
-                 input_image_path: str=None):
+                 time_activity_curve: TimeActivityCurve):
         """Initialize TacWeight with provided arguments.
 
         Args:
@@ -44,10 +40,10 @@ class ModelUncertainty:
     @property
     def calculated_weights(self):
         """The calculated weights for the TAC.
+
+        Currently placeholder function.
         """
-        self.validate_scan_timing()
-        weights = self.weight_tac_decay()
-        return weights
+        return None
 
 
     def __call__(self, weight_method: str) -> np.ndarray:
