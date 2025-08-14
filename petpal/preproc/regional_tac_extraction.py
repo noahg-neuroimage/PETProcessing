@@ -168,7 +168,7 @@ def write_tacs(input_image_path: str,
 
 def roi_tac(input_image_4d_path: str,
             roi_image_path: str,
-            region: int,
+            region: list[int] | int,
             out_tac_path: str,
             time_frame_keyword: str = 'FrameReferenceTime'):
     """
@@ -183,17 +183,19 @@ def roi_tac(input_image_4d_path: str,
                          "'FrameReferenceTime' or 'FrameTimesStart'")
 
     pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_4d_path)
-    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
     pet_numpy = ants.image_read(input_image_4d_path).numpy()
     seg_numpy = ants.image_read(roi_image_path).numpy()
 
-
-    extracted_tac = tac_extraction_func(input_img=pet_numpy,
-                                        segmentation_img=seg_numpy,
-                                        region=region)
-    region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
-    header_text = 'mean_activity'
-    np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
+    region_mask = combine_regions_as_mask(segmentation_img=seg_numpy,
+                                            label=region)
+    pet_masked_region = apply_mask_4d(input_arr=pet_numpy,
+                                        mask_arr=region_mask)
+    extracted_tac = pet_masked_region.mean((0,1,2))
+    tac_uncertainty = pet_masked_region.std((0,1,2))
+    region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
+                                        activity=extracted_tac,
+                                        uncertainty=tac_uncertainty)
+    region_tac_file.to_tsv(filename=out_tac_path)
 
 
 class WriteRegionalTacs:
