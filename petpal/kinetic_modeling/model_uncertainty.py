@@ -24,96 +24,6 @@ class ModelUncertainty:
                 TAC weights. Default None.
         """
         self.time_activity_curve = time_activity_curve
-        self.input_image_path = input_image_path
-        self.scan_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
-
-
-    def poisson_duration_error(self,
-                               tac_durations_in_minutes: np.ndarray,
-                               tac_vals: np.ndarray) -> np.ndarray:
-        """Weight a Time Activity Curve (TAC) based on variance. This function applies the simple
-        frame time length to activity ratio found in
-        http://www.turkupetcentre.net/petanalysis/model_weighting.html.
-
-        Args:
-            tac_durations_in_minutes (np.ndarray): Duration of each frame in the TAC in minutes.
-            tac_vals (np.ndarray): Activity values for each frame in the TAC.
-
-        Returns:
-            tac_weights (np.ndarray): Weights to be applied to the TAC during fitting process.
-        """
-        uncertainty = np.empty_like(tac_vals)
-        count_rate = tac_vals/tac_durations_in_minutes
-        uncertainty = np.power(count_rate, 2)
-        tac_vals_where_zero = np.where(tac_vals==0)
-        uncertainty[tac_vals_where_zero] = 0
-        return uncertainty
-
-
-    def weight_tac_decay(self) -> np.ndarray:
-        """Weight a Time Activity Curve (TAC) based on variance. This function applies the simple
-        frame time length to activity ratio found in
-        http://www.turkupetcentre.net/petanalysis/model_weighting.html with an extra factor for
-        decay correction.
-
-        Args:
-            tac_durations_in_minutes (np.ndarray): Duration of each frame in the TAC in minutes.
-            tac_vals (np.ndarray): Activity values for each frame in the TAC.
-            tac_times_in_minutes (np.ndarray): Frame times for the TAC in minutes.
-            half_life (np.ndarray): Half life of the radioisotope in seconds.
-
-        Returns:
-            tac_weights (np.ndarray): Weights to be applied to the TAC during fitting process.
-        """
-        half_life = get_half_life_from_nifti(image_path=self.input_image_path)
-        tac_times = self.scan_timing.center_in_mins
-        tac_durations = self.scan_timing.duration_in_mins
-
-        input_img = ants.image_read(filename=self.input_image_path)
-        img_vals = input_img.sum(axis=(0,1,2))
-
-        decay_factor = np.exp(-np.log(2) / (half_life / 60) * tac_times)
-        tac_weights = tac_durations * decay_factor / img_vals
-        tac_vals_where_zero = np.where(img_vals==0)
-        tac_weights[tac_vals_where_zero] = 0
-        return tac_weights
-
-
-    def convert_weights_to_sigma(self, tac_weights: np.ndarray) -> np.ndarray:
-        r"""Convert TAC weights to sigma (standard deviation) values. Calculated as
-        :math:`\sigma=w^{-1/2}`. Returns zero as the sigma value if the weight at that time point is
-        zero.
-
-        Args:
-            tac_weights (np.ndarray): Weights calculated using :meth:`weight_tac_simple` or
-            `weight_tac_decay`.
-
-        Returns:
-            tac_sigma (np.ndarray): Array of sigmas calculated from the weights.
-        """
-        tac_sigma = np.power(tac_weights,-1/2)
-        tac_weights_where_zero = np.where(tac_weights==0)
-        tac_sigma[tac_weights_where_zero] = np.inf
-        return tac_sigma
-
-
-    @staticmethod
-    def convert_sigma_to_weights(tac_uncertainty: np.ndarray) -> np.ndarray:
-        r"""Convert TAC sigma (standard deviation) to weights. Calculated as
-        :math:`w=\sigma^{-2}`. Returns zero as the sigma value if the sigma at that time point is
-        inf.
-
-        Args:
-            tac_weights (np.ndarray): Weights calculated using :meth:`weight_tac_simple` or
-            `weight_tac_decay`.
-
-        Returns:
-            tac_sigma (np.ndarray): Array of sigmas calculated from the weights.
-        """
-        tac_weight = np.power(tac_uncertainty,-2)
-        tac_sigma_where_inf = np.where(tac_uncertainty==np.inf)
-        tac_weight[tac_sigma_where_inf] = 0
-        return tac_weight
 
 
     @property
@@ -127,24 +37,8 @@ class ModelUncertainty:
     @property
     def provided_weights(self):
         """Get user provided weights for the TAC.
-        """
-        sigma = self.time_activity_curve.uncertainty
-        weights = self.convert_sigma_to_weights(tac_uncertainty=sigma)
-        return weights
-
-
-    def validate_scan_timing(self):
-        """Validate the input image successfully retrieved scan_timing property for calculating
-        TAC weights.
-        
-        Raises:
-            TypeError: When property self.scan_timing returns a TypeError on attempt to access."""
-        try:
-            self.scan_timing
-        except TypeError as exc:
-            raise TypeError("Could not read scan timing from input image. Make sure to provide "
-                            "input_image_path when using calculated weights. input_image_path "
-                            f"currently set to: {self.input_image_path}.") from exc
+        """ 
+        return self.time_activity_curve.uncertainty
 
 
     @property
