@@ -1,15 +1,153 @@
 """
-Extracting TACs from masks or regions, getting statistics, and writing to file.
+Regional TAC extraction
 """
+import re
 import os
-import ants
+import pathlib
+import nibabel
 import numpy as np
+import ants
 
-from ..preproc.image_operations_4d import extract_mean_roi_tac_from_nifti_using_segmentation
 from ..utils import image_io
 from ..utils.scan_timing import ScanTimingInfo
-from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
+from ..utils.time_activity_curve import TimeActivityCurve
+
+
+def mask_seg_by_level(segmentation_img: ants.ANTsImage | np.ndarray,
+                      level: int | list[int]):
+    """
+    Create a mask from a segmentation image and one or more levels.
+    """
+    if isinstance(level, int):
+        level = [level]
+    mask = sum(segmentation_img==l for l in level)
+    return mask
+
+
+def apply_mask_img_4d(input_img: ants.ANTsImage | np.ndarray,
+                      mask: ants.ANTsImage | np.ndarray,
+                      level=1):
+    """Apply a mask image to a 4D PET image.
+    
+    """
+    assert check_physical_space_for_ants_image_pair(image_1=input_img, image_2=mask)
+
+    input_img_as_list = ants.ndimage_to_list(image=input_img)
+    roi_mask = mask_seg_by_level(segmentation_img=mask, level=level)
+    masked_img_as_list = []
+    for frame in input_img_as_list:
+        masked_img_as_list += [frame * roi_mask]
+    masked_img = ants.list_to_ndimage(image=input_img, image_list=masked_img_as_list)
+
+    return masked_img
+
+
+def extract_mean_roi_tac_from_nifti_using_segmentation(input_img: ants.ANTsImage,
+                                                       segmentation_img: ants.ANTsImage,
+                                                       region: int | list[int]) -> np.ndarray:
+    """
+    Creates a time-activity curve (TAC) by computing the average value within a region, for each 
+    frame in a 4D PET image series. Takes as input a PET image, which has been registered to
+    anatomical space, a segmentation image, with the same sampling as the PET, and a list of values
+    corresponding to regions in the segmentation image that are used to compute the average
+    regional values. Currently, only the mean over a single region value is implemented.
+
+    Args:
+        input_image_4d_path (str): Path to a .nii or .nii.gz file containing a 4D
+            PET image, registered to anatomical space.
+        segmentation_image_path (str): Path to a .nii or .nii.gz file containing a 3D segmentation
+            image, where integer indices label specific regions. Must have same sampling as PET
+            input.
+        region (int | list[int]): Value(s) in the segmentation image corresponding to a region
+            over which the TAC is computed. If a list is provided, returns the mean over all
+            region mappings included in the list.
+        verbose (bool): Set to ``True`` to output processing information.
+
+    Returns:
+        tac_out (np.ndarray): Mean of PET image within regions for each frame in 4D PET series.
+
+    Raises:
+        ValueError: If the segmentation image and PET image have different
+            sampling.
+    """
+
+    region_img = apply_mask_img_4d(input_img=input_img, mask=segmentation_img, level=region)
+    tac_out = region_img[region_img.nonzero()].mean(axis=(0,1,2))
+    uncertainty = region_img[region_img.nonzero()].std(axis=(0,1,2))
+    return tac_out, uncertainty
+
+
+def write_tacs(input_image_path: str,
+               label_map_path: str,
+               segmentation_image_path: str,
+               out_tac_dir: str,
+               time_frame_keyword: str = 'FrameReferenceTime',
+               out_tac_prefix: str = '', ):
+    """
+    Function to write Tissue Activity Curves for each region, given a segmentation,
+    4D PET image, and label map. Computes the average of the PET image within each
+    region. Writes a JSON for each region with region name, frame start time, and mean 
+    value within region.
+    """
+
+    if time_frame_keyword not in ['FrameReferenceTime', 'FrameTimesStart']:
+        raise ValueError("'time_frame_keyword' must be one of "
+                         "'FrameReferenceTime' or 'FrameTimesStart'")
+
+    pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_path)
+    label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
+    regions_abrev = label_map['abbreviation']
+    regions_map = label_map['mapping']
+
+    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
+    pet_numpy = nibabel.load(input_image_path).get_fdata()
+    seg_numpy = nibabel.load(segmentation_image_path).get_fdata()
+
+    for i, _maps in enumerate(label_map['mapping']):
+        extracted_tac, uncertainty = tac_extraction_func(input_img=pet_numpy,
+                                            segmentation_img=seg_numpy,
+                                            region=int(regions_map[i]))
+        region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
+                                            activity=extracted_tac,
+                                            uncertainty=uncertainty)
+        header_text = f'{time_frame_keyword}\t{regions_abrev[i]}_mean_activity'
+        if out_tac_prefix:
+            out_tac_path = os.path.join(out_tac_dir, f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
+        else:
+            out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
+        region_tac_file.to_tsv(filename=out_tac_path)
+        np.savetxt(out_tac_path,region_tac_file.tac_werr,delimiter='\t',header=header_text,comments='')
+
+
+def roi_tac(input_image_4d_path: str,
+            roi_image_path: str,
+            region: int,
+            out_tac_path: str,
+            time_frame_keyword: str = 'FrameReferenceTime'):
+    """
+    Function to write Tissue Activity Curves for a single region, given a mask,
+    4D PET image, and region mapping. Computes the average of the PET image 
+    within each region. Writes a tsv table with region name, frame start time,
+    and mean value within region.
+    """
+
+    if time_frame_keyword not in ['FrameReferenceTime', 'FrameTimesStart']:
+        raise ValueError("'time_frame_keyword' must be one of "
+                         "'FrameReferenceTime' or 'FrameTimesStart'")
+
+    pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_4d_path)
+    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
+    pet_numpy = nibabel.load(input_image_4d_path).get_fdata()
+    seg_numpy = nibabel.load(roi_image_path).get_fdata()
+
+
+    extracted_tac = tac_extraction_func(input_img=pet_numpy,
+                                        segmentation_img=seg_numpy,
+                                        region=region)
+    region_tac_file = np.array([pet_meta[time_frame_keyword],extracted_tac]).T
+    header_text = 'mean_activity'
+    np.savetxt(out_tac_path,region_tac_file,delimiter='\t',header=header_text,comments='')
 
 
 def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
@@ -18,15 +156,13 @@ def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImag
     """
     Function to extract ROI voxel tacs from an image using a mask image.
 
-    This function returns all the voxel TACs, and unlike
-    :func:`extract_mean_roi_tac_from_nifti_using_segmentation` does not calculate the mean over
-    all the voxels.
+    This function returns all the voxel TACs, and unlike :func:`extract_mean_roi_tac_from_nifti_using_segmentation`,
+    does not calculate the mean over all the voxels.
 
     Args:
         input_image (ants.core.ANTsImage): Input 4D-image from which to extract ROI voxel tacs.
         mask_image (ants.core.ANTsImage): Mask image which determines which voxels to extract.
-        verbose (bool, optional): If True, prints information about the shape of extracted voxel
-            tacs.
+        verbose (bool, optional): If True, prints information about the shape of extracted voxel tacs.
 
     Returns:
         out_voxels (np.ndarray): Array of voxel TACs of shape (num_voxels, num_frames)
@@ -35,156 +171,121 @@ def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImag
          AssertionError: If input image is not 4D-image.
          AssertionError: If mask image is not in the same physical space as the input image.
 
-    Example:
-
-        .. code-block:: python
-
-            import ants
-            import numpy as np
-
-            from petpal.preproc import regional_tac_extraction
-            tac_func = regional_tac_extraction.extract_roi_voxel_tacs_from_image_using_mask
-            
-            # Read images
-            pet_img = ants.image_read("/path/to/pet.nii.gz")
-            masked_region_img = ants.image_read("/path/to/mask_region.nii.gz")
-
-            # Run ROI extraction and save
-            time_series = tac_func(input_image=pet_img, mask_image=masked_region_img).T
-            np.savetxt("time_series.tsv", time_series, delimiter='\t')
-            
     """
     assert len(input_image.shape) == 4, "Input image must be 4D."
     assert check_physical_space_for_ants_image_pair(input_image, mask_image), (
         "Images must have the same physical dimensions.")
 
-    out_voxels = apply_mask_4d(input_arr=input_image.numpy(),
-                               mask_arr=mask_image.numpy(),
-                               verbose=verbose)
-    return out_voxels
-
-
-def apply_mask_4d(input_arr: np.ndarray,
-                  mask_arr: np.ndarray,
-                  verbose: bool = False) -> np.ndarray:
-    """
-    Function to extract ROI voxel tacs from an array using a mask array.
-
-    This function applies a 3D mask to a 4D image, returning the time series for each voxel in a
-    single flattened numpy array.
-
-    Args:
-        input_arr (np.ndarray): Input 4D-image from which to extract ROI voxel tacs.
-        mask_arr (np.ndarray): Mask image which determines which voxels to extract.
-        verbose (bool, optional): If True, prints information about the shape of extracted voxel
-            tacs.
-
-    Returns:
-        out_voxels (np.ndarray): Time series of each voxel in the mask, as a flattened numpy array.
-
-    Raises:
-         AssertionError: If input array is not 4D.
-         AssertionError: If input and mask array shapes are mismatched.
-
-    Example:
-
-        .. code-block:: python
-
-            import ants
-            import numpy as np
-
-            from petpal.preproc.regional_tac_extraction import apply_mask_4d
-            
-            # Read images
-            pet_img = ants.image_read("/path/to/pet.nii.gz")
-            masked_region_img = ants.image_read("/path/to/mask_region.nii.gz")
-
-            # Get underlying arrays
-            pet_arr = pet_img.numpy()
-            masked_region_arr = masked_region_img.numpy()
-
-            # Run ROI extraction and save
-            time_series = apply_mask_4d(input_arr=pet_arr, mask_arr=masked_region_arr).T
-            np.savetxt("time_series.tsv", time_series, delimiter='\t')
-
-    """
-    assert len(input_arr.shape) == 4, "Input array must be 4D."
-    assert input_arr.shape[:3] == mask_arr.shape, (
-            "Array must have the same physical dimensions.")
-
-    x_inds, y_inds, z_inds = mask_arr.nonzero()
-    out_voxels = input_arr[x_inds, y_inds, z_inds, :]
+    x_inds, y_inds, z_inds = mask_image.nonzero()
+    out_voxels = input_image.numpy()[x_inds, y_inds, z_inds, :]
     if verbose:
         print(f"(ImageOps): Output TACs have shape {out_voxels.shape}")
     return out_voxels
 
 
-def write_tacs(input_image_path: str,
-               label_map_path: str,
-               segmentation_image_path: str,
-               out_tac_dir: str,
-               verbose: bool = False,
-               out_tac_prefix: str = ''):
+class WriteRegionalTacs:
     """
-    Function to write Tissue Activity Curves for each region, given a segmentation,
-    4D PET image, and label map. Computes the average of the PET image within each
-    region. Writes a JSON for each region with region name, frame start time, and mean 
-    value within region.
+    Write regional TACs
 
-    Args:
-        input_image_path (str): Path to the 4D PET image from which regional TACs will be
-            extracted.
-        label_map_path (str): Path to the dseg file linking regions to their mappings in the
-            segmentation image.
-        segmentation_image_path (str): Path to the segmentation image containing ROIs. Must be in
-            the same space as input_image.
-        out_tac_dir (str): Path to the directory where regional TACs will be written to.
-        verbose (bool): If true, outputs information during processing. Default False.
-        out_tac_prefix (str): Prefix for output TAC files. Typically the participant ID.
-
-
-    Examples:
-
-        .. code-block:: python
-
-            from petpal.preproc.regional_tac_extraction import write_tacs
-
-            # get files
-            segmentation_path = '/path/to/aparc+aseg.nii.gz'
-            pet_path = '/path/to/pet.nii.gz'
-
-            # run write_tacs
-            write_tacs(input_image_path=pet_path,
-                       label_map_path='dseg.tsv',
-                       segmentation_image_path=segmentation_path,
-                       out_tac_dir='/path/to/output/',
-                       verbose=False)
-
+    Attrs:
+        pet_img
+        seg_img
+        tac_extraction_func
+        out_tac_prefix
+        out_tac_dir
+        scan_timing
     """
-    label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
-    regions_abrev = label_map['abbreviation']
-    regions_map = label_map['mapping']
+    def __init__(self,
+                 input_image_path: str | pathlib.Path,
+                 segmentation_path: str | pathlib.Path,
+                 out_tac_prefix: str,
+                 out_tac_dir: str | pathlib.Path):
+        self.pet_img = ants.image_read(filename=input_image_path)
+        self.seg_img = ants.image_read(filename=segmentation_path)
+        self.tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
+        self.out_tac_prefix = out_tac_prefix
+        self.out_tac_dir = out_tac_dir
+        self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
-    tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
-    pet_numpy = ants.image_read(input_image_path).numpy()
-    seg_numpy = ants.image_read(segmentation_image_path).numpy()
 
-    scan_timing_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
-    tac_times_in_mins = scan_timing_info.center_in_mins
+    def set_tac_extraction_func(self, tac_extraction_func: callable):
+        """Sets the tac extraction function used to a different function.
+        
+        The selected function must take an input image, label image, and a single label mapping as
+        inputs, and return an estimation of activity and uncertainty of that estimation as outputs.
+        """
+        self.tac_extraction_func = tac_extraction_func
 
-    for i, region in enumerate(regions_map):
-        extracted_tac = tac_extraction_func(input_image_4d_numpy=pet_numpy,
-                                            segmentation_image_numpy=seg_numpy,
-                                            region=int(region),
-                                            verbose=verbose,
-                                            with_std=True)
 
-        region_tac = TimeActivityCurve(times=tac_times_in_mins,
-                                       activity=extracted_tac[0],
-                                       uncertainty=extracted_tac[1])
-        if out_tac_prefix:
-            out_tac_path = os.path.join(out_tac_dir,
-                                        f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
+    @staticmethod
+    def capitalize_first_char_of_str(input_str: str):
+        """
+        Capitalize only the first character of a string, leaving the remainder unchanged.
+        Args:
+            input_str (str): The string to capitalize the first character of.
+        Returns:
+            output_str (str): The string with only the first character capitalized.
+        """
+        output_str = input_str[0].capitalize()+input_str[1:]
+        return output_str
+
+
+    @staticmethod
+    def str_to_camel_case(input_str):
+        """
+        Take a string and return the string converted to camel case.
+
+        Special characters (? * - _) are removed and treated as word separaters. Different words are
+        then capitalized at the first character, leaving other alphanumeric characters unchanged.
+        """
+        split_str = re.split(r'[-_?*]', input_str)
+        capped_split_str = []
+        capitalize_first = WriteRegionalTacs.capitalize_first_char_of_str
+        for part in split_str:
+            capped_str = capitalize_first(input_str=part)
+            capped_split_str += [capped_str]
+        camel_case_str = ''.join(capped_split_str)
+        return camel_case_str
+
+
+    def extract_tac_and_write(self,
+                              region_mapping,
+                              region_name):
+        """
+        Run self.tac_extraction_func on one region and save results to image.
+        """
+        extracted_tac, uncertainty = self.tac_extraction_func(input_img=self.pet_img,
+                                            segmentation_img=self.seg_img,
+                                            region=int(region_mapping))
+        region_tac_file = TimeActivityCurve(times=self.scan_timing.center_in_mins,
+                                            activity=extracted_tac,
+                                            uncertainty=uncertainty)
+        out_tac_path = os.path.join(self.out_tac_dir,
+                                    f'{self.out_tac_prefix}_seg-{region_name}_tac.tsv')
+        region_tac_file.to_tsv(filename=out_tac_path)
+
+
+    def write_tacs(self, label_map_path: str=None):
+        """
+        Function to write Tissue Activity Curves for each region, given a segmentation,
+        4D PET image, and label map. Computes the average of the PET image within each
+        region. Writes a JSON for each region with region name, frame start time, and mean 
+        value within region.
+        """
+        unique_segmentation_labels = np.unique(self.seg_img.numpy())
+
+        if label_map_path is not None:
+            label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
+            regions_abrev = [self.str_to_camel_case(label) for label in label_map['abbreviation']]
+            regions_map = label_map['mapping']
         else:
-            out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
-        region_tac.to_tsv(filename=out_tac_path)
+            regions_map = [int(label) for label in unique_segmentation_labels]
+            regions_abrev = [str(label) for label in regions_map]
+
+        for i, _label in enumerate(unique_segmentation_labels):
+            self.extract_tac_and_write(regions_map[i],
+                                       regions_abrev[i])
+
+
+    def __call__(self, *args, **kwargs):
+        self.write_tacs(*args, **kwargs)
