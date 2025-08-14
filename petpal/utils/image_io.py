@@ -166,7 +166,7 @@ def get_half_life_from_radionuclide(meta_data_file_path: str) -> float:
     except KeyError as exc:
         raise KeyError("Required BIDS metadata field 'TracerRadionuclide' not found.") from exc
 
-    return HALF_LIVES[radionuclide]
+    return float(HALF_LIVES[radionuclide])
 
 def get_half_life_from_meta(meta_data_file_path: str):
     """
@@ -186,7 +186,7 @@ def get_half_life_from_meta(meta_data_file_path: str):
 
     try:
         half_life = meta_data['RadionuclideHalfLife']
-        return half_life
+        return float(half_life)
     except KeyError as exc:
         raise KeyError("RadionuclideHalfLife not found in meta-data file.") from exc
 
@@ -214,7 +214,7 @@ def get_half_life_from_nifti(image_path:str):
         half_life = get_half_life_from_radionuclide(meta_path)
     except KeyError:
         half_life = get_half_life_from_meta(meta_path)
-    return half_life
+    return float(half_life)
 
 
 

@@ -386,7 +386,7 @@ class TimeActivityCurve:
         """
         assert dt != 0, "dt must be strictly larger than 0."
         if shift_in_mins < 0:
-            return TimeActivityCurve.right_shifted_tac(tac=self, shift_in_mins=shift_in_mins, dt=dt)
+            return TimeActivityCurve.right_shifted_tac(tac=self, shift_in_mins=-shift_in_mins, dt=dt)
         else:
             return TimeActivityCurve.left_shifted_tac(tac=self, shift_in_mins=shift_in_mins, dt=dt)
 

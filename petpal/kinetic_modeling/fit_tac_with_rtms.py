@@ -15,7 +15,7 @@ from .reference_tissue_models import (fit_frtm2_to_tac,
                                      fit_srtm2_to_tac_with_bounds,
                                      fit_srtm_to_tac,
                                      fit_srtm_to_tac_with_bounds)
-
+from ..utils.time_activity_curve import TimeActivityCurve
 
 def get_rtm_method(method: str, bounds=None):
     r"""Function for obtaining the appropriate reference tissue model.
@@ -160,7 +160,7 @@ class FitTACWithRTMs:
     r"""
     A class used to fit a kinetic model to both a target and a reference Time Activity Curve (TAC).
 
-    The :class:`FitTACWithRTMs` class simplifies the process of kinetic model fitting by providing
+    The :class:`~.FitTACWithRTMs` class simplifies the process of kinetic model fitting by providing
     methods for validating input data, choosing a model to fit, and then performing the fit. It
     takes in raw intensity values of TAC for both target and reference regions as inputs, which are
     then used in curve fitting.
@@ -185,34 +185,62 @@ class FitTACWithRTMs:
         fit_results (np.ndarray): The result of the fit.
 
     Example:
-        The following example shows how to use the :class:`FitTACWithRTMs` class to fit the SRTM to
+        The following example shows how to use the :class:`~.FitTACWithRTMs` class to fit the SRTM to
         a target and reference TAC.
 
-        .. code-block:: python
+        .. plot::
+            :include-source:
+            :caption: Fitting a simulated SRTM TAC
+
 
             import numpy as np
+            import matplotlib.pyplot as plt
+
             import petpal.kinetic_modeling.tcms_as_convolutions as pet_tcm
             import petpal.kinetic_modeling.reference_tissue_models as pet_rtms
+            import petpal.kinetic_modeling.fit_tac_with_rtms as fit_rtms
+            from petpal.visualizations.tac_plots import TacFigure as TACPlots
+            from petpal.utils.time_activity_curve import TimeActivityCurve
 
-            # loading the input tac to generate a reference region tac
-            input_tac_times, input_tac_vals = np.asarray(np.loadtxt("../../data/tcm_tacs/fdg_plasma_clamp_evenly_resampled.txt").T,
-                                                         float)
+            # Loading the input tac to generate a reference region tac
+            input_tac = TimeActivityCurve.from_tsv("../../../../../data/tcm_tacs/fdg_plasma_clamp_evenly_resampled.txt")
+            input_tac_resampled = input_tac.evenly_resampled_tac(8096)
 
-            # generating a reference region tac
-            tac_times_in_minutes, ref_tac_vals = pet_tcm.generate_tac_1tcm_c1_from_tac(tac_times_in_minutes=input_tac_times, tac_vals=input_tac_vals,
-                                                                                k1=1.0, k2=0.2)
+            # Generating a reference region tac
+            tac_times_in_minutes, ref_tac_vals = pet_tcm.gen_tac_1tcm_cpet_from_tac(tac_times=input_tac_resampled.times,
+                                                                                    tac_vals=input_tac_resampled.activity,
+                                                                                    k1=0.25, k2=0.2)
+            test_params = dict(r1=1.0, k2=0.25, bp=3.0)
+            # Generating an SRTM tac
+            srtm_tac_vals = pet_rtms.calc_srtm_tac(tac_times_in_minutes=tac_times_in_minutes, ref_tac_vals=ref_tac_vals, **test_params)
 
-            # generating an SRTM tac
-            srtm_tac_vals = pet_rtms.calc_srtm_tac(tac_times_in_minutes=tac_times_in_minutes, ref_tac_vals=ref_tac_vals, r1=1.0, k2=0.25, bp=3.0)
 
-            rtm_analysis = pet_rtms.FitTACWithRTMs(target_tac_vals=srtm_tac_vals,
-                                                tac_times_in_minutes=tac_times_in_minutes,
-                                                reference_tac_vals=ref_tac_vals,
-                                                method='srtm')
 
-            # performing the fit
+
+
+            rtm_analysis = fit_rtms.FitTACWithRTMs(target_tac_vals=srtm_tac_vals,
+                                                   tac_times_in_minutes=tac_times_in_minutes,
+                                                   reference_tac_vals=ref_tac_vals,
+                                                   method='srtm')
+
+            # Performing the fit
             rtm_analysis.fit_tac_to_model()
-            fit_results = rtm_analysis.fit_results[1]
+            fit_results = rtm_analysis.fit_results[0]
+            fit_results_dict = dict(r1=fit_results[0], k2=fit_results[1], bp=fit_results[2])
+
+            assert np.allclose(fit_results, list(test_params.values()))
+
+            fit_srtm_tac_vals = pet_rtms.calc_srtm_tac(tac_times_in_minutes=tac_times_in_minutes,
+                                                       ref_tac_vals=ref_tac_vals, **fit_results_dict)
+
+            tac_plt = TACPlots(ylabel=r'TAC $(\mathrm{nCi/ml})$')
+            tac_plt.add_tac(*input_tac.tac, label='PTAC', alpha=0.6, ls='--')
+            tac_plt.add_tac(tac_times_in_minutes, ref_tac_vals, label='Ref TAC', alpha=0.6, ls='--')
+            tac_plt.add_tac(tac_times_in_minutes[::50], srtm_tac_vals[::50], label='SRTM TAC', marker='x', color='black', ms=10)
+            tac_plt.add_tac(tac_times_in_minutes[::50], srtm_tac_vals[::50], label='SRTM TAC Fit', marker='o', color='red', ms=5)
+            plt.legend()
+            plt.ylim(0, None)
+            plt.show()
 
 
     This will give you the kinetic parameter values of the SRTM for the provided TACs.
@@ -224,9 +252,8 @@ class FitTACWithRTMs:
 
     """
     def __init__(self,
-                 tac_times_in_minutes: np.ndarray,
-                 target_tac_vals: np.ndarray,
-                 reference_tac_vals: np.ndarray,
+                 target_tac: TimeActivityCurve,
+                 reference_tac: TimeActivityCurve,
                  method: str = 'mrtm',
                  bounds: Union[None, np.ndarray] = None,
                  t_thresh_in_mins: float = None,
@@ -239,9 +266,8 @@ class FitTACWithRTMs:
         MRTM analyses.
 
         Args:
-            tac_times_in_minutes (np.ndarray): The array representing the time-points for both TACs.
-            target_tac_vals (np.ndarray): The array representing the target TAC values.
-            reference_tac_vals (np.ndarray): The array representing values of the reference TAC.
+            target_tac (TimeActivityCurve): The TAC object for the target region.
+            reference_tac (TimeActivityCurve): The TAC object for the reference region.
             method (str, optional): The kinetics method to be used. Default is 'mrtm'.
             bounds (Union[None, np.ndarray], optional): Bounds for kinetic parameters used in
                 optimization. None represents absence of bounds. Default is None.
@@ -255,9 +281,8 @@ class FitTACWithRTMs:
             AssertionError: If rate constant k2_prime is non-positive.
         """
 
-        self.tac_times_in_minutes: np.ndarray = tac_times_in_minutes
-        self.target_tac_vals: np.ndarray = target_tac_vals
-        self.reference_tac_vals: np.ndarray = reference_tac_vals
+        self.target_tac: TimeActivityCurve = target_tac
+        self.reference_tac: TimeActivityCurve = reference_tac
         self.method: str = method.lower()
         self.bounds: Union[None, np.ndarray] = bounds
         self.validate_bounds()
@@ -371,7 +396,7 @@ class FitTACWithRTMs:
 
         if 'mrtm' in method:
             nan_array = [np.array([np.nan]*output_size),
-                         np.array(len(self.tac_times_in_minutes)*[np.nan])]
+                         np.array(len(self.reference_tac)*[np.nan])]
 
         return nan_array
 
@@ -412,9 +437,9 @@ class FitTACWithRTMs:
                                     k2_prime=self.k2_prime,
                                     t_thresh_in_mins=self.t_thresh_in_mins)
         try:
-            self.fit_results = rtm_method(tac_times_in_minutes=self.tac_times_in_minutes,
-                                          tgt_tac_vals=self.target_tac_vals,
-                                          ref_tac_vals=self.reference_tac_vals,
+            self.fit_results = rtm_method(tac_times_in_minutes=self.reference_tac.times_in_mins,
+                                          tgt_tac_vals=self.target_tac.activity,
+                                          ref_tac_vals=self.reference_tac.activity,
                                           **rtm_kwargs)
         except ValueError:
             self.fit_results = self.get_failed_output_nan_array()
