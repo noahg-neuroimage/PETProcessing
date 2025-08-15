@@ -147,6 +147,16 @@ def write_tacs(input_image_path: str,
     4D PET image, and label map. Computes the average of the PET image within each
     region. Writes a JSON for each region with region name, frame start time, and mean 
     value within region.
+
+    Args:
+        input_image_path (str): Path to the 4D PET image from which regional TACs will be
+            extracted.
+        label_map_path (str): Path to the dseg file linking regions to their mappings in the
+            segmentation image.
+        segmentation_image_path (str): Path to the segmentation image containing ROIs. Must be in
+            the same space as input_image.
+        out_tac_dir (str): Path to the directory where regional TACs will be written to.
+        out_tac_prefix (str): Prefix for output TAC files. Typically the participant ID.
     """
     label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
     regions_abrev = label_map['abbreviation']
