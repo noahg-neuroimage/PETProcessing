@@ -235,7 +235,7 @@ class WriteRegionalTacs:
                  out_tac_dir: str | pathlib.Path):
         self.pet_img = ants.image_read(filename=input_image_path)
         self.seg_img = ants.image_read(filename=segmentation_path)
-        self.tac_extraction_func = extract_mean_roi_tac_from_nifti_using_segmentation
+        self.tac_extraction_func = voxel_average_w_uncertainty
         self.out_tac_prefix = out_tac_prefix
         self.out_tac_dir = out_tac_dir
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
