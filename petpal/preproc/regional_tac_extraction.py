@@ -230,7 +230,7 @@ class WriteRegionalTacs:
     def __init__(self,
                  input_image_path: str | pathlib.Path,
                  segmentation_path: str | pathlib.Path,
-                 label_map_path: str | pathlib.Path,):
+                 label_map_path: str | pathlib.Path):
         self.pet_img = ants.image_read(filename=input_image_path)
         self.seg_img = ants.image_read(filename=segmentation_path)
         self.label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
@@ -300,6 +300,10 @@ class WriteRegionalTacs:
         value within region.
         """
         tacs_data = pd.DataFrame()
+
+        tacs_data['frame_time'] = self.scan_timing.center_in_mins
+        tacs_data['duration'] = self.scan_timing.duration_in_mins
+
         unique_segmentation_labels = np.unique(self.seg_img.numpy())
 
         label_map = self.label_map
