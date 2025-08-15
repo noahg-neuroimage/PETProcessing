@@ -141,7 +141,6 @@ def write_tacs(input_image_path: str,
                label_map_path: str,
                segmentation_image_path: str,
                out_tac_dir: str,
-               time_frame_keyword: str = 'FrameReferenceTime',
                out_tac_prefix: str = '', ):
     """
     Function to write Tissue Activity Curves for each region, given a segmentation,
@@ -149,12 +148,6 @@ def write_tacs(input_image_path: str,
     region. Writes a JSON for each region with region name, frame start time, and mean 
     value within region.
     """
-
-    if time_frame_keyword not in ['FrameReferenceTime', 'FrameTimesStart']:
-        raise ValueError("'time_frame_keyword' must be one of "
-                         "'FrameReferenceTime' or 'FrameTimesStart'")
-
-    pet_meta = image_io.load_metadata_for_nifti_with_same_filename(input_image_path)
     label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
     regions_abrev = label_map['abbreviation']
     regions_map = label_map['mapping']
@@ -162,13 +155,16 @@ def write_tacs(input_image_path: str,
     pet_numpy = ants.image_read(input_image_path).numpy()
     seg_numpy = ants.image_read(segmentation_image_path).numpy()
 
+    scan_timing_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
+    tac_times_in_mins = scan_timing_info.center_in_mins
+
     for i, _maps in enumerate(label_map['mapping']):
         region_mask = combine_regions_as_mask(segmentation_img=seg_numpy,
                                               label=int(regions_map[i]))
         pet_masked_region = apply_mask_4d(input_arr=pet_numpy,
                                           mask_arr=region_mask)
         extracted_tac, tac_uncertainty = voxel_average_w_uncertainty(pet_masked_region)
-        region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
+        region_tac_file = TimeActivityCurve(times=tac_times_in_mins,
                                             activity=extracted_tac,
                                             uncertainty=tac_uncertainty)
         if out_tac_prefix:
