@@ -231,10 +231,12 @@ class WriteRegionalTacs:
     def __init__(self,
                  input_image_path: str | pathlib.Path,
                  segmentation_path: str | pathlib.Path,
+                 label_map_path: str | pathlib.Path,
                  out_tac_prefix: str,
                  out_tac_dir: str | pathlib.Path):
         self.pet_img = ants.image_read(filename=input_image_path)
         self.seg_img = ants.image_read(filename=segmentation_path)
+        self.label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
         self.tac_extraction_func = voxel_average_w_uncertainty
         self.out_tac_prefix = out_tac_prefix
         self.out_tac_dir = out_tac_dir
