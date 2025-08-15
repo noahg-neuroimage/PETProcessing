@@ -8,7 +8,6 @@ import numpy as np
 import ants
 import pandas as pd
 
-from .image_operations_4d import extract_mean_roi_tac_from_nifti_using_segmentation
 from .segmentation_tools import combine_regions_as_mask
 from ..utils import image_io
 from ..utils.scan_timing import ScanTimingInfo
