@@ -6,7 +6,7 @@ import os
 import pathlib
 import numpy as np
 import ants
-
+import pandas as pd
 
 from .image_operations_4d import extract_mean_roi_tac_from_nifti_using_segmentation
 from .segmentation_tools import combine_regions_as_mask
@@ -231,15 +231,11 @@ class WriteRegionalTacs:
     def __init__(self,
                  input_image_path: str | pathlib.Path,
                  segmentation_path: str | pathlib.Path,
-                 label_map_path: str | pathlib.Path,
-                 out_tac_prefix: str,
-                 out_tac_dir: str | pathlib.Path):
+                 label_map_path: str | pathlib.Path,):
         self.pet_img = ants.image_read(filename=input_image_path)
         self.seg_img = ants.image_read(filename=segmentation_path)
         self.label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
         self.tac_extraction_func = voxel_average_w_uncertainty
-        self.out_tac_prefix = out_tac_prefix
-        self.out_tac_dir = out_tac_dir
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
 
@@ -284,44 +280,41 @@ class WriteRegionalTacs:
         return camel_case_str
 
 
-    def extract_tac_and_write(self,
-                              region_mapping,
-                              region_name):
+    def extract_tac(self,region_mapping) -> TimeActivityCurve:
         """
         Run self.tac_extraction_func on one region and save results to image.
         """
         extracted_tac, uncertainty = self.tac_extraction_func(input_img=self.pet_img,
                                             segmentation_img=self.seg_img,
                                             region=int(region_mapping))
-        region_tac_file = TimeActivityCurve(times=self.scan_timing.center_in_mins,
+        region_tac = TimeActivityCurve(times=self.scan_timing.center_in_mins,
                                             activity=extracted_tac,
                                             uncertainty=uncertainty)
-        out_tac_path = os.path.join(self.out_tac_dir,
-                                    f'{self.out_tac_prefix}_seg-{region_name}_tac.tsv')
-        region_tac_file.to_tsv(filename=out_tac_path)
+        return region_tac
 
 
-    def write_tacs(self, label_map_path: str=None):
+    def write_tacs(self, out_tac_prefix: str, out_tac_dir: str | pathlib.Path):
         """
         Function to write Tissue Activity Curves for each region, given a segmentation,
         4D PET image, and label map. Computes the average of the PET image within each
         region. Writes a JSON for each region with region name, frame start time, and mean 
         value within region.
         """
+        tacs_data = pd.DataFrame()
         unique_segmentation_labels = np.unique(self.seg_img.numpy())
 
-        if label_map_path is not None:
-            label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
-            regions_abrev = [self.str_to_camel_case(label) for label in label_map['abbreviation']]
-            regions_map = label_map['mapping']
-        else:
-            regions_map = [int(label) for label in unique_segmentation_labels]
-            regions_abrev = [str(label) for label in regions_map]
+        label_map = self.label_map
+        regions_abrev = [self.str_to_camel_case(label) for label in label_map['abbreviation']]
+        regions_map = label_map['mapping']
 
         for i, _label in enumerate(unique_segmentation_labels):
-            self.extract_tac_and_write(regions_map[i],
-                                       regions_abrev[i])
+            tac = self.extract_tac(regions_map[i])
+            tacs_data[regions_abrev[i]] = tac.activity
+            tacs_data[f'{regions_abrev[i]}_unc'] = tac.uncertainty
 
+        tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_tacs.tsv',sep='\t')
 
-    def __call__(self, *args, **kwargs):
-        self.write_tacs(*args, **kwargs)
+    def __call__(self, 
+                 out_tac_prefix: str,
+                 out_tac_dir: str | pathlib.Path):
+        self.write_tacs(out_tac_prefix,out_tac_dir)
