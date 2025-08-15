@@ -174,7 +174,7 @@ def write_tacs(input_image_path: str,
         pet_masked_region = apply_mask_4d(input_arr=pet_numpy,
                                           mask_arr=region_mask)
         extracted_tac, tac_uncertainty = voxel_average_w_uncertainty(pet_masked_region)
-        region_tac_file = TimeActivityCurve(times=tac_times_in_mins,
+        region_tac = TimeActivityCurve(times=tac_times_in_mins,
                                             activity=extracted_tac,
                                             uncertainty=tac_uncertainty)
         if out_tac_prefix:
@@ -182,7 +182,7 @@ def write_tacs(input_image_path: str,
                                         f'{out_tac_prefix}_seg-{regions_abrev[i]}_tac.tsv')
         else:
             out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
-        region_tac_file.to_tsv(filename=out_tac_path)
+        region_tac.to_tsv(filename=out_tac_path)
 
 
 def roi_tac(input_image_4d_path: str,
