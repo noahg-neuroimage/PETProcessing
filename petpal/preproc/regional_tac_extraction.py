@@ -210,10 +210,10 @@ def roi_tac(input_image_4d_path: str,
     pet_masked_region = apply_mask_4d(input_arr=pet_numpy,
                                         mask_arr=region_mask)
     extracted_tac, tac_uncertainty = voxel_average_w_uncertainty(pet_masked_region)
-    region_tac_file = TimeActivityCurve(times=pet_meta[time_frame_keyword],
+    region_tac = TimeActivityCurve(times=pet_meta[time_frame_keyword],
                                         activity=extracted_tac,
                                         uncertainty=tac_uncertainty)
-    region_tac_file.to_tsv(filename=out_tac_path)
+    region_tac.to_tsv(filename=out_tac_path)
 
 
 class WriteRegionalTacs:
