@@ -233,6 +233,8 @@ class WriteRegionalTacs:
                  label_map_path: str | pathlib.Path):
         self.pet_img = ants.image_read(filename=input_image_path)
         self.seg_img = ants.image_read(filename=segmentation_path)
+        self.pet_arr = self.pet_img.numpy()
+        self.seg_arr = self.seg_img.numpy()
         self.label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
         self.tac_extraction_func = voxel_average_w_uncertainty
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
@@ -283,12 +285,14 @@ class WriteRegionalTacs:
         """
         Run self.tac_extraction_func on one region and save results to image.
         """
-        extracted_tac, uncertainty = self.tac_extraction_func(input_img=self.pet_img,
-                                            segmentation_img=self.seg_img,
-                                            region=int(region_mapping))
+        region_mask = combine_regions_as_mask(segmentation_img=self.seg_arr,
+                                              label=region_mapping)
+        pet_masked_region = apply_mask_4d(input_arr=self.pet_arr,
+                                          mask_arr=region_mask)
+        extracted_tac, uncertainty = self.tac_extraction_func(pet_voxels=pet_masked_region)
         region_tac = TimeActivityCurve(times=self.scan_timing.center_in_mins,
-                                            activity=extracted_tac,
-                                            uncertainty=uncertainty)
+                                       activity=extracted_tac,
+                                       uncertainty=uncertainty)
         return region_tac
 
 
@@ -317,7 +321,7 @@ class WriteRegionalTacs:
 
         tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_tacs.tsv',sep='\t')
 
-    def __call__(self, 
+    def __call__(self,
                  out_tac_prefix: str,
                  out_tac_dir: str | pathlib.Path):
         self.write_tacs(out_tac_prefix,out_tac_dir)
