@@ -319,7 +319,7 @@ class WriteRegionalTacs:
             tacs_data[regions_abrev[i]] = tac.activity
             tacs_data[f'{regions_abrev[i]}_unc'] = tac.uncertainty
 
-        tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_tacs.tsv',sep='\t')
+        tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_tacs.tsv', sep='\t', index=False)
 
     def __call__(self,
                  out_tac_prefix: str,
