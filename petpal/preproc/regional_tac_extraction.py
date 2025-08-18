@@ -243,8 +243,8 @@ class WriteRegionalTacs:
     def set_tac_extraction_func(self, tac_extraction_func: callable):
         """Sets the tac extraction function used to a different function.
         
-        The selected function must take an input image, label image, and a single label mapping as
-        inputs, and return an estimation of activity and uncertainty of that estimation as outputs.
+        The selected function must take a 2D array of the masked voxels as input, and return the 
+        calculated activity and uncertainty across the masked voxels outputs.
         """
         self.tac_extraction_func = tac_extraction_func
 
