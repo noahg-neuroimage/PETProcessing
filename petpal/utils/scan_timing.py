@@ -7,13 +7,6 @@ import numpy as np
 
 from .image_io import load_metadata_for_nifti_with_same_filename
 
-def calculate_frame_reference_time(frame_duration: float,
-                                 frame_start: float,
-                                 half_life: float): 
-    decay_constant = math.log(2)/half_life
-    frame_reference_time = frame_start + math.log((decay_constant*frame_duration)/(1-math.exp(-decay_constant*frame_duration)))/decay_constant
-    return frame_reference_time
-
 
 @dataclass
 class ScanTimingInfo:
@@ -268,3 +261,19 @@ def get_window_index_pairs_for_image(image_path: str, w_size: float):
     image_frame_info = ScanTimingInfo.from_nifti(image_path=image_path)
     return get_window_index_pairs_from_durations(frame_durations=image_frame_info.duration,
                                                  w_size=w_size)
+
+
+def calculate_frame_reference_time(frame_duration: float,
+                                   frame_start: float,
+                                   half_life: float):
+    r"""Compute frame reference time as the time at which the average activity occurs.
+    
+    Equation comes from the `DICOM standard documentation <https://dicom.innolitics.com/ciods/positron-emission-tomography-image/pet-image/00541300>`_
+
+    :math:`T_{ave}=\frac{1}{\lambda}ln\frac{\lambda T}{1-e^{-\lambda T}}`
+
+    where lambda is the decay constant, :math:`\frac{ln2}{T_{1/2}}`, :math:`T_{1/2}` is the half life, and :math:`T` is the frame duration.
+    """
+    decay_constant = math.log(2)/half_life
+    frame_reference_time = frame_start + math.log((decay_constant*frame_duration)/(1-math.exp(-decay_constant*frame_duration)))/decay_constant
+    return frame_reference_time
