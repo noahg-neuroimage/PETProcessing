@@ -18,20 +18,32 @@ class BidsMetadataMender:
     (i.e. 'mender()') will result in keys being added/updated where possible.
 
     The following checks are made: 
-    - If FrameDuration is present, fill FrameTimesStart, assuming the first entry to be 0.
-    - If TracerRadionuclide is present, add 'RadionuclideHalfLife'.
+
+    - If 'FrameDuration' is present, fill 'FrameTimesStart', assuming the first entry to be 0.
+    - If 'TracerRadionuclide' is present, add 'RadionuclideHalfLife'.
         - Note that 'RadionuclideHalfLife' is not listed in BIDS, but we find it useful to store.
     - If all the previous keys were added, use them to calculate 'FrameReferenceTime'.
         - 'FrameReferenceTime' is not BIDS-required but it is useful.
     - If all the previous keys were added, add 'DecayCorrectionFactor' and 'ImageDecayCorrected'.
-        Note: If decay_correction was set to False, 'DecayCorrectionFactor' a list of ones of 
-            len(FrameDuration) and 'ImageDecayCorrected will be 'false', per BIDS.
+        - If decay_correction was set to False, 'DecayCorrectionFactor' is a list of ones of 
+          len(FrameDuration) and 'ImageDecayCorrected will be 'false', per BIDS.
+
+    Attributes: 
+        metadata (dict): dictionary containing all the existing BIDS metadata
+        filepath (str): path to .json file containing original BIDS metadata
+        decay_correction (bool): whether or not the image is decay-corrected
     """
     metadata: dict
     filepath: str
     decay_correction: bool
 
     def __init__(self, json_filepath: str, decay_correction: bool = False):
+        """Initializes a new BidsMetadataMender object.
+        
+        Args: 
+            json_filepath (str): path to .json file with original BIDS metadata.
+            decay_correction (bool): Whether or not the image is decay-corrected. Defaults to False.
+        """
         self.metadata = safe_load_meta(input_metadata_file=json_filepath)
         self.filepath = json_filepath
         self.decay_correction = decay_correction
