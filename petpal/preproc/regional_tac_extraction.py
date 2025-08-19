@@ -3,6 +3,7 @@ Regional TAC extraction
 """
 import re
 import os
+from collections.abc import Callable
 import pathlib
 import numpy as np
 import ants
@@ -240,7 +241,7 @@ class WriteRegionalTacs:
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
 
-    def set_tac_extraction_func(self, tac_extraction_func: callable):
+    def set_tac_extraction_func(self, tac_extraction_func: Callable):
         """Sets the tac extraction function used to a different function.
         
         The selected function must take a 2D array of the masked voxels as input, and return the 
