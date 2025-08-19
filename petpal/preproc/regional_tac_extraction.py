@@ -296,6 +296,13 @@ class WriteRegionalTacs:
     def extract_tac(self,region_mapping: int | list[int], **tac_calc_kwargs) -> TimeActivityCurve:
         """
         Run self.tac_extraction_func on one region and save results to image.
+
+        Args:
+            region_mapping (int | list[int]): The integer ID or IDs corresponding to the ROI.
+            **tac_calc_kwargs: Additional keyword arguments passed on to tac_extraction_func.
+    
+        Returns:
+            region_tac (TimeActivityCurve): The calculated TAC for the region. 
         """
         region_mask = combine_regions_as_mask(segmentation_img=self.seg_arr,
                                               label=region_mapping)
