@@ -1,6 +1,7 @@
 """Utilities for metadata handling, scrubbing, etc..."""
 
 from shutil import copyfile
+from copy import deepcopy
 from itertools import accumulate
 
 from .image_io import safe_load_meta, write_dict_to_json
@@ -10,14 +11,30 @@ from ..preproc.decay_correction import calculate_frame_decay_factor
 
 
 class BidsMetadataMender:
-    """Class for repairing and filling in the gaps of BIDS metadata based on existing fields."""
-
+    """Class for repairing and filling in the gaps of BIDS metadata based on existing fields.
+    
+    For most use cases, just initialize a mender object, passing a string path to the .json file,
+    and a boolean for whether the image was decay_corrected. Then, simply calling the object 
+    (i.e. 'mender()') will result in keys being added/updated where possible.
+    
+    The following checks are made: 
+    - If FrameDuration is present, fill FrameTimesStart, assuming the first entry to be 0.
+    - If TracerRadionuclide is present, add 'RadionuclideHalfLife'.
+        - Note that 'RadionuclideHalfLife' is not listed in BIDS, but we find it useful to store.
+    - If all the previous keys were added, use them to calculate 'FrameReferenceTime'.
+        - 'FrameReferenceTime' is not BIDS-required but it is useful.
+    - If all the previous keys were added, add 'DecayCorrectionFactor' and 'ImageDecayCorrected'.
+        Note: If decay_correction was set to False, 'DecayCorrectionFactor' a list of ones of 
+            len(FrameDuration) and 'ImageDecayCorrected will be 'false', per BIDS.
+    """
+    _old_metadata: dict
     metadata: dict
     filepath: str
     decay_correction: bool
 
     def __init__(self, json_filepath: str, decay_correction: bool = False):
         self.metadata = safe_load_meta(input_metadata_file=json_filepath)
+        self._old_metadata = deepcopy(self.metadata)
         self.filepath = json_filepath
         self.decay_correction = decay_correction
 
@@ -28,6 +45,7 @@ class BidsMetadataMender:
         
 
     def _add_missing_keys(self):
+        """Repair/Fill missing keys where possible."""
         updated_keys = []
         if 'FrameDuration' in self.metadata:
             self._add_frame_times_start()
@@ -41,7 +59,7 @@ class BidsMetadataMender:
         if self.decay_correction and {'RadionuclideHalfLife', 'FrameReferenceTime'}.issubset(self.metadata):
             self._add_decay_factors()
             updated_keys += ['DecayCorrectionFactor','ImageDecayCorrected']
-        else: 
+        else:
             self._add_empty_decay_factors()
             updated_keys += ['DecayCorrectionFactor','ImageDecayCorrected']
         print(f'The following keys were updated: {updated_keys}')
@@ -100,7 +118,7 @@ class BidsMetadataMender:
 
     def _to_file(self, filepath : str | None = None):
         """Write metadata dictionary to a .json file; defaults to making a backup file *.bak before overwriting the initial .json."""
-        if filepath is None: 
+        if filepath is None:
             filepath = self.filepath
             copyfile(src=filepath, dst=filepath+".bak")
         write_dict_to_json(meta_data_dict=self.metadata, out_path=filepath)
