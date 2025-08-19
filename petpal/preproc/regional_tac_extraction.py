@@ -141,7 +141,8 @@ def write_tacs(input_image_path: str,
                label_map_path: str,
                segmentation_image_path: str,
                out_tac_dir: str,
-               out_tac_prefix: str = ''):
+               out_tac_prefix: str = '',
+               verbose: bool = False):
     """
     Function to write Tissue Activity Curves for each region, given a segmentation,
     4D PET image, and label map. Computes the average of the PET image within each
@@ -183,6 +184,8 @@ def write_tacs(input_image_path: str,
         else:
             out_tac_path = os.path.join(out_tac_dir, f'seg-{regions_abrev[i]}_tac.tsv')
         region_tac.to_tsv(filename=out_tac_path)
+    if verbose:
+        print('Finished writing TACs.')
 
 
 def roi_tac(input_image_4d_path: str,
