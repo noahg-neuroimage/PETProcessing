@@ -269,13 +269,19 @@ class WriteRegionalTacs:
 
 
     @staticmethod
-    def str_to_camel_case(input_str):
+    def str_to_camel_case(input_str) -> str:
         """
         Take a string and return the string converted to camel case.
 
         Special characters (? * - _ / \\) are removed and treated as word separaters. Different
         words are then capitalized at the first character, leaving other alphanumeric characters
         unchanged.
+
+        Args:
+            input_str (str): The string to convert to camel case and remove special characters.
+        Returns:
+            camel_case_str (str): The string converted to camel case (e.g. CamelCase) with special
+                characters removed.
         """
         split_str = re.split(r'[-_?*/\\]', input_str)
         capped_split_str = []
