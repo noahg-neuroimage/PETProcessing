@@ -246,6 +246,11 @@ class WriteRegionalTacs:
         
         The selected function must take a 2D array of the masked voxels as input, and return the 
         calculated activity and uncertainty across the masked voxels outputs.
+
+        Args:
+            tac_extraction_func (Callable): Function that takes a 2D array of masked voxels and one
+                or more keyword arguments, and returns the calculated activity and uncertainty as a
+                tuple of 1D arrays of length equal to the number of frames in the PET image.
         """
         self.tac_extraction_func = tac_extraction_func
 
