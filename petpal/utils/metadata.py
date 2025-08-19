@@ -27,22 +27,18 @@ class BidsMetadataMender:
         Note: If decay_correction was set to False, 'DecayCorrectionFactor' a list of ones of 
             len(FrameDuration) and 'ImageDecayCorrected will be 'false', per BIDS.
     """
-    _old_metadata: dict
     metadata: dict
     filepath: str
     decay_correction: bool
 
     def __init__(self, json_filepath: str, decay_correction: bool = False):
         self.metadata = safe_load_meta(input_metadata_file=json_filepath)
-        self._old_metadata = deepcopy(self.metadata)
         self.filepath = json_filepath
         self.decay_correction = decay_correction
-
 
     def __call__(self, output_filepath : str | None = None):
         self._add_missing_keys()
         self._to_file(output_filepath)
-        
 
     def _add_missing_keys(self):
         """Repair/Fill missing keys where possible."""
@@ -67,7 +63,7 @@ class BidsMetadataMender:
 
     def _add_half_life(self):
         """Add "RadionuclideHalfLife" key to metadata."""
-        metadata = self.metadata
+        metadata = deepcopy(self.metadata)
         radionuclide = metadata['TracerRadionuclide'].lower().replace("-", "")
         half_life = float(HALF_LIVES[radionuclide])
         metadata['RadionuclideHalfLife'] = half_life
@@ -76,7 +72,7 @@ class BidsMetadataMender:
 
     def _add_empty_decay_factors(self):
         """Adds a list of ones for decay factors and sets 'ImageDecayCorrected' to False."""
-        metadata = self.metadata
+        metadata = deepcopy(self.metadata)
         frame_durations = metadata['FrameDuration']
         decay_factors = [1 for i in frame_durations]
         metadata['DecayCorrectionFactor'] = decay_factors
@@ -86,7 +82,7 @@ class BidsMetadataMender:
 
     def _add_decay_factors(self):
         """Computes decay factors and adds 'DecayCorrectionFactor' to metadata."""
-        metadata = self.metadata
+        metadata = deepcopy(self.metadata)
         half_life = metadata['RadionuclideHalfLife']
         decay_factors = [calculate_frame_decay_factor(frame_reference_time=t, half_life=half_life) for t in metadata['FrameReferenceTime']]
         metadata['DecayCorrectionFactor'] = decay_factors
@@ -97,7 +93,7 @@ class BidsMetadataMender:
 
     def _add_frame_times_start(self):
         """Fill in frame starts from frame durations, assuming first frame starts at 0."""
-        metadata = self.metadata
+        metadata = deepcopy(self.metadata)
         frame_durations = metadata['FrameDuration']
         frame_starts = [0]
         frame_starts = frame_starts + list(accumulate(frame_durations[:-1]))
@@ -107,7 +103,7 @@ class BidsMetadataMender:
 
     def _add_frame_reference_times(self):
         """Fill in frame reference times from frame starts and durations."""
-        metadata = self.metadata
+        metadata = deepcopy(self.metadata)
         half_life = metadata['RadionuclideHalfLife']
         frame_starts = metadata['FrameTimesStart']
         frame_durations = metadata['FrameDuration']
