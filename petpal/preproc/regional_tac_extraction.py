@@ -296,7 +296,10 @@ class WriteRegionalTacs:
         return region_tac
 
 
-    def write_tacs(self, out_tac_prefix: str, out_tac_dir: str | pathlib.Path):
+    def write_tacs(self,
+                   out_tac_prefix: str,
+                   out_tac_dir: str | pathlib.Path,
+                   one_tsv_per_region: bool=True):
         """
         Function to write Tissue Activity Curves for each region, given a segmentation,
         4D PET image, and label map. Computes the average of the PET image within each
@@ -316,12 +319,20 @@ class WriteRegionalTacs:
 
         for i, _label in enumerate(unique_segmentation_labels):
             tac = self.extract_tac(regions_map[i])
-            tacs_data[regions_abrev[i]] = tac.activity
-            tacs_data[f'{regions_abrev[i]}_unc'] = tac.uncertainty
+            region_name = regions_abrev[i]
+            if one_tsv_per_region:
+                tac.to_tsv(filename=f'{out_tac_dir}/{out_tac_prefix}_seg-{region_name}_tacs.tsv')
+            else:
+                tacs_data[region_name] = tac.activity
+                tacs_data[f'{region_name}_unc'] = tac.uncertainty
 
-        tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_tacs.tsv', sep='\t', index=False)
+        if not one_tsv_per_region:
+            tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_tacs.tsv', sep='\t', index=False)
 
     def __call__(self,
                  out_tac_prefix: str,
-                 out_tac_dir: str | pathlib.Path):
-        self.write_tacs(out_tac_prefix,out_tac_dir)
+                 out_tac_dir: str | pathlib.Path,
+                 one_tsv_per_region: bool=True):
+        self.write_tacs(out_tac_prefix=out_tac_prefix,
+                        out_tac_dir=out_tac_dir,
+                        one_tsv_per_region=one_tsv_per_region)
