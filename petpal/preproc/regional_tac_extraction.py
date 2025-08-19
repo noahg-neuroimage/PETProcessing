@@ -256,7 +256,7 @@ class WriteRegionalTacs:
 
 
     @staticmethod
-    def capitalize_first_char_of_str(input_str: str):
+    def capitalize_first_char_of_str(input_str: str) -> str:
         """
         Capitalize only the first character of a string, leaving the remainder unchanged.
         Args:
