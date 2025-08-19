@@ -326,6 +326,14 @@ class WriteRegionalTacs:
         4D PET image, and label map. Computes the average of the PET image within each
         region. Writes a JSON for each region with region name, frame start time, and mean 
         value within region.
+
+        Args:
+            out_tac_prefix (str): Prefix for the output files, usually the BIDS subject and
+                session ID.
+            out_tac_dir (str | pathlib.Path): Output path where files are saved.
+            one_tsv_per_region (bool): If True, write one TSV TAC file for each region in the
+                image. If False, write one TSV file with all TACs in the image.
+            **tac_calc_kwargs: Additional keywords passed onto tac_extraction_func.
         """
         tacs_data = pd.DataFrame()
 
