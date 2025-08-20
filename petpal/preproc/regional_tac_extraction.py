@@ -9,7 +9,7 @@ import numpy as np
 import ants
 import pandas as pd
 
-from .segmentation_tools import combine_regions_as_mask
+from .segmentation_tools import combine_regions_as_mask, unique_segmentation_labels
 from ..utils import image_io
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
@@ -235,14 +235,15 @@ class WriteRegionalTacs:
                  input_image_path: str | pathlib.Path,
                  segmentation_path: str | pathlib.Path,
                  label_map_path: str | pathlib.Path):
-        self.pet_img = ants.image_read(filename=input_image_path)
-        self.seg_img = ants.image_read(filename=segmentation_path)
-        self.pet_arr = self.pet_img.numpy()
-        self.seg_arr = self.seg_img.numpy()
-        self.label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
+        self.pet_arr = ants.image_read(filename=input_image_path).numpy()
+        self.seg_arr = ants.image_read(filename=segmentation_path).numpy()
+
         self.tac_extraction_func = voxel_average_w_uncertainty
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
+        label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
+        self.region_names = [self.str_to_camel_case(label) for label in label_map['abbreviation']]
+        self.region_maps = label_map['mapping'].to_list()
 
     def set_tac_extraction_func(self, tac_extraction_func: Callable):
         """Sets the tac extraction function used to a different function.
@@ -296,6 +297,17 @@ class WriteRegionalTacs:
         return camel_case_str
 
 
+    def find_label_name(self, label: int) -> str:
+        """Find the name for a label based on the provided label map. If a name is not found,
+        return 'UNK' followed by the label index."""
+        try:
+            label_map_loc = self.region_maps.index(label)
+            region_name = self.region_names[label_map_loc]
+        except ValueError:
+            region_name = f'UNK{label}'
+        return region_name
+
+
     def extract_tac(self,region_mapping: int | list[int], **tac_calc_kwargs) -> TimeActivityCurve:
         """
         Run self.tac_extraction_func on one region and save results to image.
@@ -343,15 +355,11 @@ class WriteRegionalTacs:
         tacs_data['frame_time'] = self.scan_timing.center_in_mins
         tacs_data['duration'] = self.scan_timing.duration_in_mins
 
-        unique_segmentation_labels = np.unique(self.seg_img.numpy())
+        unique_labels = unique_segmentation_labels(self.seg_arr)
 
-        label_map = self.label_map
-        regions_abrev = [self.str_to_camel_case(label) for label in label_map['abbreviation']]
-        regions_map = label_map['mapping']
-
-        for i, _label in enumerate(unique_segmentation_labels):
-            tac = self.extract_tac(regions_map[i], **tac_calc_kwargs)
-            region_name = regions_abrev[i]
+        for label in unique_labels:
+            tac = self.extract_tac(label, **tac_calc_kwargs)
+            region_name = self.find_label_name(label=label)
             if one_tsv_per_region:
                 tac.to_tsv(filename=f'{out_tac_dir}/{out_tac_prefix}_seg-{region_name}_tacs.tsv')
             else:
