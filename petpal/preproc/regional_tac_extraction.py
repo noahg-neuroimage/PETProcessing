@@ -385,6 +385,15 @@ class WriteRegionalTacs:
                  out_tac_dir: str | pathlib.Path,
                  one_tsv_per_region: bool=True,
                  **tac_calc_kwargs):
+        """Runs TAC computation and writing by running `self.write_tacs`.
+        
+        Args:
+            out_tac_prefix (str): Prefix for the output files, usually the BIDS subject and
+                session ID.
+            out_tac_dir (str | pathlib.Path): Output path where files are saved.
+            one_tsv_per_region (bool): If True, write one TSV TAC file for each region in the
+                image. If False, write one TSV file with all TACs in the image.
+            **tac_calc_kwargs: Additional keywords passed onto tac_extraction_func."""
         self.write_tacs(out_tac_prefix=out_tac_prefix,
                         out_tac_dir=out_tac_dir,
                         one_tsv_per_region=one_tsv_per_region,
