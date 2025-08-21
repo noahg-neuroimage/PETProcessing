@@ -250,9 +250,6 @@ class WriteRegionalTacs:
 
         .. code-block:: python
 
-            import ants
-            import numpy as np
-
             from petpal.preproc.regional_tac_extraction import WriteRegionalTacs
             from petpal.utils.bids_utils import gen_bids_like_filepath, gen_bids_like_dir_path
             
@@ -277,6 +274,7 @@ class WriteRegionalTacs:
             tac_calculator(out_tac_dir=tac_output_dir,
                            out_tac_prefix='sub-001_ses-01',
                            one_tsv_per_region=False)
+
     """
     def __init__(self,
                  input_image_path: str | pathlib.Path,
