@@ -310,7 +310,13 @@ class WriteRegionalTacs:
 
     def find_label_name(self, label: int) -> str:
         """Find the name for a label based on the provided label map. If a name is not found,
-        return 'UNK' followed by the label index."""
+        return 'UNK' followed by the label index.
+        
+        Args:
+            label (int): Label mapping for a region.
+        
+        Returns:
+            region_name (str): Name of the region corresponding to the provided label."""
         try:
             label_map_loc = self.region_maps.index(label)
             region_name = self.region_names[label_map_loc]
