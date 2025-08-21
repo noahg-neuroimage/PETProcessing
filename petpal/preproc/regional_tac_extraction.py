@@ -244,6 +244,39 @@ class WriteRegionalTacs:
         region_names (list): Names of regions to use in the analysis.
         region_maps (list): Region mappings to use in the analysis, corresponding 1-1 with
             region_names.
+
+
+    Example:
+
+        .. code-block:: python
+
+            import ants
+            import numpy as np
+
+            from petpal.preproc.regional_tac_extraction import WriteRegionalTacs
+            from petpal.utils.bids_utils import gen_bids_like_filepath, gen_bids_like_dir_path
+            
+            pet_image_path = gen_bids_like_filepath(sub_id='001',
+                                                    ses_id='01',
+                                                    suffix='pet',
+                                                    ext='.nii.gz')
+            seg_image_path = gen_bids_like_filepath(sub_id='001',
+                                                    ses_id='01',
+                                                    bids_dir='../derivatives/petpal/'
+                                                    suffix='seg',
+                                                    modality='seg',
+                                                    space='pet',
+                                                    ext='.nii.gz')
+            tac_output_dir = gen_bids_like_dir_path(sub_id='001',
+                                                    ses_id='01',
+                                                    modality='tacs',
+                                                    sup_dir='../derivatives/petpal/')
+            tac_calculator = WriteRegionalTacs(input_image_path=pet_image_path,
+                                               segmentation_path=seg_image_path,
+                                               label_map_path='dseg.tsv')
+            tac_calculator(out_tac_dir=tac_output_dir,
+                           out_tac_prefix='sub-001_ses-01',
+                           one_tsv_per_region=False)
     """
     def __init__(self,
                  input_image_path: str | pathlib.Path,
