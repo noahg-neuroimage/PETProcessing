@@ -158,6 +158,7 @@ def write_tacs(input_image_path: str,
             the same space as input_image.
         out_tac_dir (str): Path to the directory where regional TACs will be written to.
         out_tac_prefix (str): Prefix for output TAC files. Typically the participant ID.
+        verbose (bool): Set to True to print processing info. Default False.
     """
     label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
     regions_abrev = label_map['abbreviation']
