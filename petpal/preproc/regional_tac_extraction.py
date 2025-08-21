@@ -238,6 +238,14 @@ class WriteRegionalTacs:
                  input_image_path: str | pathlib.Path,
                  segmentation_path: str | pathlib.Path,
                  label_map_path: str | pathlib.Path):
+        """Initialize WriteRegionalTacs.
+        
+        Args:
+            input_image_path (str | pathlib.Path): Path to input 4D PET image.
+            segmentation_path (str | pathlib.Path): Path to 3D discrete segmentation image. Must
+                match input PET image space.
+            label_map_path (str | pathlib.Path): Path to label map 'dseg.tsv' file containing names
+                and mapping for regions of interest in the study."""
         self.pet_arr = ants.image_read(filename=input_image_path).numpy()
         self.seg_arr = ants.image_read(filename=segmentation_path).numpy()
 
