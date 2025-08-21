@@ -224,12 +224,15 @@ class WriteRegionalTacs:
     Write regional TACs
 
     Attrs:
-        pet_img
-        seg_img
-        tac_extraction_func
-        out_tac_prefix
-        out_tac_dir
-        scan_timing
+        pet_arr (np.ndarray): Numpy array containing 4D PET data.
+        seg_arr (np.ndarray): Numpy array containing 3D discrete segmentation data.
+        tac_extraction_func (Callable): A function that takes a 2D M x N numpy array with M voxels
+            and N time frames as well as any number of optional keyword arguments and returns a
+            tuple of 1D N-length numpy arrays with the calculated TAC and uncertainty.
+        scan_timing (ScanTimingInfo): Scan timing for the input PET image.
+        region_names (list): Names of regions to use in the analysis.
+        region_maps (list): Region mappings to use in the analysis, corresponding 1-1 with
+            region_names.
     """
     def __init__(self,
                  input_image_path: str | pathlib.Path,
