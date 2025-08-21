@@ -198,6 +198,16 @@ def roi_tac(input_image_4d_path: str,
     4D PET image, and region mapping. Computes the average of the PET image 
     within each region. Writes a tsv table with region name, frame start time,
     and mean value within region.
+
+    Args:
+        input_image_path (str): Path to the 4D PET image from which the regional TAC will be
+            extracted.
+        roi_image_path (str): Path to the segmentation image containing ROIs. Must be in the same
+            space as input_image.
+        region (list[int] | int): The region or regions that will be extracted as a TAC.
+        out_tac_dir (str): Path to the TSV where the regional TAC will be written to.
+        time_frame_keyword (str): Keyword corresponding to either 'FrameReferenceTime' or
+            'FrameTimesStart' to get the frame timing. Default 'FrameReferenceTime'.
     """
 
     if time_frame_keyword not in ['FrameReferenceTime', 'FrameTimesStart']:
