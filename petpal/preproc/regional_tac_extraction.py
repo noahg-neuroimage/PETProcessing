@@ -279,7 +279,8 @@ class WriteRegionalTacs:
     def __init__(self,
                  input_image_path: str | pathlib.Path,
                  segmentation_path: str | pathlib.Path,
-                 label_map_path: str | pathlib.Path):
+                 label_map_path: str | pathlib.Path,
+                 tac_extraction_func: Callable=voxel_average_w_uncertainty):
         """Initialize WriteRegionalTacs.
         
         Args:
@@ -287,11 +288,13 @@ class WriteRegionalTacs:
             segmentation_path (str | pathlib.Path): Path to 3D discrete segmentation image. Must
                 match input PET image space.
             label_map_path (str | pathlib.Path): Path to label map 'dseg.tsv' file containing names
-                and mapping for regions of interest in the study."""
+                and mapping for regions of interest in the study.
+            tac_extraction_func (Callable): Function to get TAC from 2D array of voxels. Default
+                :func:`voxel_average_w_uncertainty`."""
         self.pet_arr = ants.image_read(filename=input_image_path).numpy()
         self.seg_arr = ants.image_read(filename=segmentation_path).numpy()
 
-        self.tac_extraction_func = voxel_average_w_uncertainty
+        self.tac_extraction_func = tac_extraction_func
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
         label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
