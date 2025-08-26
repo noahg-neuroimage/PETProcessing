@@ -4,10 +4,14 @@ import petpal
 _PIB_EXAMPLE_ = (r"""
 Example:
     - Run a PIB scan through SUVR pipeline:
-      petpal-pib-proc --sub 001 --ses 01 --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz --seg-path ./derivatives/freesurfer/sub-001/ses-01/mri/wmparc.mgz --seg-table-path ./dseg.tsv --ref-region-label 8
+      'petpal-pib-proc --sub 001 --ses 01 --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz 
+                --seg-path ./derivatives/freesurfer/sub-001/ses-01/mri/wmparc.mgz --seg-table-path 
+                ./dseg.tsv --ref-region-label 8'
                  
     - Only compute SUVR for the range of 30-60 min:
-      petpal-pib-proc --sub 001 --ses 01 --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz --seg-path ./derivatives/freesurfer/sub-001/ses-01/mri/wmparc.mgz --seg-table-path ./dseg.tsv --ref-region-label 8 --suvr-start 1800 --suvr-end 3600
+      'petpal-pib-proc --sub 001 --ses 01 --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz \
+                --seg-path ./derivatives/freesurfer/sub-001/ses-01/mri/wmparc.mgz --seg-table-path 
+                ./dseg.tsv --ref-region-label 8 --suvr-start 1800 --suvr-end 3600'
           
 """)
 
@@ -59,9 +63,9 @@ def main():
 
     # Configure steps for preproc container
     thresh_crop_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_threshold_cropping(input_image_path=PiB_Pipeline.pet_path)
+    moco_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_windowed_moco()
     registration_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_register_pet_to_t1(reference_image_path=PiB_Pipeline.anat_path,
                                                                                             half_life=petpal.utils.constants.HALF_LIVES['c11'])
-    moco_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_windowed_moco()
     write_tacs_step = petpal.pipelines.preproc_steps.TACsFromSegmentationStep.default_write_tacs_from_segmentation_rois(segmentation_image_path=PiB_Pipeline.seg_img,
                                                                                                     segmentation_label_map_path=PiB_Pipeline.seg_table)
     wss_step = petpal.pipelines.preproc_steps.ImageToImageStep(name='weighted_series_sum',
