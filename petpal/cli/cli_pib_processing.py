@@ -1,7 +1,12 @@
+"""CLI command for running a basic PiB pipeline on a subject"""
+
 import argparse
 import petpal
+from petpal.pipelines.preproc_steps import ImageToImageStep, TACsFromSegmentationStep
+from petpal.pipelines.steps_containers import StepsContainer
+from petpal.pipelines.pipelines import BIDS_Pipeline
 
-_PIB_EXAMPLE_ = (r"""
+_PIB_EXAMPLE_ = r"""
 Example:
     - Run a PIB scan through SUVR pipeline:
       'petpal-pib-proc --sub 001 --ses 01 --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz 
@@ -11,9 +16,8 @@ Example:
     - Only compute SUVR for the range of 30-60 min:
       'petpal-pib-proc --sub 001 --ses 01 --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz \
                 --seg-path ./derivatives/freesurfer/sub-001/ses-01/mri/wmparc.mgz --seg-table-path 
-                ./dseg.tsv --ref-region-label 8 --suvr-start 1800 --suvr-end 3600'
-          
-""")
+                ./dseg.tsv --ref-region-label 8 --suvr-start 1800 --suvr-end 3600'          
+"""
 
 def main():
     help_text='Command line interface for running PiB processing.\n\nThis command runs the' \
@@ -49,50 +53,50 @@ def main():
     suvr_end = args.suvr_end
     ref_region_label = args.ref_region_label
 
-    pib_pipeline = petpal.pipelines.pipelines.BIDS_Pipeline(sub_id=sub_id,
-                                                            ses_id=ses_id,
-                                                            pipeline_name='petpal-pib-cli',
-                                                            raw_anat_img_path=anat_path,
-                                                            segmentation_img_path=seg_path,
-                                                            bids_root_dir=bids_dir,
-                                                            segmentation_label_table_path=seg_table_path,
-                                                            raw_pet_img_path=pet_path)
+    pib_pipeline = BIDS_Pipeline(sub_id=sub_id,
+                                 ses_id=ses_id,
+                                 pipeline_name='petpal-pib-cli',
+                                 raw_anat_img_path=anat_path,
+                                 segmentation_img_path=seg_path,
+                                 bids_root_dir=bids_dir,
+                                 segmentation_label_table_path=seg_table_path,
+                                 raw_pet_img_path=pet_path)
 
 
-    preproc_container = petpal.pipelines.steps_containers.StepsContainer(name='preproc')
+    preproc_container = StepsContainer(name='preproc')
 
     # Configure steps for preproc container
-    thresh_crop_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_threshold_cropping(input_image_path=pib_pipeline.pet_path)
-    moco_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_windowed_moco()
-    registration_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_register_pet_to_t1(reference_image_path=pib_pipeline.anat_path,
-                                                                                            half_life=petpal.utils.constants.HALF_LIVES['c11'])
-    write_tacs_step = petpal.pipelines.preproc_steps.TACsFromSegmentationStep.default_write_tacs_from_segmentation_rois(segmentation_image_path=pib_pipeline.seg_img,
-                                                                                                    segmentation_label_map_path=pib_pipeline.seg_table)
-    wss_step = petpal.pipelines.preproc_steps.ImageToImageStep(name='weighted_series_sum',
-                                            function=petpal.utils.useful_functions.weighted_series_sum,
-                                            input_image_path='',
-                                            output_image_path='',
-                                            half_life=petpal.utils.constants.HALF_LIVES['c11'],
-                                            start_time=suvr_start,
-                                            end_time=suvr_end)
+    thresh_crop_step = ImageToImageStep.default_threshold_cropping(input_image_path=pib_pipeline.pet_path)
+    moco_step = ImageToImageStep.default_windowed_moco()
+    registration_step = ImageToImageStep.default_register_pet_to_t1(reference_image_path=pib_pipeline.anat_path,
+                                                                    half_life=petpal.utils.constants.HALF_LIVES['c11'])
+    write_tacs_step = TACsFromSegmentationStep.default_write_tacs_from_segmentation_rois(segmentation_image_path=pib_pipeline.seg_img,
+                                                                                         segmentation_label_map_path=pib_pipeline.seg_table)
+    wss_step = ImageToImageStep(name='weighted_series_sum',
+                                function=petpal.utils.useful_functions.weighted_series_sum,
+                                input_image_path='',
+                                output_image_path='',
+                                half_life=petpal.utils.constants.HALF_LIVES['c11'],
+                                start_time=suvr_start,
+                                end_time=suvr_end)
 
     # Add steps to preproc container
     preproc_container.add_step(step=thresh_crop_step)
-    preproc_container.add_step(step=registration_step)
     preproc_container.add_step(step=moco_step)
+    preproc_container.add_step(step=registration_step)
     preproc_container.add_step(step=write_tacs_step)
     preproc_container.add_step(step=wss_step)
 
-    kinetic_modeling_container = petpal.pipelines.steps_containers.StepsContainer(name='km')
+    kinetic_modeling_container = StepsContainer(name='km')
 
     # Configure steps for kinetic modeling container
-    suvr_step = petpal.pipelines.preproc_steps.ImageToImageStep(name='suvr',
-                                                                function=petpal.preproc.image_operations_4d.suvr,
-                                                                input_image_path='',
-                                                                output_image_path='',
-                                                                ref_region=ref_region_label,
-                                                                segmentation_image_path=seg_path,
-                                                                verbose=False)
+    suvr_step = ImageToImageStep(name='suvr',
+                                 function=petpal.preproc.image_operations_4d.suvr,
+                                 input_image_path='',
+                                 output_image_path='',
+                                 ref_region=ref_region_label,
+                                 segmentation_image_path=seg_path,
+                                 verbose=False)
 
     # Add steps to kinetic modeling container
     kinetic_modeling_container.add_step(step=suvr_step)
@@ -109,3 +113,6 @@ def main():
     pib_pipeline.update_dependencies(verbose=True)
 
     pib_pipeline()
+
+if __name__ == "__main__":
+    main()
