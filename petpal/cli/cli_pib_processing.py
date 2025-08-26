@@ -21,11 +21,11 @@ Example:
 
 def main():
     help_text='Command line interface for running PiB processing.\n\nThis command runs the' \
-    'following steps:\n\n1. Crop out unnecessary voxels to speed up further processing' \
-    '\n2. Motion Correct PET image with sliding windows.\n3. Register PET image to the' \
-    'anatomical image given.\n4. Sum PET image using provided time frame.\n5. Compute ' \
-    'SUVR Parametric Image with provided reference label.\n6. Write roi tacs for optional' \
-    'further analysis.'
+    ' following steps:\n\n1. Crop out unnecessary voxels to speed up further processing' \
+    '\n2. Motion Correct PET image with sliding windows\n3. Register PET image to the' \
+    ' anatomical image given\n4. Sum PET image over provided time frame\n5. Compute ' \
+    'SUVR Parametric Image with provided reference label\n6. Write roi tacs for optional' \
+    ' further analysis'
     parser = argparse.ArgumentParser(prog='petpal-pib-proc',
                                      description=help_text,
                                      epilog=_PIB_EXAMPLE_, formatter_class=argparse.RawTextHelpFormatter)
