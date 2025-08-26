@@ -12,8 +12,14 @@ Example:
 """)
 
 def main():
+    help_text='Command line interface for running PiB processing.\n\nThis command runs the' \
+    'following steps:\n\n1. Crop out unnecessary voxels to speed up further processing' \
+    '\n2. Motion Correct PET image with sliding windows.\n3. Register PET image to the' \
+    'anatomical image given.\n4. Sum PET image using provided time frame.\n5. Compute ' \
+    'SUVR Parametric Image with provided reference label.\n6. Write roi tacs for optional' \
+    'further analysis.'
     parser = argparse.ArgumentParser(prog='petpal-pib-proc',
-                                     description='Command line interface for running PIB processing.',
+                                     description=help_text,
                                      epilog=_PIB_EXAMPLE_, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--sub',required=True,help='Subject or participant identifier. Note that this should not include "sub-", but only the value, i.e."--sub 001"')
     parser.add_argument('--ses',required=True,help='Session identifier. Note that this should not include "ses-", but only the value, i.e. "--ses 01"')
@@ -45,7 +51,8 @@ def main():
                                                             raw_anat_img_path=anat_path,
                                                             segmentation_img_path=seg_path,
                                                             bids_root_dir=bids_dir,
-                                                            segmentation_label_table_path=seg_table_path)
+                                                            segmentation_label_table_path=seg_table_path,
+                                                            raw_pet_img_path=pet_path)
 
 
     preproc_container = petpal.pipelines.steps_containers.StepsContainer(name='preproc')
