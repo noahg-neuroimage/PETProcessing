@@ -49,7 +49,7 @@ def main():
     suvr_end = args.suvr_end
     ref_region_label = args.ref_region_label
 
-    PiB_Pipeline = petpal.pipelines.pipelines.BIDS_Pipeline(sub_id=sub_id,
+    pib_pipeline = petpal.pipelines.pipelines.BIDS_Pipeline(sub_id=sub_id,
                                                             ses_id=ses_id,
                                                             pipeline_name='petpal-pib-cli',
                                                             raw_anat_img_path=anat_path,
@@ -62,12 +62,12 @@ def main():
     preproc_container = petpal.pipelines.steps_containers.StepsContainer(name='preproc')
 
     # Configure steps for preproc container
-    thresh_crop_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_threshold_cropping(input_image_path=PiB_Pipeline.pet_path)
+    thresh_crop_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_threshold_cropping(input_image_path=pib_pipeline.pet_path)
     moco_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_windowed_moco()
-    registration_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_register_pet_to_t1(reference_image_path=PiB_Pipeline.anat_path,
+    registration_step = petpal.pipelines.preproc_steps.ImageToImageStep.default_register_pet_to_t1(reference_image_path=pib_pipeline.anat_path,
                                                                                             half_life=petpal.utils.constants.HALF_LIVES['c11'])
-    write_tacs_step = petpal.pipelines.preproc_steps.TACsFromSegmentationStep.default_write_tacs_from_segmentation_rois(segmentation_image_path=PiB_Pipeline.seg_img,
-                                                                                                    segmentation_label_map_path=PiB_Pipeline.seg_table)
+    write_tacs_step = petpal.pipelines.preproc_steps.TACsFromSegmentationStep.default_write_tacs_from_segmentation_rois(segmentation_image_path=pib_pipeline.seg_img,
+                                                                                                    segmentation_label_map_path=pib_pipeline.seg_table)
     wss_step = petpal.pipelines.preproc_steps.ImageToImageStep(name='weighted_series_sum',
                                             function=petpal.utils.useful_functions.weighted_series_sum,
                                             input_image_path='',
@@ -97,15 +97,15 @@ def main():
     # Add steps to kinetic modeling container
     kinetic_modeling_container.add_step(step=suvr_step)
 
-    PiB_Pipeline.add_container(step_container=preproc_container)
-    PiB_Pipeline.add_container(step_container=kinetic_modeling_container)
+    pib_pipeline.add_container(step_container=preproc_container)
+    pib_pipeline.add_container(step_container=kinetic_modeling_container)
 
-    PiB_Pipeline.add_dependency(sending='thresh_crop', receiving='windowed_moco')
-    PiB_Pipeline.add_dependency(sending='windowed_moco', receiving='register_pet_to_t1')
-    PiB_Pipeline.add_dependency(sending='register_pet_to_t1', receiving='write_roi_tacs')
-    PiB_Pipeline.add_dependency(sending='register_pet_to_t1', receiving='weighted_series_sum')
-    PiB_Pipeline.add_dependency(sending='weighted_series_sum', receiving='suvr')
+    pib_pipeline.add_dependency(sending='thresh_crop', receiving='windowed_moco')
+    pib_pipeline.add_dependency(sending='windowed_moco', receiving='register_pet_to_t1')
+    pib_pipeline.add_dependency(sending='register_pet_to_t1', receiving='write_roi_tacs')
+    pib_pipeline.add_dependency(sending='register_pet_to_t1', receiving='weighted_series_sum')
+    pib_pipeline.add_dependency(sending='weighted_series_sum', receiving='suvr')
 
-    PiB_Pipeline.update_dependencies(verbose=True)
+    pib_pipeline.update_dependencies(verbose=True)
 
-    PiB_Pipeline()
+    pib_pipeline()
