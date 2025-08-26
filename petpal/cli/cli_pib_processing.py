@@ -9,17 +9,20 @@ from petpal.pipelines.pipelines import BIDS_Pipeline
 _PIB_EXAMPLE_ = r"""
 Example:
     - Run a PIB scan through SUVR pipeline:
-      'petpal-pib-proc --sub 001 --ses 01 --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz 
-                --seg-path ./derivatives/freesurfer/sub-001/ses-01/mri/wmparc.mgz --seg-table-path 
+      'petpal-pib-proc --sub 001 --ses 01 --pet-path ./sub-001/ses-01/pet/sub-001_ses-01_pet.nii.gz 
+                --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz --seg-path 
+                ./derivatives/freesurfer/sub-001/ses-01/mri/wmparc.mgz --seg-table-path 
                 ./dseg.tsv --ref-region-label 8'
                  
     - Only compute SUVR for the range of 30-60 min:
-      'petpal-pib-proc --sub 001 --ses 01 --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz \
-                --seg-path ./derivatives/freesurfer/sub-001/ses-01/mri/wmparc.mgz --seg-table-path 
+      'petpal-pib-proc --sub 001 --ses 01 --pet-path ./sub-001/ses-01/pet/sub-001_ses-01_pet.nii.gz 
+                --anat-path ./sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz --seg-path 
+                ./derivatives/freesurfer/sub-001/ses-01/mri/wmparc.mgz --seg-table-path 
                 ./dseg.tsv --ref-region-label 8 --suvr-start 1800 --suvr-end 3600'          
 """
 
 def main():
+    """Configure petpal-pib-cli command."""
     help_text='Command line interface for running PiB processing.\n\nThis command runs the' \
     ' following steps:\n\n1. Crop out unnecessary voxels to speed up further processing' \
     '\n2. Motion Correct PET image with sliding windows\n3. Register PET image to the' \
@@ -35,9 +38,9 @@ def main():
     parser.add_argument('--anat-path',required=True,help='Path to anatomical image')
     parser.add_argument('--seg-path',required=True,help='Path to segmentation image')
     parser.add_argument('--seg-table-path',required=True,help='Path to segmentation table file (see /shared/dseg.tsv in petpal for an example)')
-    parser.add_argument('--ref-region-label',required=True,help='Integer label which corresponds to the reference region in the segmentation image')
-    parser.add_argument('--suvr-start',required=False,default=0,help='Time (in seconds) to start SUVR calculation. Defaults to 0 (beginning of scan)')
-    parser.add_argument('--suvr-end',required=False,default=-1,help='Time (in seconds) to end SUVR calculation. Default to -1 (the end of the scan)')
+    parser.add_argument('--ref-region-label',required=True,type=int,help='Integer label which corresponds to the reference region in the segmentation image')
+    parser.add_argument('--suvr-start',required=False,default=0,type=int,help='Time (in seconds) to start SUVR calculation. Defaults to 0 (beginning of scan)')
+    parser.add_argument('--suvr-end',required=False,default=-1,type=int,help='Time (in seconds) to end SUVR calculation. Default to -1 (the end of the scan)')
     parser.add_argument('--bids-root',required=False,default='.',help='Path to root of bids directory. Defaults to current path (".")')
     
     args = parser.parse_args()
@@ -110,7 +113,7 @@ def main():
     pib_pipeline.add_dependency(sending='register_pet_to_t1', receiving='weighted_series_sum')
     pib_pipeline.add_dependency(sending='weighted_series_sum', receiving='suvr')
 
-    pib_pipeline.update_dependencies(verbose=True)
+    pib_pipeline.update_dependencies()
 
     pib_pipeline()
 
