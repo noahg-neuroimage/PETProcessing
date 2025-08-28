@@ -424,13 +424,13 @@ class WriteRegionalTacs:
             tac = self.extract_tac(label, **tac_calc_kwargs)
             region_name = self.find_label_name(label=label)
             if one_tsv_per_region:
-                tac.to_tsv(filename=f'{out_tac_dir}/{out_tac_prefix}_seg-{region_name}_tacs.tsv')
+                tac.to_tsv(filename=f'{out_tac_dir}/{out_tac_prefix}_seg-{region_name}_tac.tsv')
             else:
                 tacs_data[region_name] = tac.activity
                 tacs_data[f'{region_name}_unc'] = tac.uncertainty
 
         if not one_tsv_per_region:
-            tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_tacs.tsv', sep='\t', index=False)
+            tacs_data.to_csv(f'{out_tac_dir}/{out_tac_prefix}_multitacs.tsv', sep='\t', index=False)
 
     def __call__(self,
                  out_tac_prefix: str,
