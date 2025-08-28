@@ -210,7 +210,9 @@ def roi_tac(input_image_4d_path: str,
             extracted.
         roi_image_path (str): Path to the segmentation image containing ROIs. Must be in the same
             space as input_image.
-        region (list[int] | int): The region or regions that will be extracted as a TAC.
+        region (list[int] | int): The region or regions that will be extracted as a TAC. If a list
+            of regions are provided, the function combines all listed regions and calculates the
+            TAC from the merged region.
         out_tac_dir (str): Path to the TSV where the regional TAC will be written to.
         time_frame_keyword (str): Keyword corresponding to either 'FrameReferenceTime' or
             'FrameTimesStart' to get the frame timing. Default 'FrameReferenceTime'.
