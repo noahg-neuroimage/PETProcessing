@@ -234,7 +234,7 @@ class WriteRegionalTacs:
     """
     Write regional TACs
 
-    Attrs:
+    Attributes:
         pet_arr (np.ndarray): Numpy array containing 4D PET data.
         seg_arr (np.ndarray): Numpy array containing 3D discrete segmentation data.
         tac_extraction_func (Callable): A function that takes a 2D M x N numpy array with M voxels
@@ -290,7 +290,7 @@ class WriteRegionalTacs:
             label_map_path (str | pathlib.Path): Path to label map 'dseg.tsv' file containing names
                 and mapping for regions of interest in the study.
             tac_extraction_func (Callable): Function to get TAC from 2D array of voxels. Default
-                :func:`voxel_average_w_uncertainty`."""
+                :func:`~petpal.preproc.regional_tac_extraction.voxel_average_w_uncertainty`."""
         self.pet_arr = ants.image_read(filename=input_image_path).numpy()
         self.seg_arr = ants.image_read(filename=segmentation_path).numpy()
 
