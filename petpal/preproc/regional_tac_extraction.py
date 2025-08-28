@@ -167,7 +167,6 @@ def write_tacs(input_image_path: str,
     """
     label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
     regions_abrev = label_map['abbreviation']
-    regions_map = label_map['mapping']
 
     pet_numpy = ants.image_read(input_image_path).numpy()
     seg_numpy = ants.image_read(segmentation_image_path).numpy()
@@ -175,9 +174,9 @@ def write_tacs(input_image_path: str,
     scan_timing_info = ScanTimingInfo.from_nifti(image_path=input_image_path)
     tac_times_in_mins = scan_timing_info.center_in_mins
 
-    for i, _maps in enumerate(label_map['mapping']):
+    for i, region_map in enumerate(label_map['mapping']):
         region_mask = combine_regions_as_mask(segmentation_img=seg_numpy,
-                                              label=int(regions_map[i]))
+                                              label=int(region_map))
         pet_masked_region = apply_mask_4d(input_arr=pet_numpy,
                                           mask_arr=region_mask)
         extracted_tac, tac_uncertainty = voxel_average_w_uncertainty(pet_masked_region)
