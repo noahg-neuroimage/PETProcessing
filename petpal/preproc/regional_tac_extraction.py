@@ -367,7 +367,7 @@ class WriteRegionalTacs:
             label_map_loc = self.region_maps.index(label)
             region_name = self.region_names[label_map_loc]
         except ValueError:
-            region_name = f'UNK{label}'
+            region_name = f'UNK{label:>04}'
         return region_name
 
 
