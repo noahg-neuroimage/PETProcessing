@@ -125,13 +125,18 @@ def apply_mask_4d(input_arr: np.ndarray,
 
 def voxel_average_w_uncertainty(pet_voxels: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Spatially average flattened PET voxels and get the standard deviation as well.
-    
+
+    Takes a 2D M x N numpy array with M voxels and N time frames and returns a tuple of 1D N-length
+    numpy arrays with the mean activity and standard deviation for each time frame.
+
     Args:
-        pet_voxels (np.ndarray): 1D or 2D array of PET voxels.
-    
+        pet_voxels (np.ndarray): 2D M x N array of PET voxels with M voxels and N time frames.
+            Typically takes the output of
+            :func:`~petpal.preproc.regional_tac_extraction.apply_mask_4d`.
+
     Returns:
         average_w_uncertainty (tuple[np.ndarray, np.ndarray]): Average and standard deviation of
-            PET voxels."""
+            PET voxels for each time frame."""
     pet_average = pet_voxels.mean((0))
     pet_uncertainty = pet_voxels.std((0))
     return (pet_average, pet_uncertainty)
