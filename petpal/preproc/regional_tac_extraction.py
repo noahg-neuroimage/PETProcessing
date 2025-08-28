@@ -192,8 +192,8 @@ def write_tacs(input_image_path: str,
 def roi_tac(input_image_4d_path: str,
             roi_image_path: str,
             region: list[int] | int,
-            out_tac_path: str,
-            time_frame_keyword: str = 'FrameReferenceTime'):
+            out_tac_path: str | None = None,
+            time_frame_keyword: str = 'FrameReferenceTime') -> TimeActivityCurve:
     """
     Function to write Tissue Activity Curves for a single region, given a mask,
     4D PET image, and region mapping. Computes the average of the PET image 
@@ -209,6 +209,9 @@ def roi_tac(input_image_4d_path: str,
         out_tac_dir (str): Path to the TSV where the regional TAC will be written to.
         time_frame_keyword (str): Keyword corresponding to either 'FrameReferenceTime' or
             'FrameTimesStart' to get the frame timing. Default 'FrameReferenceTime'.
+
+    Returns:
+        region_tac (TimeActivityCurve): The mean time activity curve for the region.
     """
 
     if time_frame_keyword not in ['FrameReferenceTime', 'FrameTimesStart']:
@@ -227,8 +230,10 @@ def roi_tac(input_image_4d_path: str,
     region_tac = TimeActivityCurve(times=pet_meta[time_frame_keyword],
                                    activity=extracted_tac,
                                    uncertainty=tac_uncertainty)
-    region_tac.to_tsv(filename=out_tac_path)
+    if out_tac_path is not None:
+        region_tac.to_tsv(filename=out_tac_path)
 
+    return region_tac
 
 class WriteRegionalTacs:
     """
