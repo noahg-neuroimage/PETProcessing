@@ -1,4 +1,4 @@
-"""CLI command for running a basic PiB pipeline on a subject"""
+"""CLI command for running a basic PiB pipeline on a subject, generating SUVR parametric image and tacs."""
 
 import argparse
 import petpal
