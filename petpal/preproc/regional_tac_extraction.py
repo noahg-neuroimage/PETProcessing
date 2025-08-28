@@ -415,8 +415,8 @@ class WriteRegionalTacs:
         """
         tacs_data = pd.DataFrame()
 
-        tacs_data['frame_time'] = self.scan_timing.center_in_mins
-        tacs_data['duration'] = self.scan_timing.duration_in_mins
+        tacs_data['frame_start_min'] = self.scan_timing.start_in_mins
+        tacs_data['frame_end_min'] = self.scan_timing.end_in_mins
 
         unique_labels = unique_segmentation_labels(self.seg_arr)
 
