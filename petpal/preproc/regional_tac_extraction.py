@@ -373,7 +373,7 @@ class WriteRegionalTacs:
 
     def extract_tac(self,region_mapping: int | list[int], **tac_calc_kwargs) -> TimeActivityCurve:
         """
-        Run self.tac_extraction_func on one region and save results to image.
+        Run self.tac_extraction_func on one region and return the TAC.
 
         Args:
             region_mapping (int | list[int]): The integer ID or IDs corresponding to the ROI.
