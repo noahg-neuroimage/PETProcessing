@@ -127,3 +127,23 @@ def decay_correct(input_image_path: str,
                                     out_path=output_json_path)
 
     return corrected_image
+
+
+def calculate_frame_decay_factor(frame_reference_time: float,
+                                 half_life: float) -> float:
+    """Calculate decay factor for a single frame, given the frame reference time and half life.
+    
+    Important: 
+        The frame reference time should be the time at which average activity occurs,
+        not simply the midpoint. See preproc.scan_timing.calculate_frame_reference_time for more info.
+        
+    Args: 
+        frame_reference_time (float): Time at which the average activity occurs for the frame.
+        half_life (float): Radionuclide half life.
+
+    Returns: 
+        float: Decay Correction Factor for the frame.     
+    """
+    decay_constant = math.log(2)/half_life
+    frame_decay_factor = math.exp((decay_constant)*frame_reference_time)
+    return frame_decay_factor
