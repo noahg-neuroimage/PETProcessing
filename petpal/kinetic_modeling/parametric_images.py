@@ -94,7 +94,8 @@ def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
                                                      pTAC_vals: np.ndarray,
                                                      tTAC_img: np.ndarray,
                                                      t_thresh_in_mins: float,
-                                                     method_name: str) -> Tuple[np.ndarray, np.ndarray]:
+                                                     method_name: str,
+                                                     **run_kwargs) -> Tuple[np.ndarray, np.ndarray]:
     """
     Generates parametric images for 4D-PET data using a specified graphical analysis method.
 
@@ -131,7 +132,8 @@ def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
                                                                        pTAC_vals=pTAC_vals,
                                                                        tTAC_img=tTAC_img,
                                                                        t_thresh_in_mins=t_thresh_in_mins,
-                                                                       analysis_func=analysis_func)
+                                                                       analysis_func=analysis_func,
+                                                                       **run_kwargs)
 
     return slope_img, intercept_img
 
