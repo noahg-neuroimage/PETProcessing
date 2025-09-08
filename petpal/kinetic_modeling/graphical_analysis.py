@@ -329,6 +329,54 @@ def logan_analysis_with_rsquared(tac_times_in_minutes: np.ndarray,
     return logan_values
 
 
+@numba.njit()
+def logan_ref_region_analysis(tac_times_in_minutes: np.ndarray,
+                              input_tac_values: np.ndarray,
+                              region_tac_values: np.ndarray,
+                              t_thresh_in_minutes: float,
+                              k2_prime: float) -> tuple[float, float, float]:
+    """
+    Performs Logan reference on given input TAC, regional TAC, times and threshold.
+
+    Args:
+        tac_times_in_minutes (np.ndarray): Array of times in minutes.
+        input_tac_values (np.ndarray): Array of input TAC values
+        region_tac_values (np.ndarray): Array of ROI TAC values
+        t_thresh_in_minutes (np.ndarray): Threshold time in minutes. Line is fit for all values after the threshold.
+
+    Returns:
+        tuple: (slope, intercept, :math:`R^2`)
+
+    .. important::
+        * The interpretation of the values depends on the underlying kinetic model.
+        * We assume that the input TAC and ROI TAC values are sampled at the same times.
+        
+    """
+
+    non_zero_indices = np.argwhere(region_tac_values != 0.).T[0]
+
+    if len(non_zero_indices) <= 2:
+        return np.nan, np.nan, np.nan
+
+    t_thresh = get_index_from_threshold(times_in_minutes=tac_times_in_minutes[non_zero_indices],
+                                        t_thresh_in_minutes=t_thresh_in_minutes)
+
+    if len(tac_times_in_minutes[non_zero_indices][t_thresh:]) <= 2:
+        return np.nan, np.nan, np.nan
+
+    logan_x = cumulative_trapezoidal_integral(xdata=tac_times_in_minutes, ydata=input_tac_values)
+    logan_y = cumulative_trapezoidal_integral(xdata=tac_times_in_minutes, ydata=region_tac_values)
+
+    logan_x_ref_region_term = input_tac_values[non_zero_indices][t_thresh:]/k2_prime
+    logan_x_numerator = logan_x[non_zero_indices][t_thresh:] + logan_x_ref_region_term
+    logan_x = logan_x_numerator / region_tac_values[non_zero_indices][t_thresh:]
+    logan_y = logan_y[non_zero_indices][t_thresh:] / region_tac_values[non_zero_indices][t_thresh:]
+
+    logan_values = fit_line_to_data_using_lls(xdata=logan_x, ydata=logan_y)
+
+    return logan_values
+
+
 @numba.njit
 def alternative_logan_analysis(tac_times_in_minutes: np.ndarray,
                                input_tac_values: np.ndarray,
