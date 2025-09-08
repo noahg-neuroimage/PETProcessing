@@ -35,7 +35,8 @@ def apply_linearized_analysis_to_all_voxels(pTAC_times: np.ndarray,
                                             pTAC_vals: np.ndarray,
                                             tTAC_img: np.ndarray,
                                             t_thresh_in_mins: float,
-                                            analysis_func: Callable) -> Tuple[np.ndarray, np.ndarray]:
+                                            analysis_func: Callable,
+                                            **run_kwargs) -> Tuple[np.ndarray, np.ndarray]:
     """
     Generates parametric images for 4D-PET data using the provided analysis method.
 
@@ -80,7 +81,8 @@ def apply_linearized_analysis_to_all_voxels(pTAC_times: np.ndarray,
                 analysis_vals = analysis_func(input_tac_values=pTAC_vals,
                                               region_tac_values=tTAC_img[i, j, k, :],
                                               tac_times_in_minutes=pTAC_times,
-                                              t_thresh_in_minutes=t_thresh_in_mins)
+                                              t_thresh_in_minutes=t_thresh_in_mins,
+                                              **run_kwargs)
                 slope_img[i, j, k] = analysis_vals[0]
                 intercept_img[i, j, k] = analysis_vals[1]
 
