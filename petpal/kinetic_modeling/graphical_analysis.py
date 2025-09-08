@@ -556,13 +556,18 @@ def get_graphical_analysis_method(method_name: str) -> Callable:
             print(results)
                                     
     """
-    if method_name == "patlak":
-        return patlak_analysis
-    if method_name == "logan":
-        return logan_analysis
-    if method_name == "alt_logan":
-        return alternative_logan_analysis
-    raise ValueError(f"Invalid method_name! Must be either 'patlak', 'logan', or 'alt_logan'. Got {method_name}")
+    match method_name:
+        case "patlak":
+            return patlak_analysis
+        case "alt_logan":
+            return alternative_logan_analysis
+        case "logan":
+            return logan_analysis
+        case "logan_ref":
+            return logan_ref_region_analysis
+        case _:
+            raise ValueError("Invalid method_name! Must be either 'patlak', 'logan', 'alt_logan',"
+                             f"'logan_ref'. Got {method_name}")
 
 
 def get_graphical_analysis_method_with_rsquared(method_name: str) -> callable:
