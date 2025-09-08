@@ -17,7 +17,8 @@ TODO:
     
 """
 
-from typing import Callable, Tuple
+from collections.abc import Callable
+from typing import Tuple
 import os
 import json
 import numba
