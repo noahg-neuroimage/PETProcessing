@@ -565,7 +565,7 @@ def get_graphical_analysis_method(method_name: str) -> Callable:
     raise ValueError(f"Invalid method_name! Must be either 'patlak', 'logan', or 'alt_logan'. Got {method_name}")
 
 
-def get_graphical_analysis_method_with_rsquared(method_name: str) -> Callable:
+def get_graphical_analysis_method_with_rsquared(method_name: str) -> callable:
     """
     Function for obtaining the appropriate graphical analysis method which also calculates the r-squared value.
 
@@ -602,13 +602,17 @@ def get_graphical_analysis_method_with_rsquared(method_name: str) -> Callable:
             print(results)
             
     """
-    if method_name == "patlak":
-        return patlak_analysis_with_rsquared
-    if method_name == "logan":
-        return logan_analysis_with_rsquared
-    if method_name == "alt_logan":
-        return alternative_logan_analysis_with_rsquared
-    raise ValueError(f"Invalid method_name! Must be either 'patlak', 'logan', or 'alt_logan'. Got {method_name}")
+    match method_name:
+        case "patlak":
+            return patlak_analysis_with_rsquared
+        case "alt_logan":
+            return alternative_logan_analysis_with_rsquared
+        case "logan":
+            return logan_analysis_with_rsquared
+        case "logan_ref":
+            return logan_ref_region_analysis_with_rsquared
+        case _:
+            raise ValueError(f"Invalid method_name! Must be either 'patlak', 'logan', 'alt_logan', 'logan_ref'. Got {method_name}")
 
 
 class GraphicalAnalysis:
