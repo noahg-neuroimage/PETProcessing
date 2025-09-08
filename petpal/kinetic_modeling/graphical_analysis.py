@@ -872,7 +872,7 @@ class MultiTACGraphicalAnalysis(GraphicalAnalysis, MultiTACAnalysisMixin):
         return analysis_props
 
 
-    def calculate_fit(self):
+    def calculate_fit(self, **run_kwargs):
         """
         Calculates the fit for each TAC, updating the analysis properties with slope, intercept, and R-squared values.
         Overrides :meth:`GraphicalAnalysis.calculate_fit`.
@@ -884,7 +884,8 @@ class MultiTACGraphicalAnalysis(GraphicalAnalysis, MultiTACAnalysisMixin):
                 slope, intercept, rsquared = self.analysis_func(tac_times_in_minutes=p_tac_times,
                                                                 input_tac_values=p_tac_vals,
                                                                 region_tac_values=t_tac_vals,
-                                                                t_thresh_in_minutes=self.fit_thresh_in_mins)
+                                                                t_thresh_in_minutes=self.fit_thresh_in_mins,
+                                                                **run_kwargs)
             except np.linalg.LinAlgError:
                 slope, intercept, rsquared = np.nan, np.nan, np.nan
             self.analysis_props[tac_id]['Slope'] = slope
