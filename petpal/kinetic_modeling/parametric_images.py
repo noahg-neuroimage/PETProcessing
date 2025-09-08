@@ -12,7 +12,8 @@ various properties, and handling parametric image data.
 import os
 import warnings
 import json
-from typing import Tuple, Callable, Union
+from collections.abc import Callable
+from typing import Tuple, Union
 import nibabel
 import numpy as np
 import numba
