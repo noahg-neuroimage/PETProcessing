@@ -721,7 +721,7 @@ class GraphicalAnalysis:
             Computes and updates the analysis-related properties in the object based on the provided method and threshold.
         """
         self.calculate_fit(**run_kwargs)
-        self.calculate_fit_properties()
+        self.calculate_fit_properties(**run_kwargs)
 
     def calculate_fit(self, **run_kwargs):
         """
@@ -752,7 +752,7 @@ class GraphicalAnalysis:
         self.analysis_props['Intercept'] = intercept
         self.analysis_props['RSquared'] = rsquared
 
-    def calculate_fit_properties(self):
+    def calculate_fit_properties(self, **run_kwargs):
         """
         Calculates and stores the properties related to the fitting process.
 
@@ -777,6 +777,7 @@ class GraphicalAnalysis:
             None. The results are stored within the instance's `analysis_props` variable.
         """
         self.analysis_props['ThresholdTime'] = self.fit_thresh_in_mins
+        self.analysis_props['RunKwargs'] = run_kwargs
         self.analysis_props['MethodName'] = self.method
         p_tac_times, _ = safe_load_tac(filename=self.input_tac_path)
         t_thresh_index = get_index_from_threshold(times_in_minutes=p_tac_times, t_thresh_in_minutes=self.fit_thresh_in_mins)
@@ -892,7 +893,7 @@ class MultiTACGraphicalAnalysis(GraphicalAnalysis, MultiTACAnalysisMixin):
             self.analysis_props[tac_id]['Intercept'] = intercept
             self.analysis_props[tac_id]['RSquared'] = rsquared
 
-    def calculate_fit_properties(self):
+    def calculate_fit_properties(self, **run_kwargs):
         """
         Calculates additional properties of the fit, such as threshold, method name,
         start and end times, and number of points. Iterates over all the TACs.
@@ -908,6 +909,7 @@ class MultiTACGraphicalAnalysis(GraphicalAnalysis, MultiTACAnalysisMixin):
 
         for tac_id, a_tac in enumerate(self.tacs_files_list):
             self.analysis_props[tac_id]['ThresholdTime'] = self.fit_thresh_in_mins
+            self.analysis_props[tac_id]['RunKwargs'] = run_kwargs
             self.analysis_props[tac_id]['MethodName'] = self.method
             self.analysis_props[tac_id]['StartFrameTime'] = start_time
             self.analysis_props[tac_id]['EndFrameTime'] = end_time
