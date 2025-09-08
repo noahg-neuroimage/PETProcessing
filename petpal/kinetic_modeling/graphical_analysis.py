@@ -707,7 +707,7 @@ class GraphicalAnalysis:
                  'RSquared': None}
         return props
 
-    def run_analysis(self):
+    def run_analysis(self, **run_kwargs):
         """
         Runs the graphical analysis on the data using the specified method.
 
@@ -720,10 +720,10 @@ class GraphicalAnalysis:
         Side Effects:
             Computes and updates the analysis-related properties in the object based on the provided method and threshold.
         """
-        self.calculate_fit()
+        self.calculate_fit(**run_kwargs)
         self.calculate_fit_properties()
 
-    def calculate_fit(self):
+    def calculate_fit(self, **run_kwargs):
         """
         Calculates the best fit parameters for a graphical analysis method.
     
@@ -746,7 +746,8 @@ class GraphicalAnalysis:
         slope, intercept, rsquared = self.analysis_func(tac_times_in_minutes=p_tac_times,
                                                         input_tac_values=p_tac_vals,
                                                         region_tac_values=t_tac_vals,
-                                                        t_thresh_in_minutes=self.fit_thresh_in_mins)
+                                                        t_thresh_in_minutes=self.fit_thresh_in_mins,
+                                                        **run_kwargs)
         self.analysis_props['Slope'] = slope
         self.analysis_props['Intercept'] = intercept
         self.analysis_props['RSquared'] = rsquared
@@ -805,12 +806,12 @@ class GraphicalAnalysis:
         with open(analysis_props_file, 'w',encoding='utf-8') as f:
             json.dump(obj=self.analysis_props, fp=f, indent=4)
 
-    def __call__(self):
+    def __call__(self, **run_kwargs):
         """
         Runs :meth:`run_analysis` and :meth:`save_analysis` to run the analysis and save the analysis properties.
         
         """
-        self.run_analysis()
+        self.run_analysis(**run_kwargs)
         self.save_analysis()
 
 
