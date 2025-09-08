@@ -10,7 +10,6 @@ various properties, and handling parametric image data.
 """
 
 import os
-import warnings
 import json
 from collections.abc import Callable
 from typing import Tuple, Union
@@ -370,8 +369,7 @@ class ReferenceTissueParametricImage:
                            props: dict,
                            bounds: Union[None, np.ndarray] = None,
                            k2_prime: float=None,
-                           t_thresh_in_mins: float=None,
-                           image_scale: float=None):
+                           t_thresh_in_mins: float=None):
         """
         Set kwargs used for running parametric analysis.
 
@@ -381,14 +379,12 @@ class ReferenceTissueParametricImage:
         props['Bounds'] = bounds
         props['k2Prime'] = k2_prime
         props['ThresholdTime'] = t_thresh_in_mins
-        props['ImageScale'] = image_scale
 
 
     def run_parametric_analysis(self,
                                 bounds: Union[None, np.ndarray] = None,
                                 k2_prime: float=None,
-                                t_thresh_in_mins: float=None,
-                                image_scale: float=1):
+                                t_thresh_in_mins: float=None):
         """
         Run the analysis.
 
@@ -417,7 +413,7 @@ class ReferenceTissueParametricImage:
                                          t_thresh_in_mins=t_thresh_in_mins)
 
         fit_results = apply_rtm2_to_all_voxels(tac_times_in_minutes=tac_times_in_minutes,
-                                               tgt_image=pet_np * image_scale,
+                                               tgt_image=pet_np,
                                                ref_tac_vals=ref_tac_vals,
                                                mask_img=mask_np,
                                                method=method,
@@ -478,17 +474,14 @@ class ReferenceTissueParametricImage:
     def __call__(self,
                  bounds: np.ndarray=None,
                  t_thresh_in_mins: float=None,
-                 k2_prime: float=None,
-                 image_scale: float=None):
+                 k2_prime: float=None):
         self.run_parametric_analysis(bounds=bounds,
                                      t_thresh_in_mins=t_thresh_in_mins,
-                                     k2_prime=k2_prime,
-                                     image_scale=image_scale)
+                                     k2_prime=k2_prime)
         self.set_analysis_props(props=self.analysis_props,
                                 bounds=bounds,
                                 k2_prime=k2_prime,
-                                t_thresh_in_mins=t_thresh_in_mins,
-                                image_scale=image_scale)
+                                t_thresh_in_mins=t_thresh_in_mins)
         self.save_parametric_images()
         self.save_analysis_properties()
 
@@ -591,7 +584,7 @@ class GraphicalAnalysisParametricImage:
         }
         return props
 
-    def run_analysis(self, method_name: str, t_thresh_in_mins: float, image_scale: float=1./37000):
+    def run_analysis(self, method_name: str, t_thresh_in_mins: float):
         """
         Executes the complete analysis procedure.
 
@@ -612,7 +605,7 @@ class GraphicalAnalysisParametricImage:
 
         """
         self.calculate_parametric_images(
-            method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, image_scale=image_scale)
+            method_name=method_name, t_thresh_in_mins=t_thresh_in_mins)
         self.calculate_analysis_properties(
             method_name=method_name, t_thresh_in_mins=t_thresh_in_mins)
 
@@ -778,23 +771,16 @@ class GraphicalAnalysisParametricImage:
 
     def calculate_parametric_images(self,
                                     method_name: str,
-                                    t_thresh_in_mins: float,
-                                    image_scale: float):
+                                    t_thresh_in_mins: float):
         """
         Performs graphical analysis of PET parametric images and generates/updates the slope and
         intercept images.
 
-        Important:
-            This method scales the PET image values by the ``image_scale`` argument. This quantity
-            is inferred from the call to :meth:`run_analysis` which uses a default value of 1/37000
-            for unit conversion of the input PET image from Bq/mL to μCi/mL.
-
         This method uses the given graphical analysis method and threshold to perform the analysis
         given the input Time Activity Curve (TAC) and 4D PET image, and updates the slope and 
-        intercept images accordingly. PET images are loaded from the specified path and multiplied
-        by ``image_scale`` to convert the image into the proper units. Then, the parametric images 
-        are calculated using the specified graphical method and threshold time by explicitly
-        analyzing each voxel in the 4D PET image.
+        intercept images accordingly. PET images are loaded from the specified path. Then, the 
+        parametric images are calculated using the specified graphical method and threshold time by
+        explicitly analyzing each voxel in the 4D PET image.
 
         Args:
             method_name (str): The name of the graphical analysis method to be used.
@@ -816,17 +802,14 @@ class GraphicalAnalysisParametricImage:
         """
         p_tac_times, p_tac_vals = safe_load_tac(self.input_tac_path)
         nifty_pet4d_img = safe_load_4dpet_nifti(filename=self.pet4D_img_path)
-        warnings.warn(
-            f"PET image values are being scaled by {image_scale}.",
-            UserWarning)
         self.slope_image, self.intercept_image = generate_parametric_images_with_graphical_method(
             pTAC_times=p_tac_times,
             pTAC_vals=p_tac_vals,
-            tTAC_img=nifty_pet4d_img.get_fdata() * image_scale,
+            tTAC_img=nifty_pet4d_img.get_fdata(),
             t_thresh_in_mins=t_thresh_in_mins, method_name=method_name)
 
-    def __call__(self, method_name, t_thresh_in_mins, image_scale):
-        self.run_analysis(method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, image_scale=image_scale)
+    def __call__(self, method_name, t_thresh_in_mins):
+        self.run_analysis(method_name=method_name, t_thresh_in_mins=t_thresh_in_mins)
         self.save_analysis()
 
     def save_parametric_images(self):
