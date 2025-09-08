@@ -551,6 +551,7 @@ class GraphicalAnalysisParametricImage:
             * ``StartFrameTime`` (float): The start time of the frame used in the analysis, filled in after the analysis.
             * ``EndFrameTime`` (float): The end time of the frame used in the analysis, filled in after the analysis.
             * ``ThresholdTime`` (float): The time threshold used in the analysis, filled in after the analysis.
+            * ``RunKwargs`` (dict): Keyword arguments passed on to the analysis function.
             * ``NumberOfPointsFit`` (int): The number of points fitted in the analysis, filled in after the analysis.
             * ``SlopeMaximum`` (float): The maximum slope found in the analysis, filled in after the analysis.
             * ``SlopeMinimum`` (float): The minimum slope found in the analysis, filled in after the analysis.
@@ -572,6 +573,7 @@ class GraphicalAnalysisParametricImage:
             'StartFrameTime': None,
             'EndFrameTime': None,
             'ThresholdTime': None,
+            'RunKwargs': None,
             'NumberOfPointsFit': None,
             'SlopeMaximum': None,
             'SlopeMinimum': None,
@@ -584,7 +586,7 @@ class GraphicalAnalysisParametricImage:
         }
         return props
 
-    def run_analysis(self, method_name: str, t_thresh_in_mins: float):
+    def run_analysis(self, method_name: str, t_thresh_in_mins: float, **run_kwargs):
         """
         Executes the complete analysis procedure.
 
@@ -605,9 +607,9 @@ class GraphicalAnalysisParametricImage:
 
         """
         self.calculate_parametric_images(
-            method_name=method_name, t_thresh_in_mins=t_thresh_in_mins)
+            method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, **run_kwargs)
         self.calculate_analysis_properties(
-            method_name=method_name, t_thresh_in_mins=t_thresh_in_mins)
+            method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, **run_kwargs)
 
     def save_analysis(self):
         """
@@ -635,7 +637,8 @@ class GraphicalAnalysisParametricImage:
 
     def calculate_analysis_properties(self,
                                       method_name: str,
-                                      t_thresh_in_mins: float):
+                                      t_thresh_in_mins: float,
+                                      **run_kwargs):
         """
         Performs a set of calculations to collate various analysis properties.
 
@@ -657,9 +660,9 @@ class GraphicalAnalysisParametricImage:
         """
         self.calculate_parametric_images_properties()
         self.calculate_fit_properties(
-            method_name=method_name, t_thresh_in_mins=t_thresh_in_mins)
+            method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, **run_kwargs)
 
-    def calculate_fit_properties(self, method_name: str, t_thresh_in_mins: float):
+    def calculate_fit_properties(self, method_name: str, t_thresh_in_mins: float, **run_kwargs):
         """
         Calculates and stores the properties related to the fitting process.
 
@@ -687,6 +690,7 @@ class GraphicalAnalysisParametricImage:
             None. The results are stored within the instance's ``analysis_props`` variable.
         """
         self.analysis_props['ThresholdTime'] = t_thresh_in_mins
+        self.analysis_props['RunKwargs'] = run_kwargs
         self.analysis_props['MethodName'] = method_name
 
         p_tac_times, _ = safe_load_tac(filename=self.input_tac_path)
@@ -771,7 +775,8 @@ class GraphicalAnalysisParametricImage:
 
     def calculate_parametric_images(self,
                                     method_name: str,
-                                    t_thresh_in_mins: float):
+                                    t_thresh_in_mins: float,
+                                    **run_kwargs):
         """
         Performs graphical analysis of PET parametric images and generates/updates the slope and
         intercept images.
@@ -806,10 +811,11 @@ class GraphicalAnalysisParametricImage:
             pTAC_times=p_tac_times,
             pTAC_vals=p_tac_vals,
             tTAC_img=nifty_pet4d_img.get_fdata(),
-            t_thresh_in_mins=t_thresh_in_mins, method_name=method_name)
+            t_thresh_in_mins=t_thresh_in_mins, method_name=method_name,
+            **run_kwargs)
 
-    def __call__(self, method_name, t_thresh_in_mins):
-        self.run_analysis(method_name=method_name, t_thresh_in_mins=t_thresh_in_mins)
+    def __call__(self, method_name, t_thresh_in_mins, **run_kwargs):
+        self.run_analysis(method_name=method_name, t_thresh_in_mins=t_thresh_in_mins, **run_kwargs)
         self.save_analysis()
 
     def save_parametric_images(self):
