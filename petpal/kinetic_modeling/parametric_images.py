@@ -30,7 +30,7 @@ from ..utils.image_io import safe_copy_meta, validate_two_images_same_dimensions
 from ..utils.time_activity_curve import safe_load_tac
 
 
-@numba.njit()
+@numba.njit
 def apply_linearized_analysis_to_all_voxels(pTAC_times: np.ndarray,
                                             pTAC_vals: np.ndarray,
                                             tTAC_img: np.ndarray,
