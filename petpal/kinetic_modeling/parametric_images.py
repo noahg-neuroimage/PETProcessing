@@ -13,17 +13,17 @@ import os
 import json
 from collections.abc import Callable
 from typing import Tuple, Union
-import nibabel
+import ants
 import numpy as np
 import numba
 
 from .reference_tissue_models import fit_mrtm2_2003_to_tac,calc_bp_from_mrtm2_2003_fit
 from .fit_tac_with_rtms import get_rtm_kwargs,get_rtm_method,get_rtm_output_size
 from ..utils.time_activity_curve import TimeActivityCurve
-from ..utils.image_io import safe_load_4dpet_nifti
+from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from .graphical_analysis import get_graphical_analysis_method, get_index_from_threshold
 from ..input_function.blood_input import read_plasma_glucose_concentration
-from ..utils.image_io import safe_copy_meta, validate_two_images_same_dimensions
+from ..utils.image_io import safe_copy_meta
 from ..utils.time_activity_curve import safe_load_tac
 
 
@@ -335,13 +335,12 @@ def generate_cmrglc_parametric_image_from_ki_image(input_ki_image_path: str,
     Returns:
         None
     """
-    patlak_image = safe_load_4dpet_nifti(filename=input_ki_image_path)
-    patlak_affine = patlak_image.affine
+    patlak_image = ants.image_read(filename=input_ki_image_path)
     plasma_glucose = read_plasma_glucose_concentration(file_path=plasma_glucose_file_path,
                                                        correction_scale=glucose_rescaling_constant)
-    cmr_vals = (plasma_glucose / lumped_constant) * patlak_image.get_fdata() * rescaling_const
-    cmr_image = nibabel.Nifti1Image(dataobj=cmr_vals, affine=patlak_affine)
-    nibabel.save(cmr_image, f"{output_image_path}")
+    cmr_vals = (plasma_glucose / lumped_constant) * patlak_image.numpy() * rescaling_const
+    cmr_image = ants.from_numpy_like(data=cmr_vals, image=patlak_image)
+    ants.image_write(cmr_image, f"{output_image_path}")
     safe_copy_meta(input_image_path=input_ki_image_path, out_image_path=output_image_path)
 
 
@@ -384,12 +383,17 @@ class ReferenceTissueParametricImage:
             output_directory (str): Path to folder where analysis is saved.
             output_filename_prefix (str): Prefix for output files saved after analysis.
             method (str): RTM method to run. Default 'mrtm2'.
+
+        Raises:
+            ValueError: When pet_image_path and mask_image_path are not in same physical space.
         """
         self.reference_tac = TimeActivityCurve.from_tsv(filename=reference_tac_path)
-        self.pet_image = safe_load_4dpet_nifti(pet_image_path)
-        self.mask_image = safe_load_4dpet_nifti(mask_image_path)
+        self.pet_image = ants.image_read(pet_image_path)
+        self.mask_image = ants.image_read(mask_image_path)
 
-        validate_two_images_same_dimensions(self.pet_image,self.mask_image,check_4d=False)
+        if not check_physical_space_for_ants_image_pair(self.pet_image,self.mask_image):
+            raise ValueError(f'Input image {pet_image_path} and mask {mask_image_path} not in'
+                             'same physical space.')
 
         self.output_directory = output_directory
         self.output_filename_prefix = output_filename_prefix
@@ -473,8 +477,8 @@ class ReferenceTissueParametricImage:
             fit_results (np.ndarray, Tuple[np.ndarray, np.ndarray]): Kinetic parameters and
                 simulated data returned as arrays. 
         """
-        pet_np = self.pet_image.get_fdata()
-        mask_np = self.mask_image.get_fdata()
+        pet_np = self.pet_image.numpy()
+        mask_np = self.mask_image.numpy()
         tac_times_in_minutes = self.reference_tac.times
         ref_tac_vals = self.reference_tac.activity
         method = self.method
@@ -497,16 +501,14 @@ class ReferenceTissueParametricImage:
         """
         Save parametric images.
         """
-        fit_image = self.fit_results
-        pet_image = self.pet_image
-        fit_nibabel = nibabel.nifti1.Nifti1Image(dataobj=fit_image,
-                                                 affine=pet_image.affine,
-                                                 header=pet_image.header)
+        fit_arr = self.fit_results
+        pet_img = self.pet_image
+        fit_img = ants.from_numpy_like(data=fit_arr, image=pet_img)
 
         try:
             fit_image_path = os.path.join(self.output_directory,
                                     f"{self.output_filename_prefix}_desc-rtmfit_pet.nii.gz")
-            nibabel.save(fit_nibabel,fit_image_path)
+            ants.image_write(fit_img,fit_image_path)
         except IOError as exc:
             print("An IOError occurred while attempting to write the NIfTI image files.")
             raise exc from None
@@ -601,6 +603,7 @@ class GraphicalAnalysisParametricImage:
         """
         self.input_tac_path = os.path.abspath(input_tac_path)
         self.pet4D_img_path = os.path.abspath(pet4D_img_path)
+        self.pet_img = ants.image_read(filename=pet4D_img_path)
         self.output_directory = os.path.abspath(output_directory)
         self.output_filename_prefix = output_filename_prefix
         self.analysis_props = self.init_analysis_props()
@@ -887,11 +890,10 @@ class GraphicalAnalysisParametricImage:
 
         """
         p_tac_times, p_tac_vals = safe_load_tac(self.input_tac_path)
-        nifty_pet4d_img = safe_load_4dpet_nifti(filename=self.pet4D_img_path)
         self.slope_image, self.intercept_image = generate_parametric_images_with_graphical_method(
             pTAC_times=p_tac_times,
             pTAC_vals=p_tac_vals,
-            tTAC_img=nifty_pet4d_img.get_fdata(),
+            tTAC_img=self.pet_img.numpy(),
             t_thresh_in_mins=t_thresh_in_mins, method_name=method_name,
             **run_kwargs)
 
@@ -925,11 +927,9 @@ class GraphicalAnalysisParametricImage:
         file_name_prefix = os.path.join(self.output_directory,
                                         f"{self.output_filename_prefix}_desc-"
                                         f"{self.analysis_props['MethodName']}")
-        nifty_img_affine = safe_load_4dpet_nifti(
-            filename=self.pet4D_img_path).affine
+        
         try:
-            tmp_slope_img = nibabel.Nifti1Image(
-                dataobj=self.slope_image, affine=nifty_img_affine)
+            tmp_slope_img = ants.from_numpy_like(data=self.slope_image, image=self.pet_img)
             nibabel.save(tmp_slope_img, f"{file_name_prefix}_slope.nii.gz")
 
             tmp_intercept_img = nibabel.Nifti1Image(
