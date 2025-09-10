@@ -17,14 +17,11 @@ import nibabel
 import numpy as np
 import numba
 
-from petpal.kinetic_modeling.reference_tissue_models import (fit_mrtm2_2003_to_tac,
-                                                             calc_bp_from_mrtm2_2003_fit)
-from petpal.kinetic_modeling.fit_tac_with_rtms import (get_rtm_kwargs,
-                                                       get_rtm_method,
-                                                       get_rtm_output_size)
-from petpal.utils.time_activity_curve import TimeActivityCurve
-from petpal.utils.image_io import safe_load_4dpet_nifti
-from . import graphical_analysis
+from .reference_tissue_models import fit_mrtm2_2003_to_tac,calc_bp_from_mrtm2_2003_fit
+from .fit_tac_with_rtms import get_rtm_kwargs,get_rtm_method,get_rtm_output_size
+from ..utils.time_activity_curve import TimeActivityCurve
+from ..utils.image_io import safe_load_4dpet_nifti
+from .graphical_analysis import get_graphical_analysis_method, get_index_from_threshold
 from ..input_function.blood_input import read_plasma_glucose_concentration
 from ..utils.image_io import safe_copy_meta, validate_two_images_same_dimensions
 from ..utils.time_activity_curve import safe_load_tac
@@ -194,8 +191,7 @@ def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
             'alt_logan', 'logan_ref'.
     """
 
-    analysis_func = graphical_analysis.get_graphical_analysis_method(
-        method_name=method_name)
+    analysis_func = get_graphical_analysis_method(method_name=method_name)
     if method_name!='logan_ref':
         slope_img, intercept_img = apply_linearized_analysis_to_all_voxels(pTAC_times=pTAC_times,
                                                                            pTAC_vals=pTAC_vals,
@@ -777,7 +773,7 @@ class GraphicalAnalysisParametricImage:
             self.analysis_props[analysis_parameter_key] = analysis_parameter_val
 
         p_tac_times, _ = safe_load_tac(filename=self.input_tac_path)
-        t_thresh_index = graphical_analysis.get_index_from_threshold(times_in_minutes=p_tac_times,
+        t_thresh_index = get_index_from_threshold(times_in_minutes=p_tac_times,
                                                                      t_thresh_in_minutes=t_thresh_in_mins)
         self.analysis_props['StartFrameTime'] = p_tac_times[t_thresh_index]
         self.analysis_props['EndFrameTime'] = p_tac_times[-1]
