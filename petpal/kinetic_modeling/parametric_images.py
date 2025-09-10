@@ -179,7 +179,7 @@ def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
         t_thresh_in_mins (float): A float representing the threshold time in minutes.
 
         method_name (str): The analysis method's name to apply. Must be one of: 'patlak', 'logan',
-            or 'alt_logan'.
+            'alt_logan', or 'logan_ref'.
 
     Returns:
         Tuple[np.ndarray, np.ndarray]: A tuple of two 3D numpy arrays representing the calculated
