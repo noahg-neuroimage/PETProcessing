@@ -649,7 +649,6 @@ class GraphicalAnalysisParametricImage:
             'StartFrameTime': None,
             'EndFrameTime': None,
             'ThresholdTime': None,
-            'RunKwargs': None,
             'NumberOfPointsFit': None,
             'SlopeMaximum': None,
             'SlopeMinimum': None,
@@ -827,10 +826,10 @@ class GraphicalAnalysisParametricImage:
         No explicit return value. The results are stored within the instance's `analysis_props`
         variable.
         """
-        self.analysis_props['SlopeMaximum'] = np.max(self.slope_image)
-        self.analysis_props['SlopeMinimum'] = np.min(self.slope_image)
-        self.analysis_props['SlopeMean'] = np.mean(self.slope_image)
-        self.analysis_props['SlopeVariance'] = np.var(self.slope_image)
+        self.analysis_props['SlopeMaximum'] = np.nanmax(self.slope_image)
+        self.analysis_props['SlopeMinimum'] = np.nanmin(self.slope_image)
+        self.analysis_props['SlopeMean'] = np.nanmean(self.slope_image)
+        self.analysis_props['SlopeVariance'] = np.nanvar(self.slope_image)
 
     def calculate_intercept_image_properties(self):
         """
@@ -850,10 +849,10 @@ class GraphicalAnalysisParametricImage:
         No explicit return value. The results are stored within the instance's `analysis_props`
         variable.
         """
-        self.analysis_props['InterceptMaximum'] = np.max(self.intercept_image)
-        self.analysis_props['InterceptMinimum'] = np.min(self.intercept_image)
-        self.analysis_props['InterceptMean'] = np.mean(self.intercept_image)
-        self.analysis_props['InterceptVariance'] = np.var(self.intercept_image)
+        self.analysis_props['InterceptMaximum'] = np.nanmax(self.intercept_image)
+        self.analysis_props['InterceptMinimum'] = np.nanmin(self.intercept_image)
+        self.analysis_props['InterceptMean'] = np.nanmean(self.intercept_image)
+        self.analysis_props['InterceptVariance'] = np.nanvar(self.intercept_image)
 
 
     def calculate_parametric_images(self,
