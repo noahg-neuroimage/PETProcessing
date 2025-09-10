@@ -338,3 +338,28 @@ def convert_ctab_to_dseg(ctab_path: str,
     label_map = label_map.sort_values(by=['mapping'])
     label_map.to_csv(dseg_path,sep='\t')
     return label_map
+
+
+def gen_3d_img_from_timeseries(input_img: ants.ANTsImage) -> ants.ANTsImage:
+    """
+    Get the first frame of a 4D image as a 3D image.
+
+    Args:
+        input_img (ants.ANTsImage): The 4D image from which to get the dimension reduced image.
+
+    Returns:
+        img_3d (ants.ANTsImage): The 3D first frame of the input image as an ants image.
+    """
+    dimension = input_img.dimension
+    subdimension = dimension - 1
+    suborigin = ants.get_origin( input_img )[0:subdimension]
+    subspacing = ants.get_spacing( input_img )[0:subdimension]
+    subdirection = np.eye( subdimension )
+    for i in range( subdimension ):
+        subdirection[i,:] = ants.get_direction( input_img )[i,0:subdimension]
+    img_3d = ants.slice_image( input_img, axis = subdimension, idx = 0 )
+    ants.set_spacing( img_3d, subspacing )
+    ants.set_origin( img_3d, suborigin )
+    ants.set_direction( img_3d, subdirection )
+
+    return img_3d
