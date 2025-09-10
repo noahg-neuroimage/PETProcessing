@@ -344,6 +344,8 @@ def gen_3d_img_from_timeseries(input_img: ants.ANTsImage) -> ants.ANTsImage:
     """
     Get the first frame of a 4D image as a 3D image.
 
+    A simplified version of :py:func:`ants.ndimage_to_list.ndimage_to_list`.
+
     Args:
         input_img (ants.ANTsImage): The 4D image from which to get the dimension reduced image.
 
