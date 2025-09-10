@@ -187,17 +187,25 @@ def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
                                        
 
     Raises:
-       ValueError: If the `method_name` is not one of the following: 'patlak', 'logan', 'alt_logan'.
+        ValueError: If the `method_name` is not one of the following: 'patlak', 'logan',
+            'alt_logan', 'logan_ref'.
     """
 
     analysis_func = graphical_analysis.get_graphical_analysis_method(
         method_name=method_name)
-    slope_img, intercept_img = apply_linearized_analysis_to_all_voxels(pTAC_times=pTAC_times,
-                                                                       pTAC_vals=pTAC_vals,
-                                                                       tTAC_img=tTAC_img,
-                                                                       t_thresh_in_mins=t_thresh_in_mins,
-                                                                       analysis_func=analysis_func,
-                                                                       **run_kwargs)
+    if method_name!='logan_ref':
+        slope_img, intercept_img = apply_linearized_analysis_to_all_voxels(pTAC_times=pTAC_times,
+                                                                           pTAC_vals=pTAC_vals,
+                                                                           tTAC_img=tTAC_img,
+                                                                           t_thresh_in_mins=t_thresh_in_mins,
+                                                                           analysis_func=analysis_func)
+    else:
+        slope_img, intercept_img = parametric_refregion_analysis(pTAC_times=pTAC_times,
+                                                                 pTAC_vals=pTAC_vals,
+                                                                 tTAC_img=tTAC_img,
+                                                                 t_thresh_in_mins=t_thresh_in_mins,
+                                                                 analysis_func=analysis_func,
+                                                                 k2_prime=run_kwargs['k2_prime'])
 
     return slope_img, intercept_img
 
