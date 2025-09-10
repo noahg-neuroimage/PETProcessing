@@ -96,7 +96,9 @@ def parametric_refregion_analysis(pTAC_times: np.ndarray,
                                   k2_prime: float,
                                   analysis_func: Callable) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Generates parametric images for 4D-PET data using the provided analysis method.
+    Generates parametric images for 4D-PET data using the provided analysis method. This function
+    is intended only for use with reference region linear methods, such as Logan w/o arterial
+    input.
 
     This function iterates over each voxel in the given `tTAC_img` and applies the provided
     `analysis_func` to compute analysis values. The `analysis_func` should be a numba.jit function
@@ -179,10 +181,13 @@ def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
         method_name (str): The analysis method's name to apply. Must be one of: 'patlak', 'logan',
             'alt_logan', or 'logan_ref'.
 
+        run_kwargs: Keyword arguments with additional parameters for kinetic modeling. Currently
+            only supports `k2_prime`.
+
     Returns:
         Tuple[np.ndarray, np.ndarray]: A tuple of two 3D numpy arrays representing the calculated
             slope image and the intercept image, each of the same spatial dimensions as `tTAC_img`.
-                                       
+
 
     Raises:
         ValueError: If the `method_name` is not one of the following: 'patlak', 'logan',
