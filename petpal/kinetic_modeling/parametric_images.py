@@ -673,6 +673,8 @@ class GraphicalAnalysisParametricImage:
         Parameters:
             method_name (str): The name of the methodology adopted for the process.
             t_thresh_in_mins (float): The threshold time used through the analysis (in minutes).
+            run_kwargs: Additional keyword arguments passed on to
+                :func:`calculate_parametric_images` and :func:`calculate_analysis_properties`.
 
         See Also:
             * :func:`calculate_parametric_images`
@@ -726,6 +728,7 @@ class GraphicalAnalysisParametricImage:
         Parameters:
             method_name (str): The name of the method used for the fitting process.
             t_thresh_in_mins (float): The threshold time (in minutes) used for the fitting process.
+            run_kwargs: Additional keyword arguments passed on to :func:`calculate_fit_properties`.
 
         See Also:
             * :meth:`calculate_parametric_images_properties`
@@ -747,9 +750,11 @@ class GraphicalAnalysisParametricImage:
         of points used in the fit. These values are stored in the instance's `analysis_props`
         variable.
 
-        Parameters:
+        Args:
             method_name (str): The name of the methodology adopted for the fitting process.
             t_thresh_in_mins (float): The threshold time (in minutes) used in the fitting process.
+            run_kwargs: Additional keyword arguments used in the analysis. These are saved to the
+                analysis properties as individual properties.
 
         Note:
             This method relies on the :func:`safe_load_tac` function to load time-activity curve
@@ -766,8 +771,10 @@ class GraphicalAnalysisParametricImage:
             None. The results are stored within the instance's ``analysis_props`` variable.
         """
         self.analysis_props['ThresholdTime'] = t_thresh_in_mins
-        self.analysis_props['RunKwargs'] = run_kwargs
         self.analysis_props['MethodName'] = method_name
+
+        for analysis_parameter_key, analysis_parameter_val in run_kwargs.items():
+            self.analysis_props[analysis_parameter_key] = analysis_parameter_val
 
         p_tac_times, _ = safe_load_tac(filename=self.input_tac_path)
         t_thresh_index = graphical_analysis.get_index_from_threshold(times_in_minutes=p_tac_times,
