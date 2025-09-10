@@ -721,7 +721,7 @@ class GraphicalAnalysisParametricImage:
         :meth:`calculate_parametric_images_properties` and :meth:`calculate_fit_properties`
         respectively.
 
-        Parameters:
+        Args:
             method_name (str): The name of the method used for the fitting process.
             t_thresh_in_mins (float): The threshold time (in minutes) used for the fitting process.
             run_kwargs: Additional keyword arguments passed on to :func:`calculate_fit_properties`.
@@ -869,6 +869,8 @@ class GraphicalAnalysisParametricImage:
         Args:
             method_name (str): The name of the graphical analysis method to be used.
             t_thresh_in_mins (float): The threshold time in minutes.
+            run_kwargs: Additional keyword arguments passed on to
+                :func:`generate_parametric_images_with_graphical_method`.
 
         Returns:
             None
