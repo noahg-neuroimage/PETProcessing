@@ -754,6 +754,10 @@ class GraphicalAnalysis:
         This method is the main entry point to carry out the analysis. It executes the steps in
         order, first calculating the fit, then calculating the properties of the fit.
 
+        Args:
+            run_kwargs: Additional keyword arguments used in the analysis. These are passed on to
+                :meth:`calculate_fit` and :meth:`calculate_fit_properties`.
+
         Returns:
             None
 
@@ -773,9 +777,8 @@ class GraphicalAnalysis:
         analysis properties.
     
         Args:
-            method_name (str): The name of the graphical analysis method for which the fit should
-                be calculated.
-            t_thresh_in_mins (float): The threshold time in minutes for the analysis method.
+            run_kwargs: Additional keyword arguments used in the analysis. These are passed on to
+                `analysis_func`.
     
         Returns:
             None
@@ -960,6 +963,11 @@ class MultiTACGraphicalAnalysis(GraphicalAnalysis, MultiTACAnalysisMixin):
         start and end times, and number of points. Iterates over all the TACs.
         
         Overrides :meth:`GraphicalAnalysis.calculate_fit_properties`
+
+        Args:
+            run_kwargs: Additional keyword arguments used in the analysis. These are saved to the
+                analysis properties as individual properties.
+
         """
         p_tac_times, _ = safe_load_tac(self.input_tac_path)
         t_thresh_index = get_index_from_threshold(times_in_minutes=p_tac_times,
