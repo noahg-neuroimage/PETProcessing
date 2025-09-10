@@ -20,7 +20,8 @@ import numba
 from .reference_tissue_models import fit_mrtm2_2003_to_tac,calc_bp_from_mrtm2_2003_fit
 from .fit_tac_with_rtms import get_rtm_kwargs,get_rtm_method,get_rtm_output_size
 from ..utils.time_activity_curve import TimeActivityCurve
-from ..utils.useful_functions import check_physical_space_for_ants_image_pair
+from ..utils.useful_functions import (check_physical_space_for_ants_image_pair,
+                                      gen_3d_img_from_timeseries)
 from .graphical_analysis import get_graphical_analysis_method, get_index_from_threshold
 from ..input_function.blood_input import read_plasma_glucose_concentration
 from ..utils.image_io import safe_copy_meta
@@ -927,15 +928,13 @@ class GraphicalAnalysisParametricImage:
         file_name_prefix = os.path.join(self.output_directory,
                                         f"{self.output_filename_prefix}_desc-"
                                         f"{self.analysis_props['MethodName']}")
-        
+        template_img = gen_3d_img_from_timeseries(input_img=self.pet_img)
         try:
-            tmp_slope_img = ants.from_numpy_like(data=self.slope_image, image=self.pet_img)
-            nibabel.save(tmp_slope_img, f"{file_name_prefix}_slope.nii.gz")
+            tmp_slope_img = ants.from_numpy_like(data=self.slope_image, image=template_img)
+            ants.image_write(tmp_slope_img, f"{file_name_prefix}_slope.nii.gz")
 
-            tmp_intercept_img = nibabel.Nifti1Image(
-                dataobj=self.intercept_image, affine=nifty_img_affine)
-            nibabel.save(tmp_intercept_img,
-                         f"{file_name_prefix}_intercept.nii.gz")
+            tmp_intercept_img = ants.from_numpy_like(self.intercept_image, image=template_img)
+            ants.image_write(tmp_intercept_img,f"{file_name_prefix}_intercept.nii.gz")
 
             safe_copy_meta(input_image_path=self.pet4D_img_path,
                            out_image_path=f"{file_name_prefix}_slope.nii.gz")
