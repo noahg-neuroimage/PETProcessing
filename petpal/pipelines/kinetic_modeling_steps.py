@@ -370,6 +370,20 @@ class GraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
         return cls(input_tac_path='', roi_tacs_dir='', output_directory='', output_prefix='', method='alt_logan', )
 
 
+    @classmethod
+    def default_logan_ref(cls):
+        """
+        Creates a default instance for Logan graphical analysis of ROI TACs with reference region
+        input in a directory using
+        :class:`MultiTACGraphicalAnalysis<petpal.kinetic_modeling.graphical_analysis.MultiTACGraphicalAnalysis>`.
+        All paths are set to empty strings.
+
+        Returns:
+            GraphicalAnalysisStep: A new instance for Alt-Logan (New Plot) graphical analysis.
+        """
+        return cls(input_tac_path='', roi_tacs_dir='', output_directory='', output_prefix='', method='alt_logan', )
+
+
 class TCMFittingAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
     """
     A step for fitting compartment models to TAC data using
