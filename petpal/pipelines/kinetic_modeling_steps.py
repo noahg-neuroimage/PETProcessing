@@ -382,7 +382,7 @@ class GraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
         Returns:
             GraphicalAnalysisStep: A new instance for Alt-Logan (New Plot) graphical analysis.
         """
-        return cls(input_tac_path='', roi_tacs_dir='', output_directory='', output_prefix='', method='alt_logan', )
+        return cls(input_tac_path='', roi_tacs_dir='', output_directory='', output_prefix='', method='logan_ref', )
 
 
 class TCMFittingAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
