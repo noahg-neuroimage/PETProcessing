@@ -350,8 +350,8 @@ def logan_ref_region_analysis(tac_times_in_minutes: np.ndarray,
                               t_thresh_in_minutes: float,
                               k2_prime: float) -> np.ndarray:
     """
-    Performs Logan with reference region input function on given input TAC, regional TAC, times and
-    threshold.
+    Performs Logan with reference region input function on given input TAC, regional TAC, times,
+    threshold, and population averaged reference region k2.
 
     Args:
         tac_times_in_minutes (np.ndarray): Array of times in minutes.
@@ -402,8 +402,8 @@ def logan_ref_region_analysis_with_rsquared(tac_times_in_minutes: np.ndarray,
                                             t_thresh_in_minutes: float,
                                             k2_prime: float) -> tuple[float, float, float]:
     """
-    Performs Logan with reference region input function on given input TAC, regional TAC, times and
-    threshold.
+    Performs Logan with reference region input function on given input TAC, regional TAC, times,
+    threshold, and population averaged reference region k2.
 
     Args:
         tac_times_in_minutes (np.ndarray): Array of times in minutes.
