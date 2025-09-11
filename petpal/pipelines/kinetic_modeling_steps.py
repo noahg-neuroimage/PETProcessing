@@ -717,7 +717,21 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
             ParametricGraphicalAnalysisStep: A new instance for Alt-Logan parametric graphical analysis.
         """
         return cls(input_tac_path='', input_image_path='', output_directory='', output_prefix='', method='alt_logan')
-    
+
+    @classmethod
+    def default_logan_ref(cls):
+        """
+        Creates a default instance for Logan parametric graphical analysis with reference region
+        using
+        :class:`GraphicalAnalysisParametricImages<petpal.kinetic_modeling.parametric_images.GraphicalAnalysisParametricImage>`.
+        All non-method arguments are set to empty-strings.
+
+        Returns:
+            ParametricGraphicalAnalysisStep: A new instance for Logan parametric graphical analysis
+                with reference region.
+        """
+        return cls(input_tac_path='', input_image_path='', output_directory='', output_prefix='', method='logan_ref')
+
 KMStepType = Union[GraphicalAnalysisStep,
                    TCMFittingAnalysisStep,
                    ParametricGraphicalAnalysisStep,
