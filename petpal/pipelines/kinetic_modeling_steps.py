@@ -292,7 +292,8 @@ class GraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
                  output_directory: str,
                  output_prefix: str,
                  method: str,
-                 fit_threshold_in_mins: float = 30.0):
+                 fit_threshold_in_mins: float = 30.0,
+                 **run_kwargs):
         """
         Initializes the GraphicalAnalysisStep with specified parameters.
 
@@ -310,7 +311,7 @@ class GraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
                                       is_ref_tac_based_model=False, method=method,
                                       fit_thresh_in_mins=fit_threshold_in_mins)
         ObjectBasedStep.__init__(self, name=f'roi_{method}_fit', class_type=pet_grph.MultiTACGraphicalAnalysis,
-                                 init_kwargs=self.init_kwargs, call_kwargs=dict())
+                                 init_kwargs=self.init_kwargs, call_kwargs=dict(**run_kwargs))
     
     def __repr__(self):
         """
