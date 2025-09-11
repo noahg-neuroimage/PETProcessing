@@ -614,9 +614,9 @@ def get_graphical_analysis_method_with_rsquared(method_name: str) -> Callable:
 
     Returns:
         function: A reference to the function that performs the corresponding graphical TAC
-            analysis. The returned function will take arguments specific to the analysis method, such
-            as input TAC values, tissue TAC values, TAC times in minutes, and threshold time in
-            minutes.
+            analysis. The returned function will take arguments specific to the analysis method,
+            such as input TAC values, tissue TAC values, TAC times in minutes, and threshold time
+            in minutes.
 
     Raises:
         ValueError: If `method_name` is not one of the supported graphical analysis methods, i.e.,
