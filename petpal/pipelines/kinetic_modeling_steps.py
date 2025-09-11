@@ -304,7 +304,7 @@ class GraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
             output_prefix (str): Prefix for the output files.
             method (str): Graphical analysis method.
             fit_threshold_in_mins (float, optional): Threshold in minutes for fitting. Defaults to 30.0.
-            
+            run_kwargs: Additional keyword arguments passed on to GraphicalAnalysis.__call__().
         """
         TACAnalysisStepMixin.__init__(self, input_tac_path=input_tac_path, roi_tacs_dir=roi_tacs_dir,
                                       output_directory=output_directory, output_prefix=output_prefix,
@@ -605,6 +605,8 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
             output_prefix (str): Prefix for the output files.
             method (str): Graphical analysis method.
             fit_threshold_in_mins (float, optional): Threshold in minutes for fitting. Defaults to 30.0
+            run_kwargs: Additional keyword arguments passed on to
+                GraphicalAnalysisParametricImage.__call__().
         """
         TACAnalysisStepMixin.__init__(self, input_tac_path=input_tac_path, pet4D_img_path=input_image_path,
                                       roi_tacs_dir='', output_directory=output_directory, output_prefix=output_prefix,
