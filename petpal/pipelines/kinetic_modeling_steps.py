@@ -593,7 +593,8 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
                  output_directory: str,
                  output_prefix: str,
                  method: str,
-                 fit_threshold_in_mins: float = 30.0):
+                 fit_threshold_in_mins: float = 30.0,
+                 **run_kwargs):
         """
         Initializes the ParametricGraphicalAnalysisStep with specified parameters.
 
@@ -614,7 +615,8 @@ class ParametricGraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
                                  class_type=parametric_images.GraphicalAnalysisParametricImage,
                                  init_kwargs=self.init_kwargs,
                                  call_kwargs=dict(method_name=method,
-                                                  t_thresh_in_mins=fit_threshold_in_mins))
+                                                  t_thresh_in_mins=fit_threshold_in_mins,
+                                                  **run_kwargs))
         self._input_image_path = input_image_path
     
     def __repr__(self):
