@@ -347,7 +347,7 @@ class ImageIO:
         return image_ants
 
 
-def read_label_map_tsv(label_map_file: str) -> dict:
+def read_label_map_tsv(label_map_file: str) -> dict | pd.DataFrame:
     """
     Static method to read a label map, translating region indices to region names,
     as a dictionary. Assumes tsv format.
