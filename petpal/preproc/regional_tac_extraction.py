@@ -165,7 +165,7 @@ def write_tacs(input_image_path: str,
         out_tac_prefix (str): Prefix for output TAC files. Typically the participant ID.
         verbose (bool): Set to True to print processing info. Default False.
     """
-    label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
+    label_map = image_io.read_label_map_tsv(label_map_file=label_map_path)
     regions_abrev = label_map['abbreviation']
 
     pet_numpy = ants.image_read(input_image_path).numpy()
@@ -309,7 +309,7 @@ class WriteRegionalTacs:
         self.tac_extraction_func = tac_extraction_func
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
-        label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
+        label_map = image_io.read_label_map_tsv(label_map_file=label_map_path)
         self.region_names = [self.str_to_camel_case(label) for label in label_map['abbreviation']]
         self.region_maps = label_map['mapping'].to_list()
 
