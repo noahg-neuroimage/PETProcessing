@@ -60,17 +60,13 @@ class SymmetricGeometricTransferMatrix():
                 in the discrete segmentation image assigned to object.
         """
         if self.segmentation_label_map is None:
-
-            label_idx = unique_segmentation_labels(segmentation_img=self.segmentation_image,
+            region_index_map = unique_segmentation_labels(segmentation_img=self.segmentation_image,
                                                    zeroth_roi=self.zeroth_roi_valid)
-            label_names = [f'UNK{i:05d}' for i in label_idx]
-
-            return (label_idx, label_names)
+            region_short_names = [f'UNK{i:05d}' for i in region_index_map]
         else:
-            region_names = [str_to_camel_case(label) for label in label_map['abbreviation']]
-            region_maps = label_map['mapping'].to_list()
-            label_idx = self.segmentation_label_map[]
-            return self.segmentation_label_map[self.segmentation_image]
+            region_index_map = self.segmentation_label_map['mapping'].to_list()
+            region_short_names = [str_to_camel_case(label) for label in self.segmentation_label_map['abbreviation']]
+        return (region_index_map, region_short_names)
 
 
 
