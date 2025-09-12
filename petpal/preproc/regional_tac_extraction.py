@@ -12,7 +12,9 @@ import pandas as pd
 from .segmentation_tools import combine_regions_as_mask, unique_segmentation_labels
 from ..utils import image_io
 from ..utils.scan_timing import ScanTimingInfo
-from ..utils.useful_functions import check_physical_space_for_ants_image_pair
+from ..utils.useful_functions import (check_physical_space_for_ants_image_pair,
+                                      str_to_camel_case,
+                                      capitalize_first_char_of_str)
 from ..utils.time_activity_curve import TimeActivityCurve
 
 
@@ -310,7 +312,7 @@ class WriteRegionalTacs:
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
         label_map = image_io.read_label_map_tsv(label_map_file=label_map_path)
-        self.region_names = [self.str_to_camel_case(label) for label in label_map['abbreviation']]
+        self.region_names = [str_to_camel_case(label) for label in label_map['abbreviation']]
         self.region_maps = label_map['mapping'].to_list()
 
     def set_tac_extraction_func(self, tac_extraction_func: Callable):
@@ -326,44 +328,6 @@ class WriteRegionalTacs:
                 uncertainty.
         """
         self.tac_extraction_func = tac_extraction_func
-
-
-    @staticmethod
-    def capitalize_first_char_of_str(input_str: str) -> str:
-        """
-        Capitalize only the first character of a string, leaving the remainder unchanged.
-        Args:
-            input_str (str): The string to capitalize the first character of.
-        Returns:
-            output_str (str): The string with only the first character capitalized.
-        """
-        output_str = input_str[0].capitalize()+input_str[1:]
-        return output_str
-
-
-    @staticmethod
-    def str_to_camel_case(input_str) -> str:
-        """
-        Take a string and return the string converted to camel case.
-
-        Special characters (? * - _ / \\) are removed and treated as word separaters. Different
-        words are then capitalized at the first character, leaving other alphanumeric characters
-        unchanged.
-
-        Args:
-            input_str (str): The string to convert to camel case and remove special characters.
-        Returns:
-            camel_case_str (str): The string converted to camel case (e.g. CamelCase) with special
-                characters removed.
-        """
-        split_str = re.split(r'[-_?*/\\]', input_str)
-        capped_split_str = []
-        capitalize_first = WriteRegionalTacs.capitalize_first_char_of_str
-        for part in split_str:
-            capped_str = capitalize_first(input_str=part)
-            capped_split_str += [capped_str]
-        camel_case_str = ''.join(capped_split_str)
-        return camel_case_str
 
 
     def find_label_name(self, label: int) -> str:

@@ -8,7 +8,9 @@ from scipy.ndimage import gaussian_filter
 import ants
 import pandas as pd
 
-from ..utils.useful_functions import check_physical_space_for_ants_image_pair
+from ..utils.useful_functions import (check_physical_space_for_ants_image_pair,
+                                      str_to_camel_case,
+                                      capitalize_first_char_of_str)
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.bids_utils import gen_bids_like_filename, parse_path_to_get_subject_and_session_id
@@ -18,10 +20,12 @@ class SymmetricGeometricTransferMatrix():
     def __init__(self,
                  input_image: ants.ANTsImage,
                  segmentation_image: ants.ANTsImage,
-                 segmentation_label_map: dict | pd.DataFrame | None = None):
+                 segmentation_label_map: dict | pd.DataFrame | None = None,
+                 zeroth_roi_valid: bool = False):
         self.input_image = input_image
         self.segmentation_image = segmentation_image
         self.segmentation_label_map = segmentation_label_map
+        self.zeroth_roi_valid = zeroth_roi_valid
 
     @staticmethod
     def perform_sgtm_on_timeseries(input_timeseries_image: ants.ANTsImage,
@@ -45,6 +49,29 @@ class SymmetricGeometricTransferMatrix():
         else:
             sigma = [(fwhm_i / 2.355) / res_i for fwhm_i, res_i in zip(fwhm, image_resolution)]
         return sigma
+
+    @property
+    def unique_labels(self) -> tuple[np.ndarray, list[str]]:
+        """
+        Get unique ROIs for sGTM.
+
+        Returns:
+            unique_segmentation_labels (np.ndarray): Array containing unique integer values found
+                in the discrete segmentation image assigned to object.
+        """
+        if self.segmentation_label_map is None:
+
+            label_idx = unique_segmentation_labels(segmentation_img=self.segmentation_image,
+                                                   zeroth_roi=self.zeroth_roi_valid)
+            label_names = [f'UNK{i:05d}' for i in label_idx]
+
+            return (label_idx, label_names)
+        else:
+            region_names = [str_to_camel_case(label) for label in label_map['abbreviation']]
+            region_maps = label_map['mapping'].to_list()
+            label_idx = self.segmentation_label_map[]
+            return self.segmentation_label_map[self.segmentation_image]
+
 
 
 class Sgtm:

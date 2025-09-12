@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 import ants
+import re
 
 from . import image_io, math_lib, scan_timing
 
@@ -338,3 +339,39 @@ def convert_ctab_to_dseg(ctab_path: str,
     label_map = label_map.sort_values(by=['mapping'])
     label_map.to_csv(dseg_path,sep='\t')
     return label_map
+
+
+def capitalize_first_char_of_str(input_str: str) -> str:
+    """
+    Capitalize only the first character of a string, leaving the remainder unchanged.
+    Args:
+        input_str (str): The string to capitalize the first character of.
+    Returns:
+        output_str (str): The string with only the first character capitalized.
+    """
+    output_str = input_str[0].capitalize()+input_str[1:]
+    return output_str
+
+
+def str_to_camel_case(input_str) -> str:
+    """
+    Take a string and return the string converted to camel case.
+
+    Special characters (? * - _ / \\) are removed and treated as word separaters. Different
+    words are then capitalized at the first character, leaving other alphanumeric characters
+    unchanged.
+
+    Args:
+        input_str (str): The string to convert to camel case and remove special characters.
+    Returns:
+        camel_case_str (str): The string converted to camel case (e.g. CamelCase) with special
+            characters removed.
+    """
+    split_str = re.split(r'[-_?*/\\]', input_str)
+    capped_split_str = []
+    capitalize_first = capitalize_first_char_of_str
+    for part in split_str:
+        capped_str = capitalize_first(input_str=part)
+        capped_split_str += [capped_str]
+    camel_case_str = ''.join(capped_split_str)
+    return camel_case_str
