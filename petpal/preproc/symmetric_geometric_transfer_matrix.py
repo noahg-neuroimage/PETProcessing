@@ -6,12 +6,46 @@ import os
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import ants
+import pandas as pd
 
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.bids_utils import gen_bids_like_filename, parse_path_to_get_subject_and_session_id
 from ..preproc.segmentation_tools import unique_segmentation_labels
+
+class SymmetricGeometricTransferMatrix():
+    def __init__(self,
+                 input_image: ants.ANTsImage,
+                 segmentation_image: ants.ANTsImage,
+                 segmentation_label_map: dict | pd.DataFrame | None = None):
+        self.input_image = input_image
+        self.segmentation_image = segmentation_image
+        self.segmentation_label_map = segmentation_label_map
+
+    @staticmethod
+    def perform_sgtm_on_timeseries(input_timeseries_image: ants.ANTsImage,
+                                   segmentation_image: ants.ANTsImage,
+                                   fhwm: float | int,
+                                   ):
+        ...
+
+    @staticmethod
+    def sigma(fwhm: int | float | tuple, image_resolution: float | tuple) -> list[float]:
+        """
+        Blurring kernal sigma for sGTM based on the input FWHM.
+
+        Returns:
+            sigma (list[float]): List of sigma blurring radii for Gaussian kernel. Each sigma value
+                corresponds to an axis: x, y, and z. Values are determined based on the FWHM input
+                to the object and the voxel dimension in the input image.
+        """
+        if isinstance(fwhm, (float, int)):
+            sigma = [(fwhm / 2.355) / res for res in image_resolution]
+        else:
+            sigma = [(fwhm_i / 2.355) / res_i for fwhm_i, res_i in zip(fwhm, image_resolution)]
+        return sigma
+
 
 class Sgtm:
     """
@@ -311,10 +345,10 @@ class Sgtm:
                 tac_filename = f'seg-{label}_tac.tsv'
             else:
                 tac_filename = gen_bids_like_filename(sub_id=sub_id,
-                                                    ses_id=ses_id,
-                                                    suffix='tac',
-                                                    seg=label,
-                                                    ext='.tsv')
+                                                      ses_id=ses_id,
+                                                      suffix='tac',
+                                                      seg=label,
+                                                      ext='.tsv')
             out_tac_path = os.path.join(out_tac_dir, tac_filename)
             pvc_tac.to_tsv(filename=out_tac_path)
 
