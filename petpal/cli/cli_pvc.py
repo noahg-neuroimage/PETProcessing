@@ -22,6 +22,7 @@ See Also:
 """
 import argparse
 
+from ..utils.bids_utils import parse_path_to_get_subject_and_session_id
 from ..preproc.symmetric_geometric_transfer_matrix import Sgtm
 
 
@@ -35,7 +36,8 @@ def sgtm_cli_run(input_image_path: str,
     sgtm_obj = Sgtm(input_image_path=input_image_path,
                     segmentation_image_path=segmentation_image_path,
                     fwhm=fwhm)
-    sgtm_obj(output_path=output_path)
+    sub_id, ses_id = parse_path_to_get_subject_and_session_id(path=input_image_path)
+    sgtm_obj(output_path=output_path, out_tac_prefix=f'sub-{sub_id}_ses-{ses_id}')
 
 def main():
     """

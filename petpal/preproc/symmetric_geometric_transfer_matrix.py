@@ -300,7 +300,8 @@ class Sgtm:
 
     def save_results_4d_tacs(self,
                              sgtm_result: np.ndarray,
-                             out_tac_dir: str):
+                             out_tac_dir: str,
+                             out_tac_prefix: str,):
         """
         Saves the result of an sGTM calculation on a 4D PET series.
 
@@ -312,23 +313,14 @@ class Sgtm:
         """
         os.makedirs(out_tac_dir, exist_ok=True)
         input_image_path = self.input_image_path
-        frame_timing = ScanTimingInfo.from_nifti(image_path=input_image_path)
-        sub_id, ses_id = parse_path_to_get_subject_and_session_id(path=input_image_path)
+        tac_times = ScanTimingInfo.from_nifti(image_path=input_image_path).center_in_mins
 
         tac_array = np.asarray(sgtm_result).T
 
         for i, (label, name) in enumerate(zip(self.unique_labels)):
-            pvc_tac = TimeActivityCurve(times=frame_timing.center_in_mins,
+            pvc_tac = TimeActivityCurve(times=tac_times,
                                         activity=tac_array[i,:])
-            if sub_id=='XXXX' or ses_id=='XX':
-                tac_filename = f'seg-{name}_tac.tsv'
-            else:
-                tac_filename = gen_bids_like_filename(sub_id=sub_id,
-                                                      ses_id=ses_id,
-                                                      suffix='tac',
-                                                      seg=name,
-                                                      ext='.tsv')
-            out_tac_path = os.path.join(out_tac_dir, tac_filename)
+            out_tac_path = os.path.join(f'{out_tac_dir}', f'{out_tac_prefix}_seg-{name}_tac.tsv')
             pvc_tac.to_tsv(filename=out_tac_path)
 
 
@@ -347,7 +339,7 @@ class Sgtm:
             self.sgtm_result = self.run_sgtm_4d()
 
 
-    def save(self, output_path):
+    def save(self, output_path: str, out_tac_prefix: str | None = None):
         """
         Save sGTM results by writing the resulting array to one or more files.
 
@@ -362,10 +354,10 @@ class Sgtm:
         if self.input_image.dimension==3:
             self.save_results_3d(sgtm_result=self.sgtm_result, out_tsv_path=output_path)
         elif self.input_image.dimension==4:
-            self.save_results_4d_tacs(sgtm_result=self.sgtm_result, out_tac_dir=output_path)
+            self.save_results_4d_tacs(sgtm_result=self.sgtm_result, out_tac_dir=output_path, out_tac_prefix=out_tac_prefix)
 
 
-    def __call__(self, output_path: str):
+    def __call__(self, output_path: str, out_tac_prefix: str | None = None):
         """
         Run sGTM and save results.
         
@@ -377,4 +369,4 @@ class Sgtm:
                 4D images, this is a directory. 
         """
         self.run()
-        self.save(output_path=output_path)
+        self.save(output_path=output_path, out_tac_prefix=out_tac_prefix)
