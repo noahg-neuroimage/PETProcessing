@@ -4,10 +4,12 @@ transfer matrix (sGTM) method.
 """
 import os
 import numpy as np
+from nibabel.freesurfer import read_label
 from scipy.ndimage import gaussian_filter
 import ants
 import pandas as pd
 
+from utils.image_io import read_label_map_tsv
 from ..utils.useful_functions import (check_physical_space_for_ants_image_pair,
                                       str_to_camel_case,
                                       capitalize_first_char_of_str)
@@ -15,60 +17,6 @@ from ..utils.scan_timing import ScanTimingInfo
 from ..utils.time_activity_curve import TimeActivityCurve
 from ..utils.bids_utils import gen_bids_like_filename, parse_path_to_get_subject_and_session_id
 from ..preproc.segmentation_tools import unique_segmentation_labels
-
-class SymmetricGeometricTransferMatrix():
-    def __init__(self,
-                 input_image: ants.ANTsImage,
-                 segmentation_image: ants.ANTsImage,
-                 segmentation_label_map: dict | pd.DataFrame | None = None,
-                 zeroth_roi_valid: bool = False):
-        self.input_image = input_image
-        self.segmentation_image = segmentation_image
-        self.segmentation_label_map = segmentation_label_map
-        self.zeroth_roi_valid = zeroth_roi_valid
-
-    @staticmethod
-    def perform_sgtm_on_timeseries(input_timeseries_image: ants.ANTsImage,
-                                   segmentation_image: ants.ANTsImage,
-                                   fhwm: float | int,
-                                   ):
-        ...
-
-    @staticmethod
-    def sigma(fwhm: int | float | tuple, image_resolution: float | tuple) -> list[float]:
-        """
-        Blurring kernal sigma for sGTM based on the input FWHM.
-
-        Returns:
-            sigma (list[float]): List of sigma blurring radii for Gaussian kernel. Each sigma value
-                corresponds to an axis: x, y, and z. Values are determined based on the FWHM input
-                to the object and the voxel dimension in the input image.
-        """
-        if isinstance(fwhm, (float, int)):
-            sigma = [(fwhm / 2.355) / res for res in image_resolution]
-        else:
-            sigma = [(fwhm_i / 2.355) / res_i for fwhm_i, res_i in zip(fwhm, image_resolution)]
-        return sigma
-
-    @property
-    def unique_labels(self) -> tuple[np.ndarray, list[str]]:
-        """
-        Get unique ROIs for sGTM.
-
-        Returns:
-            unique_segmentation_labels (np.ndarray): Array containing unique integer values found
-                in the discrete segmentation image assigned to object.
-        """
-        if self.segmentation_label_map is None:
-            region_index_map = unique_segmentation_labels(segmentation_img=self.segmentation_image,
-                                                   zeroth_roi=self.zeroth_roi_valid)
-            region_short_names = [f'UNK{i:05d}' for i in region_index_map]
-        else:
-            region_index_map = self.segmentation_label_map['mapping'].to_list()
-            region_short_names = [str_to_camel_case(label) for label in self.segmentation_label_map['abbreviation']]
-        return (region_index_map, region_short_names)
-
-
 
 class Sgtm:
     """
@@ -78,6 +26,7 @@ class Sgtm:
                  input_image_path: str,
                  segmentation_image_path: str,
                  fwhm: float | tuple[float, float, float],
+                 segmentation_label_map_path: str | None = None,
                  zeroth_roi: bool = False):
         """
         Initialize running sGTM
@@ -125,6 +74,7 @@ class Sgtm:
         self.input_image_path = input_image_path
         self.input_image = ants.image_read(input_image_path)
         self.segmentation_image = ants.image_read(segmentation_image_path)
+        self.segmentation_label_map_path = segmentation_label_map_path
         self.fwhm = fwhm
         self.zeroth_roi = zeroth_roi
         self.sgtm_result = None
@@ -147,9 +97,8 @@ class Sgtm:
             sigma = [(fwhm_i / 2.355) / res_i for fwhm_i, res_i in zip(self.fwhm, resolution)]
         return sigma
 
-
     @property
-    def unique_labels(self) -> np.ndarray:
+    def unique_labels(self) -> tuple[np.ndarray, list[str]]:
         """
         Get unique ROIs for sGTM.
 
@@ -157,8 +106,15 @@ class Sgtm:
             unique_segmentation_labels (np.ndarray): Array containing unique integer values found
                 in the discrete segmentation image assigned to object.
         """
-        return unique_segmentation_labels(segmentation_img=self.segmentation_image,
-                                          zeroth_roi=self.zeroth_roi)
+        if self.segmentation_label_map_path is None:
+            region_index_map = unique_segmentation_labels(segmentation_img=self.segmentation_image,
+                                                          zeroth_roi=self.zeroth_roi)
+            region_short_names = [f'UNK{i:05d}' for i in region_index_map]
+        else:
+            seg_label_map = read_label_map_tsv(label_map_file=self.segmentation_label_map_path)
+            region_index_map = seg_label_map['mapping'].to_list()
+            region_short_names = [str_to_camel_case(label) for label in seg_label_map['abbreviation']]
+        return (region_index_map, region_short_names)
 
 
     @staticmethod
@@ -276,7 +232,7 @@ class Sgtm:
         input_numpy = self.input_image.numpy()
         segmentation_arr = self.segmentation_image.numpy()
 
-        unique_labels = self.unique_labels
+        unique_labels = self.unique_labels[0]
 
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
                                                            segmentation_arr=segmentation_arr,
@@ -306,7 +262,7 @@ class Sgtm:
         pet_frame_list = self.input_image.ndimage_to_list()
         segmentation_arr = self.segmentation_image.numpy()
 
-        unique_labels = self.unique_labels
+        unique_labels = self.unique_labels[0]
 
         voxel_by_roi_matrix = Sgtm.get_voxel_by_roi_matrix(unique_labels=unique_labels,
                                                            segmentation_arr=segmentation_arr,
@@ -335,7 +291,7 @@ class Sgtm:
             sgtm_result (tuple): Output of :meth:`run_sgtm`
             out_tsv_path (str): File path to which results are saved.
         """
-        sgtm_result_array = np.array([sgtm_result[0],sgtm_result[1]]).T
+        sgtm_result_array = np.array([sgtm_result[0], sgtm_result[1]]).T
         np.savetxt(out_tsv_path,sgtm_result_array,
                    header='Region\tMean',
                    fmt=['%.0f','%.2f'],
@@ -361,16 +317,16 @@ class Sgtm:
 
         tac_array = np.asarray(sgtm_result).T
 
-        for i, label in enumerate(self.unique_labels):
+        for i, (label, name) in enumerate(zip(self.unique_labels)):
             pvc_tac = TimeActivityCurve(times=frame_timing.center_in_mins,
                                         activity=tac_array[i,:])
             if sub_id=='XXXX' or ses_id=='XX':
-                tac_filename = f'seg-{label}_tac.tsv'
+                tac_filename = f'seg-{name}_tac.tsv'
             else:
                 tac_filename = gen_bids_like_filename(sub_id=sub_id,
                                                       ses_id=ses_id,
                                                       suffix='tac',
-                                                      seg=label,
+                                                      seg=name,
                                                       ext='.tsv')
             out_tac_path = os.path.join(out_tac_dir, tac_filename)
             pvc_tac.to_tsv(filename=out_tac_path)
