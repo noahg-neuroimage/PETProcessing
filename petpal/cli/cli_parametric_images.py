@@ -101,13 +101,17 @@ def main():
         raise SystemExit('Exiting without command')
 
     if args.command=='graphical-analysis':
+        run_kwargs = {}
+        if args.k2_prime is not None:
+            run_kwargs['k2_prime'] = args.k2_prime
+
         param_img = GraphicalAnalysisParametricImage(input_tac_path=args.input_tac_path,
                                                     pet4D_img_path=args.pet4D_img_path,
                                                     output_directory=args.output_directory,
                                                     output_filename_prefix=args.output_filename_prefix)
         param_img.run_analysis(method_name=args.method_name,
                                t_thresh_in_mins=args.threshold_in_mins,
-                               k2_prime=args.k2_prime)
+                               **run_kwargs)
         param_img.save_analysis()
 
     if args.command=='reference-tissue':
