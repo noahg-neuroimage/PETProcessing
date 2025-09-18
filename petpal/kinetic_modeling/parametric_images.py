@@ -38,7 +38,7 @@ def apply_linearized_analysis_to_all_voxels(pTAC_times: np.ndarray,
     Generates parametric images for 4D-PET data using the provided analysis method.
 
     This function iterates over each voxel in the given `tTAC_img` and applies the provided
-    `analysis_func` to compute analysis values. The `analysis_func` should be a numba.jit function
+    `analysis_func` to compute analysis values. The `analysis_func` should be a numba.njit function
     for optimization and should be following a signature compatible with either of the following:
     patlak_analysis, logan_analysis, or alt_logan_analysis.
 
@@ -54,7 +54,7 @@ def apply_linearized_analysis_to_all_voxels(pTAC_times: np.ndarray,
         t_thresh_in_mins (float): A float representing the threshold time in minutes.
                                   It is applied when calling the `analysis_func`.
 
-        analysis_func (Callable): A numba.jit function to apply to each voxel for given PET data.
+        analysis_func (Callable): A numba.njit function to apply to each voxel for given PET data.
                                   It should take the following arguments:
 
                                     - input_tac_values: 1D numpy array for input TAC values
@@ -99,7 +99,7 @@ def parametric_refregion_analysis(pTAC_times: np.ndarray,
     input.
 
     This function iterates over each voxel in the given `tTAC_img` and applies the provided
-    `analysis_func` to compute analysis values. The `analysis_func` should be a numba.jit function
+    `analysis_func` to compute analysis values. The `analysis_func` should be a numba.njit function
     for optimization and should be following a signature compatible with either of the following:
     patlak_analysis, logan_analysis, or alt_logan_analysis.
 
@@ -118,7 +118,7 @@ def parametric_refregion_analysis(pTAC_times: np.ndarray,
         k2_prime (float): The population averaged reference region k2 value, passed to
                           `analysis_func`.
                                   
-        analysis_func (Callable): A numba.jit function to apply to each voxel for given PET data.
+        analysis_func (Callable): A numba.njit function to apply to each voxel for given PET data.
                                   It should take the following arguments:
 
                                     - input_tac_values: 1D numpy array for input TAC values
