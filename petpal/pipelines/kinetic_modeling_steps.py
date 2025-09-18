@@ -380,7 +380,7 @@ class GraphicalAnalysisStep(ObjectBasedStep, TACAnalysisStepMixin):
         All paths are set to empty strings.
 
         Returns:
-            GraphicalAnalysisStep: A new instance for Alt-Logan (New Plot) graphical analysis.
+            GraphicalAnalysisStep: A new instance for Logan graphical analysis with reference region.
         """
         return cls(input_tac_path='', roi_tacs_dir='', output_directory='', output_prefix='', method='logan_ref', )
 
