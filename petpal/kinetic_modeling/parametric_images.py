@@ -342,8 +342,7 @@ def generate_cmrglc_parametric_image_from_ki_image(input_ki_image_path: str,
     patlak_image = ants.image_read(filename=input_ki_image_path)
     plasma_glucose = read_plasma_glucose_concentration(file_path=plasma_glucose_file_path,
                                                        correction_scale=glucose_rescaling_constant)
-    cmr_vals = (plasma_glucose / lumped_constant) * patlak_image.numpy() * rescaling_const
-    cmr_image = ants.from_numpy_like(data=cmr_vals, image=patlak_image)
+    cmr_image = (plasma_glucose / lumped_constant) * patlak_image * rescaling_const
     ants.image_write(cmr_image, f"{output_image_path}")
     safe_copy_meta(input_image_path=input_ki_image_path, out_image_path=output_image_path)
 
