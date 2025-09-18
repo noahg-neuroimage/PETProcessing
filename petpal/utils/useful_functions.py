@@ -342,7 +342,7 @@ def convert_ctab_to_dseg(ctab_path: str,
 
 def gen_3d_img_from_timeseries(input_img: ants.ANTsImage) -> ants.ANTsImage:
     """
-    Get the first frame of a 4D image as a 3D image.
+    Get the first frame of a 4D image as a template 3D image with voxel value zero.
 
     A simplified version of :py:func:`ants.ndimage_to_list.ndimage_to_list`.
 
@@ -359,7 +359,8 @@ def gen_3d_img_from_timeseries(input_img: ants.ANTsImage) -> ants.ANTsImage:
     subdirection = np.eye( subdimension )
     for i in range( subdimension ):
         subdirection[i,:] = ants.get_direction( input_img )[i,0:subdimension]
-    img_3d = ants.slice_image( input_img, axis = subdimension, idx = 0 )
+    img_shape = input_img.shape[:-1]
+    img_3d = ants.make_image(img_shape)
     ants.set_spacing( img_3d, subspacing )
     ants.set_origin( img_3d, suborigin )
     ants.set_direction( img_3d, subdirection )

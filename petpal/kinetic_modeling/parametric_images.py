@@ -193,7 +193,7 @@ def generate_parametric_images_with_graphical_method(pTAC_times: np.ndarray,
             'alt_logan', 'logan_ref'.
     """
     if len(run_kwargs)>0:
-        warnings.warn(f"Got the following run kwargs: {**run_kwargs}. Kwargs other than 'k2_prime'"
+        warnings.warn(f"Got the following run kwargs: {run_kwargs}. Kwargs other than 'k2_prime'"
                       "will be ignored.")
     analysis_func = get_graphical_analysis_method(method_name=method_name)
     if method_name!='logan_ref':
