@@ -430,11 +430,9 @@ class WriteRegionalTacs:
         tacs_data['frame_start(min)'] = self.scan_timing.start_in_mins
         tacs_data['frame_end(min)'] = self.scan_timing.end_in_mins
 
-        unique_labels = unique_segmentation_labels(self.seg_arr)
-
-        for label in unique_labels:
-            tac = self.extract_tac(label, **tac_calc_kwargs)
-            region_name = self.find_label_name(label=label)
+        for i,region_name in enumerate(self.region_names):
+            mappings = self.region_maps[i]
+            tac = self.extract_tac(region_mapping=mappings, **tac_calc_kwargs)
             if one_tsv_per_region:
                 tac.to_tsv(filename=f'{out_tac_dir}/{out_tac_prefix}_seg-{region_name}_tac.tsv')
             else:
