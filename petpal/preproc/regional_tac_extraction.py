@@ -309,9 +309,9 @@ class WriteRegionalTacs:
         self.tac_extraction_func = tac_extraction_func
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
-        label_map = image_io.ImageIO.read_label_map_tsv(label_map_file=label_map_path)
-        self.region_names = [self.str_to_camel_case(label) for label in label_map['abbreviation']]
-        self.region_maps = label_map['mapping'].to_list()
+        label_map = image_io.safe_load_meta(input_metadata_file=label_map_path)
+        self.region_names = list(label_map.keys())
+        self.region_maps = list(label_map.values())
 
     def set_tac_extraction_func(self, tac_extraction_func: Callable):
         """Sets the tac extraction function used to a different function.
