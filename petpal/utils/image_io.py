@@ -168,6 +168,7 @@ def get_half_life_from_radionuclide(meta_data_file_path: str) -> float:
 
     return float(HALF_LIVES[radionuclide])
 
+
 def get_half_life_from_meta(meta_data_file_path: str):
     """
     Extracts the radionuclide half-life (usually in seconds) from a nifti metadata file.
@@ -189,6 +190,7 @@ def get_half_life_from_meta(meta_data_file_path: str):
         return float(half_life)
     except KeyError as exc:
         raise KeyError("RadionuclideHalfLife not found in meta-data file.") from exc
+
 
 def get_half_life_from_nifti(image_path:str):
     """
@@ -344,28 +346,28 @@ class ImageIO:
         image_ants = ants.from_numpy(data=image_array, spacing=spacing, origin=origin, direction=direction)
         return image_ants
 
-    @staticmethod
-    def read_label_map_tsv(label_map_file: str) -> dict:
-        """
-        Static method to read a label map, translating region indices to region names,
-        as a dictionary. Assumes tsv format.
 
-        Args:
-            label_map_file (str): Path to a json-formatted label map file.
+def read_label_map_tsv(label_map_file: str) -> dict | pd.DataFrame:
+    """
+    Static method to read a label map, translating region indices to region names,
+    as a dictionary. Assumes tsv format.
 
-        Returns:
-            label_map (pd.DataFrame): Dataframe matching region indices, names,
-                abbreviations, and mappings.
+    Args:
+        label_map_file (str): Path to a json-formatted label map file.
 
-        Raises:
-            FileNotFoundError: If the provided ctab file cannot be found in the directory.
-        """
-        if not os.path.exists(label_map_file):
-            raise FileNotFoundError(f"Image file {label_map_file} not found")
+    Returns:
+        label_map (pd.DataFrame): Dataframe matching region indices, names,
+            abbreviations, and mappings.
 
-        label_map = pd.read_csv(label_map_file,sep='\t')
+    Raises:
+        FileNotFoundError: If the provided ctab file cannot be found in the directory.
+    """
+    if not os.path.exists(label_map_file):
+        raise FileNotFoundError(f"Image file {label_map_file} not found")
 
-        return label_map
+    label_map = pd.read_csv(label_map_file,sep='\t')
+
+    return label_map
 
 
 def safe_load_4dpet_nifti(filename: str) -> nibabel.nifti1.Nifti1Image:
