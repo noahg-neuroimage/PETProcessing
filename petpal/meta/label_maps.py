@@ -194,3 +194,20 @@ label_map_freesurfer_merge_lr = {
     'CtxTransversetemporal': [1034, 2034],
     'CtxInsula': [1035, 2035]
     }
+
+
+class LabelMap(dict):
+    """Class that manages region label and mapping information."""
+    def __init__(self):
+        self.label_map: dict = None
+
+
+    def check_camel_case(self, label: str):
+        """Check if a label is camel case."""
+        pass
+
+
+    def validate_labels(self):
+        """Validate labels in the label map object"""
+        for label in self.label_map.keys():
+            self.check_camel_case(label=label)
