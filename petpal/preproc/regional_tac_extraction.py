@@ -1,7 +1,6 @@
 """
 Regional TAC extraction
 """
-import re
 import os
 from collections.abc import Callable
 import pathlib
@@ -9,12 +8,10 @@ import numpy as np
 import ants
 import pandas as pd
 
-from .segmentation_tools import combine_regions_as_mask, unique_segmentation_labels
+from .segmentation_tools import combine_regions_as_mask
 from ..utils import image_io
 from ..utils.scan_timing import ScanTimingInfo
-from ..utils.useful_functions import (check_physical_space_for_ants_image_pair,
-                                      str_to_camel_case,
-                                      capitalize_first_char_of_str)
+from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from ..utils.time_activity_curve import TimeActivityCurve
 
 
