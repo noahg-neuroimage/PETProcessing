@@ -13,7 +13,7 @@ from ..utils import image_io
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from ..utils.time_activity_curve import TimeActivityCurve
-
+from ..meta.label_maps import LabelMapLoader
 
 def extract_roi_voxel_tacs_from_image_using_mask(input_image: ants.core.ANTsImage,
                                                  mask_image: ants.core.ANTsImage,
@@ -289,7 +289,7 @@ class WriteRegionalTacs:
     def __init__(self,
                  input_image_path: str | pathlib.Path,
                  segmentation_path: str | pathlib.Path,
-                 label_map_path: str | pathlib.Path,
+                 label_map: str | pathlib.Path,
                  tac_extraction_func: Callable=voxel_average_w_uncertainty):
         """Initialize WriteRegionalTacs.
         
@@ -308,9 +308,9 @@ class WriteRegionalTacs:
         self.tac_extraction_func = tac_extraction_func
         self.scan_timing = ScanTimingInfo.from_nifti(input_image_path)
 
-        label_map = image_io.safe_load_meta(input_metadata_file=label_map_path)
-        self.region_names = list(label_map.keys())
-        self.region_maps = list(label_map.values())
+        label_map_dict = LabelMapLoader(label_map_option=label_map).label_map
+        self.region_names = list(label_map_dict.keys())
+        self.region_maps = list(label_map_dict.values())
 
     def set_tac_extraction_func(self, tac_extraction_func: Callable):
         """Sets the tac extraction function used to a different function.
