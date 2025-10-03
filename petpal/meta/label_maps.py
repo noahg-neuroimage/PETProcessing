@@ -2,6 +2,11 @@
 
 This module contains label maps for use in running PETPAL.
 """
+from collections.abc import MutableSequence, Callable
+import pathlib
+from numbers import Integral
+from petpal.utils.image_io import safe_load_meta
+from petpal.utils.useful_functions import str_to_camel_case
 
 label_map_freesurfer = {
     'Unknown': 0,
@@ -196,18 +201,73 @@ label_map_freesurfer_merge_lr = {
     }
 
 
-class LabelMap(dict):
-    """Class that manages region label and mapping information."""
-    def __init__(self):
-        self.label_map: dict = None
+class LabelMapLoader:
+    """Load label map data"""
+    def __init__(self, label_map_option: str | dict):
+        self.loader_method = self.detect_option(label_map_option=label_map_option)
+        self.label_map = self.loader_method(label_map_option)
+        self.labels_to_camel_case()
+        self.validate_mappings()
 
+    def from_petpal(self, label_map_name: str) -> dict:
+        """Choose from an existing list of label maps implemented in PETPAL."""
+        match label_map_name.lower():
+            case 'freesurfer':
+                return label_map_freesurfer
+            case 'freesurfer_merge_lr':
+                return label_map_freesurfer_merge_lr
+            case _:
+                raise ValueError(f"Label map name {label_map_name} not in existing list of "
+                                 "implemented label maps. Choose one of: 'freesurfer' or "
+                                 "'freesurfer_merge_lr'.")
 
-    def check_camel_case(self, label: str):
-        """Check if a label is camel case."""
-        pass
+    def from_dict(self, label_map: dict) -> dict:
+        """Provide a label map implemented in Python."""
+        return label_map
 
+    def from_json(self, label_map_path: str) -> dict:
+        """Load a label map from a .json file."""
+        return safe_load_meta(input_metadata_file=label_map_path)
 
-    def validate_labels(self):
-        """Validate labels in the label map object"""
-        for label in self.label_map.keys():
-            self.check_camel_case(label=label)
+    def detect_option(self, label_map_option: dict | str) -> Callable:
+        """Determine the label map loading method to use based on the provided option."""
+        if isinstance(label_map_option, dict):
+            return self.from_dict
+        if isinstance(label_map_option, str):
+            label_map_path = pathlib.Path(label_map_option)
+            if label_map_path.exists():
+                return self.from_json
+            elif label_map_path.suffix!='':
+                raise FileNotFoundError(f'Label map option {label_map_option} looks like a path'
+                                        'yet does not exist.')
+            return self.from_petpal
+
+    def labels_to_camel_case(self):
+        """Convert all label map labels to camel case and update label map."""
+        label_map = self.label_map.copy()
+        labels = label_map.keys()
+        for label in labels:
+            updated_label = str_to_camel_case(label)
+            self.label_map[updated_label] = self.label_map.pop(label)
+
+    def validate_mappings(self):
+        """Validate mapping values for integer mappings in the label map. Mappings can be an
+        integer or a list of integers.
+        
+        Raises:
+            """
+        label_map = self.label_map.copy()
+        labels = label_map.keys()
+        mappings = label_map.values()
+        for label, mapping in zip(labels, mappings):
+            if isinstance(mapping, Integral):
+                continue
+            if isinstance(mapping, MutableSequence):
+                for value in mapping:
+                    if isinstance(value, Integral):
+                        continue
+                    raise TypeError(f'Label {label} with mapping {mapping} contains value {value} '
+                                    f'which is not an integer. Instead found type: {type(value)}.')
+            else:
+                raise TypeError(f'Label {label} contains mapping {mapping} which is not '
+                                f'an integer or a list. Instead found type: {type(mapping)}.')
