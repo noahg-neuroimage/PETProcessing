@@ -237,10 +237,12 @@ class LabelMapLoader:
             label_map_path = pathlib.Path(label_map_option)
             if label_map_path.exists():
                 return self.from_json
-            elif label_map_path.suffix!='':
+            if label_map_path.suffix!='':
                 raise FileNotFoundError(f'Label map option {label_map_option} looks like a path'
                                         'yet does not exist.')
             return self.from_petpal
+        raise ValueError(f'label_map_option should be a str or dict. Got type: '
+                         f'{type(label_map_option)}')
 
     def labels_to_camel_case(self):
         """Convert all label map labels to camel case and update label map."""
