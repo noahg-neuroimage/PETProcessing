@@ -9,6 +9,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import ants
 
+from ..meta.label_maps import LabelMapLoader
 from ..utils.image_io import read_label_map_tsv
 from ..utils.useful_functions import (check_physical_space_for_ants_image_pair,
                                       str_to_camel_case)
@@ -23,7 +24,7 @@ class Sgtm:
                  input_image_path: str,
                  segmentation_image_path: str,
                  fwhm: float | tuple[float, float, float],
-                 segmentation_label_map_path: str | None = None,
+                 label_map_option: str | None = None,
                  zeroth_roi: bool = False):
         r"""Initialize running sGTM
 
@@ -33,7 +34,7 @@ class Sgtm:
                 aligned which is used to delineate regions for PVC.
             fwhm (float | tuple[float, float, float]): Full width at half maximum of the Gaussian 
                 blurring kernel for each dimension in mm. If only one number is provided, it is used for all dimensions.
-            segmentation_label_map_path (Optional, str): Path to segmentation label map table,
+            label_map_option (Optional, str): Path to segmentation label map table,
                 to be read by :func:`~.read_label_map_tsv`, for segmentation labeling ROIs in the outputs.
                 Defaults to None.
             zeroth_roi (bool): If False, ignores the zeroth ``0`` label in calculations, often used to
@@ -66,7 +67,7 @@ class Sgtm:
                 sgtm_4d_analysis = Sgtm(input_image_path=input_4d_image_path,
                                         segmentation_image_path=segmentation_image_path,
                                         fwhm=fwhm,
-                                        segmentation_label_map_path=segmentation_label_map_path,
+                                        label_map_option=label_map_option,
                                         zeroth_roi = False)
                 sgtm_4d_analysis(output_path="/path/to/output/directory/", out_tac_prefix='sub-001_ses-001_desc-sGTM')
 
@@ -74,7 +75,7 @@ class Sgtm:
         self.input_image_path = input_image_path
         self.input_image = ants.image_read(input_image_path)
         self.segmentation_image = ants.image_read(segmentation_image_path)
-        self.segmentation_label_map_path = segmentation_label_map_path
+        self.label_map_option = label_map_option
         self.fwhm = fwhm
         self.zeroth_roi = zeroth_roi
         self.sgtm_result = None
@@ -151,14 +152,14 @@ class Sgtm:
             unique_segmentation_labels (tuple[np.ndarray, list[str]]): Tuple containing the unique ROI indices (mapping)
                 and inferred segmentation labels.
         """
-        if self.segmentation_label_map_path is None:
+        if self.label_map_option is None:
             region_index_map = unique_segmentation_labels(segmentation_img=self.segmentation_image,
                                                           zeroth_roi=self.zeroth_roi)
             region_short_names = [f'UNK{i:05d}' for i in region_index_map]
         else:
-            seg_label_map = read_label_map_tsv(label_map_file=self.segmentation_label_map_path)
-            region_index_map = seg_label_map['mapping'].to_list()
-            region_short_names = [str_to_camel_case(label) for label in seg_label_map['abbreviation']]
+            seg_label_map = LabelMapLoader(label_map_option=self.label_map_option).label_map
+            region_index_map = list(seg_label_map.keys())
+            region_short_names = list(seg_label_map.values())
         return (region_index_map, region_short_names)
 
 
