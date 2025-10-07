@@ -10,9 +10,7 @@ from scipy.ndimage import gaussian_filter
 import ants
 
 from ..meta.label_maps import LabelMapLoader
-from ..utils.image_io import read_label_map_tsv
-from ..utils.useful_functions import (check_physical_space_for_ants_image_pair,
-                                      str_to_camel_case)
+from ..utils.useful_functions import check_physical_space_for_ants_image_pair
 from ..utils.scan_timing import ScanTimingInfo
 from ..utils.time_activity_curve import TimeActivityCurve
 from ..preproc.segmentation_tools import unique_segmentation_labels
