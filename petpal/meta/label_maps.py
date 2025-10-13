@@ -505,7 +505,17 @@ label_map_perlcyno_merge_lr = {
 
 
 class LabelMapLoader:
-    """Load label map data"""
+    """Class for loading label map data to convert between segmentation mappings and region
+    labels.
+    
+    There are three ways to load label maps, using argument `label_map_option`:
+    1) (str) Load a preset option implemented in PETPAL. These include `freesurfer`,
+        `freesurfer_merge_lr`, `perlcyno`, `perlcyno_merge_lr`.
+        See :meth:`LabelMapLoader.from_petpal`.
+    2) (str) Load a json file that maps regions used in your study. Provide the path to the
+        .json file. See :meth:`LabelMapLoader.from_json`.
+    3) (dict) Load a Python dictionary that implements a label map for region in your study. See
+        :meth:`LabelMapLoader.from_dict`."""
     def __init__(self, label_map_option: str | dict):
         self.loader_method = self.detect_option(label_map_option=label_map_option)
         self.label_map = self.loader_method(label_map_option)
@@ -513,7 +523,21 @@ class LabelMapLoader:
         self.validate_mappings()
 
     def from_petpal(self, label_map_name: str) -> dict:
-        """Choose from an existing list of label maps implemented in PETPAL."""
+        """Loads a label map based on an existing list of label maps implemented in PETPAL.
+        
+        Options include:
+        - `freesurfer`: The regions corresponding to the aparc+aseg segmentation image.
+        - `freesurfer_merge_lr`: The regions corresponding to the aparc+aseg segmentation image.
+            Unilateral map combining each left/right split into one region.
+        - `perlcyno`: Bilateral regions in the PerlCyno primate atlas.
+        - `perlcyno_merge_lr`: Unilateral map combining left/right regions in the PerlCyno
+            primate atlas.
+            
+        Args:
+            label_map_name (str): A name matching a preset option for a label map.
+            
+        Returns:
+            label_map (dict): The label map selected."""
         match label_map_name.lower():
             case 'freesurfer':
                 return label_map_freesurfer
@@ -529,15 +553,32 @@ class LabelMapLoader:
                                  "'freesurfer_merge_lr', 'perlcyno', or 'perlcyno_merge_lr.")
 
     def from_dict(self, label_map: dict) -> dict:
-        """Provide a label map implemented in Python."""
+        """Provide a label map implemented in Python.
+        
+        Args:
+            label_map (dict): The label map implemented for use in the PET study.
+            
+        Returns:
+            label_map (dict): The label map selected."""
         return label_map
 
     def from_json(self, label_map_path: str) -> dict:
-        """Load a label map from a .json file."""
+        """Load a label map from a .json file.
+        
+        Args:
+            label_map_path (str): Path to the label map for use in the PET study.
+            
+        Returns:
+            label_map (dict): The label map loaded from file."""
         return safe_load_meta(input_metadata_file=label_map_path)
 
     def detect_option(self, label_map_option: dict | str) -> Callable:
-        """Determine the label map loading method to use based on the provided option."""
+        """Determine the label map loading method to use based on the provided option.
+        
+        Raises:
+            FileNotFoundError: If the label_map_option looks like a path but doesn't point to an
+                existing file.
+            TypeError: If the label_map_option is not a str or dict instance."""
         if isinstance(label_map_option, dict):
             return self.from_dict
         if isinstance(label_map_option, str):
@@ -548,7 +589,7 @@ class LabelMapLoader:
                 raise FileNotFoundError(f'Label map option {label_map_option} looks like a path'
                                         'yet does not exist.')
             return self.from_petpal
-        raise ValueError(f'label_map_option should be a str or dict. Got type: '
+        raise TypeError(f'label_map_option should be a str or dict. Got type: '
                          f'{type(label_map_option)}')
 
     def labels_to_camel_case(self):
@@ -564,7 +605,8 @@ class LabelMapLoader:
         integer or a list of integers.
         
         Raises:
-            """
+            TypeError: If one of the mappings is not an integer or a list of integers.
+        """
         label_map = self.label_map.copy()
         labels = label_map.keys()
         mappings = label_map.values()
