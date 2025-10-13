@@ -509,13 +509,18 @@ class LabelMapLoader:
     labels.
     
     There are three ways to load label maps, using argument `label_map_option`:
-    1) (str) Load a preset option implemented in PETPAL. These include `freesurfer`,
-        `freesurfer_merge_lr`, `perlcyno`, `perlcyno_merge_lr`.
-        See :meth:`LabelMapLoader.from_petpal`.
-    2) (str) Load a json file that maps regions used in your study. Provide the path to the
-        .json file. See :meth:`LabelMapLoader.from_json`.
-    3) (dict) Load a Python dictionary that implements a label map for region in your study. See
-        :meth:`LabelMapLoader.from_dict`."""
+
+    1. (str) Load a preset option implemented in PETPAL. These include `freesurfer`,
+       `freesurfer_merge_lr`, `perlcyno`, `perlcyno_merge_lr`. See
+       :meth:`~LabelMapLoader.from_petpal`.
+    #. (str) Load a json file that maps regions used in your study. Provide the path to the
+       .json file. See :meth:`~LabelMapLoader.from_json`.
+    #. (dict) Load a Python dictionary that implements a label map for region in your study. See
+       :meth:`~LabelMapLoader.from_dict`.
+
+    :ivar loader_method: A string or dictionary to load as a label map.
+    :ivar label_map: The label map to use in PETPAL methods.
+    """
     def __init__(self, label_map_option: str | dict):
         self.loader_method = self.detect_option(label_map_option=label_map_option)
         self.label_map = self.loader_method(label_map_option)
@@ -526,12 +531,13 @@ class LabelMapLoader:
         """Loads a label map based on an existing list of label maps implemented in PETPAL.
         
         Options include:
-        - `freesurfer`: The regions corresponding to the aparc+aseg segmentation image.
-        - `freesurfer_merge_lr`: The regions corresponding to the aparc+aseg segmentation image.
-            Unilateral map combining each left/right split into one region.
-        - `perlcyno`: Bilateral regions in the PerlCyno primate atlas.
-        - `perlcyno_merge_lr`: Unilateral map combining left/right regions in the PerlCyno
-            primate atlas.
+
+        * `freesurfer`: The regions corresponding to the aparc+aseg segmentation image.
+        * `freesurfer_merge_lr`: The regions corresponding to the aparc+aseg segmentation image.
+          Unilateral map combining each left/right split into one region.
+        * `perlcyno`: Bilateral regions in the PerlCyno primate atlas.
+        * `perlcyno_merge_lr`: Unilateral map combining left/right regions in the PerlCyno
+          primate atlas.
             
         Args:
             label_map_name (str): A name matching a preset option for a label map.
