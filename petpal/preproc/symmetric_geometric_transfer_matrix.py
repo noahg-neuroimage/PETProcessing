@@ -5,6 +5,7 @@ image, the output will be one table (.tsv) with each unique ROI partial volume c
 is 4D, the output will be a partial volume corrected TAC for each ROI.
 """
 import os
+import warnings
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import ants
@@ -155,6 +156,11 @@ class Sgtm:
                                                           zeroth_roi=self.zeroth_roi)
             region_short_names = [f'UNK{i:05d}' for i in region_index_map]
         else:
+            warnings.warn(f"Using label map for sGTM with option: {self.label_map_option}. Users "
+                          "should be aware that any label map used with sGTM should contain a "
+                          "complete list of regions for the brain. Review label map and "
+                          "segmentation to ensure this criteria is met, or use sGTM without "
+                          "label map for automated complete region mapping.")
             seg_label_map = LabelMapLoader(label_map_option=self.label_map_option).label_map
             region_index_map = list(seg_label_map.keys())
             region_short_names = list(seg_label_map.values())
